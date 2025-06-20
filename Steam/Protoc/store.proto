@@ -1,0 +1,218 @@
+syntax = "proto3";  // 使用 proto3 语法
+package steam;   // 包名，防止命名冲突
+option go_package = "../Protoc";
+
+message Store{
+    repeated StoreItem store_items = 1;
+}
+
+message StoreItem{
+    uint32 item_type = 1;
+    uint32 id = 2;
+    uint32 success = 3;
+    bool visible = 4;
+    bool unvailable_for_country_restriction = 5;
+    string name = 6;
+    string store_url_path = 7;
+    uint32 appid = 9;
+    uint32 type = 10;
+    repeated uint32 included_types = 11;
+    repeated uint32 included_appids = 12;
+    bool is_free = 13;
+    bool is_early_access = 14;
+    RelatedItem related_items = 15;
+    IncludedItem included_items = 16;
+    repeated uint32 content_descriptorids = 20;
+    repeated uint32 tagids = 21;
+    Category categories = 22;
+    Review reviews = 23;
+    BasicInfo basic_info = 24;
+    repeated Tag tags = 25;
+    Assets assets = 30;
+    Release release = 31;
+    uint32 platforms = 32;
+    uint32 game_rating = 33;//?
+    Option best_purchase_option = 40;
+    repeated Option purchase_options = 41;
+    repeated Option accessories = 42;
+    Option self_purchase_option = 43;
+    ScreenShots screenshots = 50;
+    repeated Trailer trailers = 51;
+    repeated SupportLanguage supported_languages = 52;
+    string store_url_path_override = 53;
+    FreeWeekend free_weekend = 54;
+    bool unlisted = 55;
+    uint32 game_count = 56;
+    string internal_name = 57;
+    string full_description = 58;
+    bool is_free_temporarily = 59;
+    Assets assets_without_overrides = 60;
+    UserFilterFailure user_filter_failure = 70;
+    repeated Link links = 71; //? 猜测
+}
+
+message Assets {
+    string asset_url_format = 1;
+    string main_capsule = 2;
+    string small_capsule = 3;
+    string header = 4;
+    string package_header = 5;
+    string page_background = 6;
+    string hero_capsule = 7;
+    string hero_capsule_2x = 8;
+    string library_capsule = 9;
+    string library_capsule_2x = 10;
+    string library_hero = 11;
+    string library_hero_2x = 12;
+    string community_icon = 13;
+    string clan_avatar = 14;
+}
+
+message Option {
+    int32 packageid = 1;
+    int32 bundleid = 2;
+    string purchase_option_name = 3;
+    int64 final_price_in_cents = 5;
+    int64 original_price_in_cents = 6;
+    int64 user_final_price_in_cents = 7;
+    string formatted_final_price = 8;
+    string formatted_original_price = 9;
+    int32 discount_pct = 10;
+    int32 user_discount_pct = 11;
+    int32 bundle_discount_pct = 12;
+    repeated bool active_discounts = 20;//?
+    repeated bool user_active_discounts = 21;//?
+    repeated bool inactive_discounts = 22; //?
+    bool user_can_purchase = 30;
+    bool user_can_purchase_as_gift = 31;
+    bool is_commercial_license = 40;
+    bool should_suppress_discount_pct = 41;
+    bool hide_discount_pct_for_compliance = 42;
+    int32 included_game_count = 43;
+    int64 lowest_recent_price_in_cents = 44;
+    bool requires_shipping = 45;
+    bool recurrence_info = 46; //?
+}
+
+message Category{
+    uint32 supported_player_categoryids = 2;
+    uint32 feature_categoryids = 3;
+    uint32 controller_categoryids = 4;
+}
+
+message ScreenShots {
+    repeated ScreenShotsAge all_ages_screenshots = 2;
+    repeated ScreenShotsAge mature_content_screenshots = 3;
+}
+
+message ScreenShotsAge {
+    string filename = 1;
+    int32 ordinal = 2;
+}
+
+message RelatedItem {
+    uint32 parent_appid = 1;
+}
+
+message IncludedItem {
+    repeated StoreItem included_apps = 1;
+    repeated StoreItem included_packages = 2;
+}
+
+message BasicInfo {
+    string short_description = 1;
+    repeated Publisher publishers = 2;
+    repeated Publisher developers = 3;
+    repeated Publisher franchises = 4;
+    string capsule_headline = 5;
+}
+
+message Publisher {
+    string name = 1;
+    uint32 creator_clan_account_id = 2;
+}
+
+message Review {
+    Summary summary_filtered = 1;
+    Summary summary_unfiltered = 2;
+}
+
+message Summary {
+    uint32 review_count = 1;
+    int32 percent_positive = 2;
+    int32 review_score = 3;
+    string review_score_label = 4;
+}
+
+message Tag {
+    uint32 tagid = 1;
+    uint32 weight = 2;
+}
+
+message Release {
+    uint32 steam_release_date = 1;
+    uint32 original_release_date = 2;
+    uint32 original_steam_release_date = 3;
+    bool is_coming_soon = 4;
+    bool is_preload = 5;
+    string custom_release_date_message = 6;
+    bool is_abridged_release_date = 7;
+    string coming_soon_display = 8;
+    bool is_early_access = 10;
+    uint32 mac_release_date = 20;
+    uint32 linux_release_date = 21;
+}
+
+message Trailer {
+    TrailerInfo highlights = 1;
+    TrailerInfo other_trailers = 2;
+}
+
+message TrailerInfo {
+    string trailer_name = 1;
+    string trailer_url_format = 2;
+    TrailerType trailer_480p = 3;
+    TrailerType trailer_max = 4;
+    TrailerType microtrailer = 5;
+    string screenshot_medium = 10;
+    string screenshot_full = 11;
+    int32 trailer_base_id = 12;
+}
+
+message TrailerType {
+    string filename = 1;
+    string type = 2;
+}
+
+message SupportLanguage {
+    int32 elanguage = 1;
+    int32 eadditionallanguage = 5;
+    bool supported = 2;
+    bool full_audio = 3;
+    bool subtitles = 4;
+}
+
+message FreeWeekend {
+    uint32 start_time = 1;
+    uint32 end_time = 2;
+    string text = 3;
+}
+
+message UserFilterFailure {
+    uint32 filter_failure = 1;//enum
+    bool already_owned = 5;
+    bool on_wishlist = 6;
+    bool ignored = 7;
+    bool not_in_users_language = 10;
+    bool not_on_users_platform = 11;
+    bool demo_for_owned_game = 12;
+    bool dlc_for_unowned_game = 13;
+    bool nonpreferred_product_type = 20;
+    repeated uint32 excluded_tagids = 21;
+    repeated uint32 excluded_content_descriptorids = 30;//enum
+}
+
+message Link {
+    uint32 link_type = 1; //enum
+    string url = 2;
+}

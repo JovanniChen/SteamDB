@@ -1,0 +1,37 @@
+syntax = "proto3";  // 使用 proto3 语法
+package steam;   // 包名，防止命名冲突
+option go_package = "../Protoc";
+
+message ReactionsSend {
+    int32 target_type = 1;
+    uint64 targetid = 2;
+}
+
+message ReactionsReceive {
+    repeated uint32 reactionids = 1;
+}
+
+message SummarySend {
+    fixed64 steamid = 1;
+}
+
+message SummaryPoint {
+    uint64 points = 1;
+    int64 points_earned = 2;
+    int64 points_spent = 3;
+}
+
+message SummaryReceive {
+    SummaryPoint summary = 1;
+    uint32 timestamp_updated = 2;
+    uint64 auditid_highwater = 3;
+}
+
+message AddReactionSend {
+    int32 target_type = 1;
+    uint64 targetid = 2;
+    uint32 reactionid = 3;
+}
+
+message AddReactionReceive {
+}

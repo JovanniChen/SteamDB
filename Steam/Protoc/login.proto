@@ -1,0 +1,74 @@
+syntax = "proto3";  // 使用 proto3 语法
+package steam;   // 包名，防止命名冲突
+option go_package = "../Protoc";
+
+message GetPasswordRSAPublicKeySend { //请求参数
+    string account_name = 1;//steam账号
+}
+
+message GetPasswordRSAPublicKeySendReceive { //响应参数
+    string publickey_mod = 1;
+    string publickey_exp = 2;
+    uint64 timestamp = 3;
+}
+
+
+message DeviceDetails {
+    string device_friendly_name = 1;
+    int32 platform_type = 2;
+}
+
+message BeginAuthSessionViaCredentialsSend {
+    string friendly_name = 1;
+    string account_name = 2;
+    string encrypted_password = 3;
+    int64 encryption_timestamp = 4; // unit64string
+    bool remember_login = 5;
+    int32 platform_type = 6; //enum
+    int32 persistence = 7; //enum
+    string website_id = 8;
+    DeviceDetails device_details = 9;
+    int32 guard_data = 10;
+    int32 language = 11;
+    int32 qos_level = 12;
+}
+
+message Confirmation{
+    int32 confirmation_type = 1;
+    string associated_message = 2;
+}
+
+message BeginAuthSessionViaCredentialsReceive {
+    uint64 client_id = 1;
+    bytes request_id = 2;
+    float  interval = 3;
+    repeated Confirmation allowed_confirmations = 4;
+    uint64 steam_id = 5;
+    string weak_token = 6;
+    string agreement_session_url = 7;
+    string extended_error_message = 8;
+}
+
+message PollAuthSessionStatusSend {
+    uint64 client_id = 1;
+    bytes request_id = 2;
+    fixed64 token_to_revoke = 3;
+}
+
+message PollAuthSessionStatusReceive {
+    uint64 new_client_id = 1;
+    string new_challenge_url = 2;
+    string refresh_token = 3;
+    string access_token = 4;
+    bool had_remote_interaction = 5;
+    string account_name = 6;
+    string new_guard_data = 7;
+    string agreement_session_url = 8;
+}
+
+message EmailCode {
+    uint64 client_id = 1;
+    fixed64 steamid = 2;
+    string code = 3;
+    int32 code_type =4;
+}

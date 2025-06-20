@@ -1,0 +1,193 @@
+syntax = "proto3";  // 使用 proto3 语法
+package steam;   // 包名，防止命名冲突
+option go_package = "../Protoc";
+import "store.proto";
+
+message AddCartSend {
+    string user_country = 1; //国家地区
+    repeated Item items = 2;
+    Navdata navdata = 3;
+}
+
+message Item {
+    uint32 packageid = 1;//捆绑包
+    uint32 bundleid = 2;//购物车ID
+    GiftInfo gift_info = 10;//礼物信息
+    Flag flag = 11;
+}
+
+message CuratorData {
+    uint32 clanid = 1;
+    uint64 listid = 2;
+}
+
+message Navdata {
+    string domain = 1;
+    string controller = 2;
+    string method = 3;
+    string submethod = 4;
+    string feature = 5;
+    uint32 depth = 6;
+    string countrycode = 7;
+    string webkey = 8;
+    bool is_client = 9;
+    CuratorData curator_data = 10;
+    bool is_likely_bot = 11;
+    bool is_utm = 12;
+}
+
+message GiftInfo {
+    int32 accountid_giftee = 1;
+    GiftMessage gift_message = 2;
+    int32 time_scheduled_send = 3;
+}
+
+message GiftMessage {
+    string gifteename = 1;
+    string message = 2;
+    string sentiment = 3;
+    string signature = 4;
+}
+
+message Flag {
+    bool is_gift = 1;
+    bool is_private = 2;
+}
+
+//添加返回值
+
+message AddCartReceive {
+    repeated uint64 line_item_ids = 1;
+    Cart cart = 2;
+    repeated uint32 replaced_packages = 3;
+    uint64 existing_billing_agreementid = 4;
+    uint32 new_billing_agreement_recurring_packageid = 5;
+}
+
+//修改
+message ModifyCartSend {
+    uint64 line_item_id = 1;
+    string user_country = 2;
+    GiftInfo gift_info = 10;
+    Flag flag = 11;
+    uint64 apply_gidcoupon = 12;
+}
+
+//修改返回值
+message ModifyCartReceive {
+    Cart cart = 1;
+}
+
+message Cart {
+    repeated LineItem line_items = 1;
+    repeated Price subtotal = 2;
+    bool is_valid = 3;
+    repeated ValidationFailure validation_details = 4;
+}
+
+message LineItem {
+    uint64 line_item_id = 1;
+    uint32 type = 2;
+    uint32 packageid = 3;
+    uint32 bundleid = 4;
+    bool is_valid = 8;
+    ValidationFailure validation_details = 9;
+    uint32 time_added = 10;
+    Price price_when_added = 11;
+    GiftInfo gift_info = 12;
+    Flag flag = 13;
+    uint64 gidcoupon_applied = 14;
+}
+
+message  ValidationFailure {
+    uint32 validation_failure = 1;
+}
+message Price {
+    int64 amount_in_cents = 1;
+    int32 currency_code = 2;
+    string formatted_amount = 3;
+}
+
+//信息显示
+message CartInfo {
+    repeated CartItem cart_items = 1;
+    repeated Estimate estimated_totals = 5;
+}
+
+message CartItem {
+    uint64 line_item_id = 1;
+    ItemID item_id = 2;
+    StoreItem store_item = 3;
+    GiftInfo gift_info = 4;
+    uint32 errors = 5; // ?
+    uint32 warnings = 6;// ?
+    Price subtotal = 7;
+    Price price_when_added = 8;
+    Price original_price = 9;
+    uint32 coupon_applied = 10; // ?
+    Price coupon_discount = 11;
+    bool can_purchase_as_gift = 12;
+    bool restrict_add_additional_to_cart = 13;
+}
+
+//商店信息
+message StoreInfo {
+    repeated ItemID ids = 1;
+    Context context = 2;
+    ItemDataRequest data_request = 3;
+}
+
+message Context {
+    string language = 1; //'schinese'
+    int32 elanguage = 2;
+    string country_code = 3; //'CN'
+    int32 steam_realm = 4; //1
+}
+
+message ItemID {
+    uint32 appid = 1;
+    uint32 packageid = 2;
+    uint32 bundleid = 3;
+    uint32 tagid = 4;
+    uint32 creatorid = 5;
+    uint32 hubcategoryid = 6;
+}
+
+message Estimate {
+    Price subtotal = 1;
+    Price wallet_balance = 2;
+    Price exceeding_wallet_balance = 3;
+    Price remaining_wallet_balance = 4;
+}
+
+//删除消息发送
+message RemoveCartSend {
+    uint64 line_item_id = 1;
+    string user_country = 2;
+}
+
+message ItemDataRequest {
+    bool include_assets = 1;
+    bool include_release = 2;
+    bool include_platforms = 3;
+    bool include_all_purchase_options = 4;
+    bool include_screenshots = 5;
+    bool include_trailers = 6;
+    bool include_ratings = 7;
+    int32 include_tag_count = 8;
+    bool include_reviews = 9;
+    bool include_basic_info = 10;
+    bool include_supported_languages = 11;
+    bool include_full_description = 12;
+    bool include_included_items = 13;
+    ItemDataRequest included_item_data_request = 14;
+    bool include_assets_without_overrides = 15;
+    bool apply_user_filters = 16;
+    bool include_links = 17;
+}
+
+
+message RemoveItem {
+    uint64 line_item_id = 1;
+    string user_country = 2;
+}
