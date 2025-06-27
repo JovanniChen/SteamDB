@@ -386,6 +386,16 @@ func (d *Dao) generateTokenCode(clientId uint64, requestId []byte, steamId uint6
 	return d.afterVerificationLogin(clientId, steamId, requestId)
 }
 
+// GetTokenCode 获取token Code
+func (d *Dao) GetTokenCode(sharedSecret string) (string, error) {
+	stime, err := d.SteamTime()
+	if err != nil {
+		return "", err
+	}
+	code := Utils.GenerateAuthCode(sharedSecret, stime)
+	return code, nil
+}
+
 // beginAuthSessionViaCredentials 开始处理Auth登录问题
 func (d *Dao) beginAuthSessionViaCredentials(sharedSecret string) error {
 	timestamp, _ := strconv.ParseInt(d.credentials.RSATimeStamp, 10, 64)

@@ -101,6 +101,7 @@ func (d *Dao) GetCookiesString(ul string) *LoginCookie {
 	return nil
 }
 
+// New 创建对象 参数是代理地址
 func New(proxy string) *Dao {
 	proxyFn := func(_ *http.Request) (*u.URL, error) {
 		if proxy == "" {

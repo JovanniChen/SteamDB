@@ -19,6 +19,7 @@ func printStack(errKey, errStr string) error {
 	message += "\n" + string(buf[:n])
 	return fmt.Errorf(errKey, message)
 }
+
 func Error(errStr string) error {
 	return printStack(errorGettingKey, errStr)
 }
@@ -26,6 +27,7 @@ func Error(errStr string) error {
 func ResponseError(errStr int) error {
 	return printStack(errorResponseCode, strconv.Itoa(errStr))
 }
+
 func Unavailable() error {
 	return printStack(unavailable, "")
 }

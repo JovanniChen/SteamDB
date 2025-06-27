@@ -27,6 +27,7 @@ func (p Params) GetInt(k string) int {
 	i, _ := strconv.Atoi(p.GetString(k))
 	return i
 }
+
 func (p Params) GetInt64(k string) int64 {
 	i, _ := strconv.ParseInt(p.GetString(k), 10, 64)
 	return i
@@ -47,9 +48,11 @@ func (p Params) ToUrl() string {
 	buff = strings.Trim(buff, "&")
 	return buff
 }
+
 func (p Params) QueryEscape(s string) string {
 	return url.QueryEscape(s)
 }
+
 func (p Params) Encode() string {
 	if len(p) == 0 {
 		return ""
