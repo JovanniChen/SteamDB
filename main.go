@@ -7,9 +7,9 @@ import (
 
 func main() {
 	d := Dao.New("")
-	//code, _ := d.GetTokenCode("Q9h1SqNq+4jk5M+P6UCykXdoFmU=")
-	//fmt.Println(code)
-	err := d.Login("xwabg995", "5uBKjPMRxImK", "Q9h1SqNq+4jk5M+P6UCykXdoFmU=")
+	code, _ := d.GetTokenCode("QRzFn0QOz8dUJ0kqR/GE97WKQk4=")
+	fmt.Println(code)
+	err := d.Login("rauku721", "j6LjHiePglws", "QRzFn0QOz8dUJ0kqR/GE97WKQk4=")
 	//err := d.Login("yl32940", "32940abcd", "")
 
 	//err := d.SetLoginInfo("yl32940", "32940abcd", "eyAidHlwIjogIkpXVCIsICJhbGciOiAiRWREU0EiIH0.eyAiaXNzIjogInI6MDAwNV8yNjdCOEY2NF8xMDA0RiIsICJzdWIiOiAiNzY1NjExOTgxMzI4MjQ0NTgiLCAiYXVkIjogWyAid2ViIiBdLCAiZXhwIjogMTc1MDQ3NjE1MywgIm5iZiI6IDE3NDE3NDk0MDYsICJpYXQiOiAxNzUwMzg5NDA2LCAianRpIjogIjAwMDZfMjY3RTI0ODRfN0EwQTkiLCAib2F0IjogMTc1MDM4OTQwNiwgInJ0X2V4cCI6IDE3Njg0OTI5NDIsICJwZXIiOiAwLCAiaXBfc3ViamVjdCI6ICIxMTIuMzIuMjIuMjAwIiwgImlwX2NvbmZpcm1lciI6ICIxMTIuMzIuMjIuMjAwIiB9.T3YnJMoPHZ9wultuCChJAqr46Swe4dKV8gSJhx4duyBfUA-82pAbnLqXacnlrcUS30wumJDmohx2iXWhKCTTBg",

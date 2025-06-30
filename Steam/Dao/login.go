@@ -407,7 +407,7 @@ func (d *Dao) beginAuthSessionViaCredentials(sharedSecret string) error {
 		Persistence:         1,
 		WebsiteId:           "Store",
 		DeviceDetails: &Protoc.DeviceDetails{
-			DeviceFriendlyName: Steam.UseAgent,
+			DeviceFriendlyName: Steam.UserAgent,
 			PlatformType:       2,
 		},
 		Language: 6,
