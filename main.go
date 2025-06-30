@@ -7,8 +7,8 @@ import (
 
 func main() {
 	d := Dao.New("")
-	code, _ := d.GetTokenCode("Q9h1SqNq+4jk5M+P6UCykXdoFmU=")
-	fmt.Println(code)
+	//code, _ := d.GetTokenCode("Q9h1SqNq+4jk5M+P6UCykXdoFmU=")
+	//fmt.Println(code)
 	err := d.Login("xwabg995", "5uBKjPMRxImK", "Q9h1SqNq+4jk5M+P6UCykXdoFmU=")
 	//err := d.Login("yl32940", "32940abcd", "")
 

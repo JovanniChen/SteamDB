@@ -15,6 +15,7 @@ import (
 type UserInfo struct {
 	Balance     int
 	WaitBalance int
+	Point       int
 	PersonName  string
 	CountryCode string
 	Language    string
