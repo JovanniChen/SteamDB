@@ -55,7 +55,7 @@ func (d *Dao) NewRequest(method, url string, body io.Reader) (*http.Request, err
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", Steam.UseAgent)
+	req.Header.Set("User-Agent", Steam.UserAgent)
 	if method == "POST" {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}

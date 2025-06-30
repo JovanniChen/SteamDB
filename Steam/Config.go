@@ -12,9 +12,9 @@ type domain struct {
 }
 
 const (
-	Scheme   string = "https://"
-	Tries    int    = 3
-	UseAgent string = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+	Scheme    string = "https://"
+	Tries     int    = 3
+	UserAgent string = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
 )
 
 var (
