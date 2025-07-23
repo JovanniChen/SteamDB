@@ -6,18 +6,19 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
+	"sync"
+
 	"example.com/m/v2/Steam"
 	"example.com/m/v2/Steam/Errors"
 	"example.com/m/v2/Steam/Model"
 	"example.com/m/v2/Steam/Param"
 	"example.com/m/v2/Steam/Protoc"
 	"example.com/m/v2/Steam/Utils"
-	"fmt"
 	"google.golang.org/protobuf/proto"
-	"net/url"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 type LoginCookie struct {
