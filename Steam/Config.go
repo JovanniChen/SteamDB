@@ -29,9 +29,10 @@ var (
 		Login:     "login.steampowered.com",
 	}
 
-	Origin   string = Scheme + Domain.Store
-	Account  string = Scheme + Domain.Store + "/account/"             // 获取账号信息
-	Language string = Scheme + Domain.Store + "/account/setlanguage/" // 设置语言
+	Origin          string = Scheme + Domain.Store
+	Account         string = Scheme + Domain.Store + "/account/"             // 获取账号信息
+	Language        string = Scheme + Domain.Store + "/account/setlanguage/" // 设置语言
+	CommunityOrigin string = Scheme + Domain.Community
 
 	GetPasswordRSAPublicKey        string = Scheme + Domain.Api + "/IAuthenticationService/GetPasswordRSAPublicKey/v1"
 	BeginAuthSessionViaCredentials string = Scheme + Domain.Api + "/IAuthenticationService/BeginAuthSessionViaCredentials/v1"
@@ -46,4 +47,8 @@ var (
 	ConfirmationList  string = Scheme + Domain.Community + "/ITwoFactorService/ConfirmationList/v1/" //市场待确认列表
 	Confirmation      string = Scheme + Domain.Community + "/mobileconf/ajaxop"                      //确认列表操作 GET
 	MultiConfirmation string = Scheme + Domain.Community + "/mobileconf/multiajaxop"                 //确认列表批量操作 测试失败
+
+	// 点数
+	GetReactions string = Scheme + Domain.Api + "/ILoyaltyRewardsService/GetReactions/v1"
+	GetSummary   string = Scheme + Domain.Api + "/ILoyaltyRewardsService/GetSummary/v1"
 )
