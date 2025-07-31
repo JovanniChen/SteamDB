@@ -35,3 +35,15 @@ message AddReactionSend {
 
 message AddReactionReceive {
 }
+
+message ReactionConfig {
+    repeated reactions = 3
+}
+
+message Reaction {
+    uint32 reactionid = 1
+    uint32 points_cost = 2
+    uint32 points_transferred = 3
+    int32 valid_target_types = 4
+    uint32 valid_ugc_types = 5
+}

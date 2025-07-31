@@ -1,3 +1,5 @@
+// login.go - Steam登录相关功能实现
+// 包含用户认证、RSA加密、令牌管理等核心登录逻辑
 package Dao
 
 import (
@@ -21,26 +23,32 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// LoginCookie Steam登录Cookie结构体
+// 存储登录成功后的会话信息
 type LoginCookie struct {
-	SteamLoginSecure string `json:"steamLoginSecure"`
-	SessionId        string `json:"sessionid"`
-	//SteamLanguage    string `json:"Steam_Language"`
+	SteamLoginSecure string `json:"steamLoginSecure"` // Steam安全登录令牌
+	SessionId        string `json:"sessionid"`        // 会话ID
+	//SteamLanguage    string `json:"Steam_Language"`    // Steam语言设置（已注释）
 }
 
+// Credentials 用户凭据结构体
+// 存储用户的登录信息和认证状态
 type Credentials struct {
-	Password     string
-	Username     string
-	Nickname     string
-	SteamID      uint64
-	RSATimeStamp string
-	AccessToken  string
-	RefreshToken string
-	Language     string
-	CountryCode  string
-	LoginCookies map[string]*LoginCookie
+	Password     string                    // 用户密码
+	Username     string                    // 用户名
+	Nickname     string                    // 用户昵称
+	SteamID      uint64                    // Steam用户ID
+	RSATimeStamp string                    // RSA时间戳，用于密码加密
+	AccessToken  string                    // 访问令牌
+	RefreshToken string                    // 刷新令牌
+	Language     string                    // 语言偏好设置
+	CountryCode  string                    // 国家代码
+	LoginCookies map[string]*LoginCookie   // 各域名的登录Cookie映射
 }
 
-// AccessToken token
+// AccessToken 获取访问令牌
+// 返回当前有效的访问令牌，用于API调用认证
+// 返回值：访问令牌字符串和可能的错误
 func (d *Dao) AccessToken() (string, error) {
 	if d.credentials.AccessToken == "" {
 		return "", Errors.Error("未获取到")
@@ -48,78 +56,119 @@ func (d *Dao) AccessToken() (string, error) {
 	return d.credentials.AccessToken, nil
 }
 
-// getRSA 获取steam密钥用于加密密码
+// getRSA 获取Steam RSA公钥用于密码加密
+// Steam使用RSA加密来保护用户密码在传输过程中的安全性
+// 参数：username - 要登录的用户名
+// 返回值：Steam公钥信息和可能的错误
 func (d *Dao) getRSA(username string) (*Model.SteamPublicKey, error) {
+	// 构建获取公钥的请求参数
 	publicKeySend := &Protoc.GetPasswordRSAPublicKeySend{
 		AccountName: username,
 	}
+	
+	// 将请求参数序列化为protobuf格式
 	data, err := proto.Marshal(publicKeySend)
 	if err != nil {
 		return nil, err
 	}
+	
+	// 构建URL参数
 	params := Param.Params{}
 	params.SetString("origin", Steam.Origin)
 	params.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
+	
+	// 创建HTTP请求
 	req, err := d.NewRequest("GET", Steam.GetPasswordRSAPublicKey+"?="+params.ToUrl(), nil)
 	if err != nil {
 		return nil, err
 	}
+	
+	// 设置必要的请求头
 	req.Header.Add("origin", Steam.Origin)
 	req.Header.Set("referer", Steam.Origin+"/")
+	
+	// 发送请求并重试
 	resp, err := d.RetryRequest(Steam.Tries, req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	
+	// 检查响应状态码
 	if resp.StatusCode != 200 {
 		return nil, Errors.ResponseError(resp.StatusCode)
 	}
+	
+	// 读取响应体
 	buf := new(bytes.Buffer)
 	if _, err = buf.ReadFrom(resp.Body); err != nil {
 		return nil, err
 	}
+	
+	// 解析响应数据为protobuf格式
 	keySendReceive := &Protoc.GetPasswordRSAPublicKeySendReceive{}
 	err = proto.Unmarshal(buf.Bytes(), keySendReceive)
 	if err != nil {
 		return nil, err
 	}
+	
+	// 构建Steam公钥对象并返回
 	spk := new(Model.SteamPublicKey)
-	spk.Success = true
-	spk.Timestamp = keySendReceive.Timestamp
-	spk.PublicKeyMod = keySendReceive.PublickeyMod
-	spk.PublicKeyExp = keySendReceive.PublickeyExp
+	spk.Success = true                               // 标记获取成功
+	spk.Timestamp = keySendReceive.Timestamp         // RSA时间戳
+	spk.PublicKeyMod = keySendReceive.PublickeyMod   // 公钥模数
+	spk.PublicKeyExp = keySendReceive.PublickeyExp   // 公钥指数
 	return spk, nil
 }
 
-// pollAuthSessionStatus  轮询身份验证会话状态
+// pollAuthSessionStatus 轮询身份验证会话状态
+// 在登录过程中定期检查认证状态，等待用户完成双因素认证等步骤
+// 参数：
+//   clientId - 客户端ID
+//   requestId - 请求ID字节数组
+// 返回值：认证状态响应和可能的错误
 func (d *Dao) pollAuthSessionStatus(clientId uint64, requestId []byte) (*Protoc.PollAuthSessionStatusReceive, error) {
+	// 构建轮询请求数据
 	loginData := &Protoc.PollAuthSessionStatusSend{
 		ClientId:  clientId,
 		RequestId: requestId,
 	}
+	
+	// 序列化请求数据
 	data, err := proto.Marshal(loginData)
 	if err != nil {
 		return nil, err
 	}
+	
+	// 构建POST请求参数
 	params := Param.Params{}
 	params.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
+	
+	// 创建HTTP POST请求
 	req, err := d.NewRequest("POST", Steam.PollAuthSessionStatus, strings.NewReader(params.Encode()))
 	if err != nil {
 		return nil, err
 	}
 
+	// 发送请求并获取响应
 	resp, err := d.RetryRequest(Steam.Tries, req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	
+	// 检查响应状态码
 	if resp.StatusCode != 200 {
 		return nil, Errors.ResponseError(resp.StatusCode)
 	}
+	
+	// 获取Steam的响应结果代码
 	eresult := resp.Header.Get("x-eresult")
 	result, _ := strconv.Atoi(eresult)
+	
+	// 根据结果代码处理不同情况
 	switch result {
-	case 1:
+	case 1: // 成功状态
 		credentialsReceive := &Protoc.PollAuthSessionStatusReceive{}
 		buf := new(bytes.Buffer)
 		if _, err = buf.ReadFrom(resp.Body); err != nil {
@@ -490,19 +539,32 @@ func (d *Dao) encryptPassword(password string, spk *Model.SteamPublicKey) (strin
 	return base64.StdEncoding.EncodeToString(out), nil
 }
 
-// Login steam登录
+// Login Steam用户登录
+// 执行完整的Steam登录流程，包括RSA加密密码和身份验证
+// 参数：
+//   username - Steam用户名
+//   password - Steam密码（明文）
+//   sharedSecret - Steam Guard共享密钥（用于生成验证码）
+// 返回值：登录成功返回nil，失败返回错误信息
 func (d *Dao) Login(username, password, sharedSecret string) error {
+	// 1. 获取RSA公钥用于密码加密
 	keySendReceive, err := d.getRSA(username)
 	if err != nil {
 		return err
 	}
+	
+	// 2. 使用RSA公钥加密密码
 	encryptedPassword, err := d.encryptPassword(password, keySendReceive)
 	if err != nil {
 		return err
 	}
+	
+	// 3. 保存用户凭据信息
 	d.credentials.Username = username
 	d.credentials.Password = encryptedPassword
 	d.credentials.RSATimeStamp = strconv.FormatUint(keySendReceive.Timestamp, 10)
+	
+	// 4. 开始通过凭据进行身份验证
 	return d.beginAuthSessionViaCredentials(sharedSecret)
 }
 
