@@ -5,8 +5,8 @@ package Dao
 import (
 	"bytes"
 	"encoding/json"
-	"example.com/m/v2/Steam"
-	"example.com/m/v2/Steam/Errors"
+	"github.com/steamdb/steamdb-go/Steam/Constants"
+	"github.com/steamdb/steamdb-go/Steam/Errors"
 	"strconv"
 	"time"
 )
@@ -47,13 +47,13 @@ func (d *Dao) SteamTime() (int64, error) {
 // 返回值：时间偏差(秒)和可能的错误
 func (d *Dao) timeOffset() (int64, error) {
 	// 创建HTTP请求查询Steam服务器时间
-	req, err := d.NewRequest("POST", Steam.QueryTime, nil)
+	req, err := d.NewRequest("POST", Constants.QueryTime, nil)
 	if err != nil {
 		return 0, err
 	}
 	
 	// 发送请求获取响应
-	resp, err := d.RetryRequest(Steam.Tries, req)
+	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return 0, err
 	}

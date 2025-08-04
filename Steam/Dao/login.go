@@ -14,12 +14,12 @@ import (
 	"strings"
 	"sync"
 
-	"example.com/m/v2/Steam"
-	"example.com/m/v2/Steam/Errors"
-	"example.com/m/v2/Steam/Model"
-	"example.com/m/v2/Steam/Param"
-	"example.com/m/v2/Steam/Protoc"
-	"example.com/m/v2/Steam/Utils"
+	"github.com/steamdb/steamdb-go/Steam/Constants"
+	"github.com/steamdb/steamdb-go/Steam/Errors"
+	"github.com/steamdb/steamdb-go/Steam/Model"
+	"github.com/steamdb/steamdb-go/Steam/Param"
+	"github.com/steamdb/steamdb-go/Steam/Protoc"
+	"github.com/steamdb/steamdb-go/Steam/Utils"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -34,16 +34,16 @@ type LoginCookie struct {
 // Credentials 用户凭据结构体
 // 存储用户的登录信息和认证状态
 type Credentials struct {
-	Password     string                    // 用户密码
-	Username     string                    // 用户名
-	Nickname     string                    // 用户昵称
-	SteamID      uint64                    // Steam用户ID
-	RSATimeStamp string                    // RSA时间戳，用于密码加密
-	AccessToken  string                    // 访问令牌
-	RefreshToken string                    // 刷新令牌
-	Language     string                    // 语言偏好设置
-	CountryCode  string                    // 国家代码
-	LoginCookies map[string]*LoginCookie   // 各域名的登录Cookie映射
+	Password     string                  // 用户密码
+	Username     string                  // 用户名
+	Nickname     string                  // 用户昵称
+	SteamID      uint64                  // Steam用户ID
+	RSATimeStamp string                  // RSA时间戳，用于密码加密
+	AccessToken  string                  // 访问令牌
+	RefreshToken string                  // 刷新令牌
+	Language     string                  // 语言偏好设置
+	CountryCode  string                  // 国家代码
+	LoginCookies map[string]*LoginCookie // 各域名的登录Cookie映射
 }
 
 // AccessToken 获取访问令牌
@@ -56,6 +56,30 @@ func (d *Dao) AccessToken() (string, error) {
 	return d.credentials.AccessToken, nil
 }
 
+// GetSteamID 获取当前用户的Steam ID
+// 返回值：Steam ID
+func (d *Dao) GetSteamID() uint64 {
+	return d.credentials.SteamID
+}
+
+// GetNickname 获取用户昵称
+// 返回值：昵称字符串
+func (d *Dao) GetNickname() string {
+	return d.credentials.Nickname
+}
+
+// GetRefreshToken 获取刷新令牌
+// 返回值：刷新令牌字符串
+func (d *Dao) GetRefreshToken() string {
+	return d.credentials.RefreshToken
+}
+
+// GetCountryCode 获取用户国家代码
+// 返回值：国家代码字符串
+func (d *Dao) GetCountryCode() string {
+	return d.credentials.CountryCode
+}
+
 // getRSA 获取Steam RSA公钥用于密码加密
 // Steam使用RSA加密来保护用户密码在传输过程中的安全性
 // 参数：username - 要登录的用户名
@@ -65,67 +89,69 @@ func (d *Dao) getRSA(username string) (*Model.SteamPublicKey, error) {
 	publicKeySend := &Protoc.GetPasswordRSAPublicKeySend{
 		AccountName: username,
 	}
-	
+
 	// 将请求参数序列化为protobuf格式
 	data, err := proto.Marshal(publicKeySend)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 构建URL参数
 	params := Param.Params{}
-	params.SetString("origin", Steam.Origin)
+	params.SetString("origin", Constants.CommunityOrigin)
 	params.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
-	
+
 	// 创建HTTP请求
-	req, err := d.NewRequest("GET", Steam.GetPasswordRSAPublicKey+"?="+params.ToUrl(), nil)
+	req, err := d.NewRequest("GET", Constants.GetPasswordRSAPublicKey+"?="+params.ToUrl(), nil)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 设置必要的请求头
-	req.Header.Add("origin", Steam.Origin)
-	req.Header.Set("referer", Steam.Origin+"/")
-	
+	req.Header.Add("origin", Constants.CommunityOrigin)
+	req.Header.Set("referer", Constants.CommunityOrigin+"/")
+
 	// 发送请求并重试
-	resp, err := d.RetryRequest(Steam.Tries, req)
+	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	// 检查响应状态码
 	if resp.StatusCode != 200 {
 		return nil, Errors.ResponseError(resp.StatusCode)
 	}
-	
+
 	// 读取响应体
 	buf := new(bytes.Buffer)
 	if _, err = buf.ReadFrom(resp.Body); err != nil {
 		return nil, err
 	}
-	
+
 	// 解析响应数据为protobuf格式
 	keySendReceive := &Protoc.GetPasswordRSAPublicKeySendReceive{}
 	err = proto.Unmarshal(buf.Bytes(), keySendReceive)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 构建Steam公钥对象并返回
 	spk := new(Model.SteamPublicKey)
-	spk.Success = true                               // 标记获取成功
-	spk.Timestamp = keySendReceive.Timestamp         // RSA时间戳
-	spk.PublicKeyMod = keySendReceive.PublickeyMod   // 公钥模数
-	spk.PublicKeyExp = keySendReceive.PublickeyExp   // 公钥指数
+	spk.Success = true                             // 标记获取成功
+	spk.Timestamp = keySendReceive.Timestamp       // RSA时间戳
+	spk.PublicKeyMod = keySendReceive.PublickeyMod // 公钥模数
+	spk.PublicKeyExp = keySendReceive.PublickeyExp // 公钥指数
 	return spk, nil
 }
 
 // pollAuthSessionStatus 轮询身份验证会话状态
 // 在登录过程中定期检查认证状态，等待用户完成双因素认证等步骤
 // 参数：
-//   clientId - 客户端ID
-//   requestId - 请求ID字节数组
+//
+//	clientId - 客户端ID
+//	requestId - 请求ID字节数组
+//
 // 返回值：认证状态响应和可能的错误
 func (d *Dao) pollAuthSessionStatus(clientId uint64, requestId []byte) (*Protoc.PollAuthSessionStatusReceive, error) {
 	// 构建轮询请求数据
@@ -133,39 +159,39 @@ func (d *Dao) pollAuthSessionStatus(clientId uint64, requestId []byte) (*Protoc.
 		ClientId:  clientId,
 		RequestId: requestId,
 	}
-	
+
 	// 序列化请求数据
 	data, err := proto.Marshal(loginData)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 构建POST请求参数
 	params := Param.Params{}
 	params.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
-	
+
 	// 创建HTTP POST请求
-	req, err := d.NewRequest("POST", Steam.PollAuthSessionStatus, strings.NewReader(params.Encode()))
+	req, err := d.NewRequest("POST", Constants.PollAuthSessionStatus, strings.NewReader(params.Encode()))
 	if err != nil {
 		return nil, err
 	}
 
 	// 发送请求并获取响应
-	resp, err := d.RetryRequest(Steam.Tries, req)
+	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	// 检查响应状态码
 	if resp.StatusCode != 200 {
 		return nil, Errors.ResponseError(resp.StatusCode)
 	}
-	
+
 	// 获取Steam的响应结果代码
 	eresult := resp.Header.Get("x-eresult")
 	result, _ := strconv.Atoi(eresult)
-	
+
 	// 根据结果代码处理不同情况
 	switch result {
 	case 1: // 成功状态
@@ -183,12 +209,12 @@ func (d *Dao) pollAuthSessionStatus(clientId uint64, requestId []byte) (*Protoc.
 // ajaxRefresh 刷新 仅用来获取steam ak_bmsc
 func (d *Dao) ajaxRefresh() (*Model.RefreshResponse, error) {
 	params := Param.Params{}
-	params.SetString("redir", Steam.Origin+"/")
-	req, err := d.NewRequest("POST", Steam.AjaxRefresh, strings.NewReader(params.Encode()))
+	params.SetString("redir", Constants.Origin+"/")
+	req, err := d.NewRequest("POST", Constants.AjaxRefresh, strings.NewReader(params.Encode()))
 	if err != nil {
 		return nil, err
 	}
-	resp, err := d.RetryRequest(Steam.Tries, req)
+	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return nil, err
 	}
@@ -223,12 +249,12 @@ func (d *Dao) finalizeLogin(ak_bmsc, refreshToken, sessionid string) (*Model.Fin
 	params.SetString("redir", "https://store.steampowered.com/login/?redir=&redir_ssl=1&snr=1_4_600__global-header")
 	params.SetString("nonce", refreshToken)
 	params.SetString("sessionid", sessionid)
-	req, err := d.NewRequest("POST", Steam.FinalizeLogin, strings.NewReader(params.Encode()))
+	req, err := d.NewRequest("POST", Constants.FinalizeLogin, strings.NewReader(params.Encode()))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("cookie", ak_bmsc)
-	resp, err := d.RetryRequest(Steam.Tries, req)
+	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return nil, err
 	}
@@ -261,9 +287,9 @@ func (d *Dao) AutoLogin(url, nonce, auth string, steamID uint64, reDir string) (
 		return nil, err
 	}
 	req.Header.Set("cookie", "")
-	req.Header.Set("origin", Steam.Origin)
-	req.Header.Set("referer", Steam.Origin+"/")
-	resp, err := d.RetryRequest(Steam.Tries, req)
+	req.Header.Set("origin", Constants.Origin)
+	req.Header.Set("referer", Constants.Origin+"/")
+	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return nil, err
 	}
@@ -392,11 +418,11 @@ func (d *Dao) submitVerificationCode(clientId uint64, steamId uint64, confirmati
 
 	params := Param.Params{}
 	params.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
-	req, err := d.NewRequest("POST", Steam.UpdateCode, strings.NewReader(params.Encode()))
+	req, err := d.NewRequest("POST", Constants.UpdateCode, strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
-	resp, err := d.RetryRequest(Steam.Tries, req)
+	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return err
 	}
@@ -457,7 +483,7 @@ func (d *Dao) beginAuthSessionViaCredentials(sharedSecret string) error {
 		Persistence:         1,
 		WebsiteId:           "Store",
 		DeviceDetails: &Protoc.DeviceDetails{
-			DeviceFriendlyName: Steam.UserAgent,
+			DeviceFriendlyName: Constants.UserAgent,
 			PlatformType:       2,
 		},
 		Language: 6,
@@ -468,11 +494,11 @@ func (d *Dao) beginAuthSessionViaCredentials(sharedSecret string) error {
 	}
 	params := Param.Params{}
 	params.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
-	req, err := d.NewRequest("POST", Steam.BeginAuthSessionViaCredentials, strings.NewReader(params.Encode()))
+	req, err := d.NewRequest("POST", Constants.BeginAuthSessionViaCredentials, strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
-	resp, err := d.RetryRequest(Steam.Tries, req)
+	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return err
 	}
@@ -542,9 +568,11 @@ func (d *Dao) encryptPassword(password string, spk *Model.SteamPublicKey) (strin
 // Login Steam用户登录
 // 执行完整的Steam登录流程，包括RSA加密密码和身份验证
 // 参数：
-//   username - Steam用户名
-//   password - Steam密码（明文）
-//   sharedSecret - Steam Guard共享密钥（用于生成验证码）
+//
+//	username - Steam用户名
+//	password - Steam密码（明文）
+//	sharedSecret - Steam Guard共享密钥（用于生成验证码）
+//
 // 返回值：登录成功返回nil，失败返回错误信息
 func (d *Dao) Login(username, password, sharedSecret string) error {
 	// 1. 获取RSA公钥用于密码加密
@@ -552,18 +580,18 @@ func (d *Dao) Login(username, password, sharedSecret string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// 2. 使用RSA公钥加密密码
 	encryptedPassword, err := d.encryptPassword(password, keySendReceive)
 	if err != nil {
 		return err
 	}
-	
+
 	// 3. 保存用户凭据信息
 	d.credentials.Username = username
 	d.credentials.Password = encryptedPassword
 	d.credentials.RSATimeStamp = strconv.FormatUint(keySendReceive.Timestamp, 10)
-	
+
 	// 4. 开始通过凭据进行身份验证
 	return d.beginAuthSessionViaCredentials(sharedSecret)
 }

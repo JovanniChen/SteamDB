@@ -5,13 +5,14 @@ package Dao
 import (
 	"bytes"
 	"encoding/json"
-	"example.com/m/v2/Steam"
-	"example.com/m/v2/Steam/Errors"
-	"example.com/m/v2/Steam/Param"
-	"github.com/antchfx/htmlquery"
 	"io"
 	"strconv"
 	"strings"
+
+	"github.com/antchfx/htmlquery"
+	"github.com/steamdb/steamdb-go/Steam/Constants"
+	"github.com/steamdb/steamdb-go/Steam/Errors"
+	"github.com/steamdb/steamdb-go/Steam/Param"
 )
 
 // UserInfo 用户信息结构体
@@ -35,24 +36,24 @@ func (d *Dao) userInfo(body io.ReadCloser) (*UserInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	info := &UserInfo{}
-	
+
 	// 提取钱包余额信息
 	for _, name := range htmlquery.Find(doc, `//div[@class="accountData price"]/a/text()`) {
 		info.Balance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
 	}
-	
+
 	// 提取用户昵称
 	for _, name := range htmlquery.Find(doc, `//*[@id="account_pulldown"]/text()`) {
 		info.PersonName = strings.TrimSpace(name.Data)
 	}
-	
+
 	// 提取待处理余额
 	for _, name := range htmlquery.Find(doc, `//a[@id="header_wallet_balance"]/text()`) {
 		info.WaitBalance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
 	}
-	
+
 	// 提取应用配置信息(语言、国家等)
 	for _, name := range htmlquery.Find(doc, `//div[@id='application_config']`) {
 		src := htmlquery.SelectAttr(name, "data-config")
@@ -64,7 +65,7 @@ func (d *Dao) userInfo(body io.ReadCloser) (*UserInfo, error) {
 		info.Language = m["LANGUAGE"].(string)
 		info.CountryCode = m["COUNTRY"].(string)
 	}
-	
+
 	return info, nil
 }
 
@@ -72,8 +73,8 @@ func (d *Dao) userInfo(body io.ReadCloser) (*UserInfo, error) {
 // 通过访问Steam账户页面获取用户的详细信息
 // 返回值：用户信息结构体和可能的错误
 func (d *Dao) getUserInfo() (*UserInfo, error) {
-	accountUrl := Steam.Account
-	
+	accountUrl := Constants.Account
+
 	// 检查是否已登录该域名
 	if d.CheckLogin(accountUrl) {
 		// 创建认证请求
@@ -81,23 +82,23 @@ func (d *Dao) getUserInfo() (*UserInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// 发送请求获取响应
-		resp, err := d.RetryRequest(Steam.Tries, req)
+		resp, err := d.RetryRequest(Constants.Tries, req)
 		if err != nil {
 			return nil, err
 		}
 		defer resp.Body.Close()
-		
+
 		// 检查响应状态
 		if resp.StatusCode != 200 {
 			return nil, Errors.ResponseError(resp.StatusCode)
 		}
-		
+
 		// 解析HTML获取用户信息
 		return d.userInfo(resp.Body)
 	}
-	
+
 	return nil, nil
 }
 
@@ -117,13 +118,13 @@ func (d *Dao) UserInfo() error {
 	if err != nil {
 		return err
 	}
-	
+
 	// 更新内部凭据
 	d.credentials.CountryCode = info.CountryCode
 	d.credentials.Language = info.Language
 	d.credentials.Nickname = info.PersonName
 	d.SetCookiesLanguage(info.Language)
-	
+
 	return nil
 }
 
@@ -139,47 +140,47 @@ func (d *Dao) GetUserCookies() ([]byte, error) {
 // 参数：language - 语言代码(如"schinese"表示简体中文)
 // 返回值：设置成功返回nil，失败返回错误
 func (d *Dao) SetLanguage(language string) error {
-	languageUrl := Steam.Language
-	
+	languageUrl := Constants.Language
+
 	// 检查是否已登录
 	if d.CheckLogin(languageUrl) {
 		// 获取当前域名的Cookie信息
 		lg := d.GetCookiesString(languageUrl)
-		
+
 		// 构建POST请求参数
 		params := Param.Params{}
 		params.SetString("language", language)
 		params.SetString("sessionid", lg.SessionId) // 需要会话ID验证
-		
+
 		// 创建POST请求
 		req, err := d.Request("POST", languageUrl, strings.NewReader(params.Encode()))
 		if err != nil {
 			return err
 		}
-		
+
 		// 发送请求
-		resp, err := d.RetryRequest(Steam.Tries, req)
+		resp, err := d.RetryRequest(Constants.Tries, req)
 		if err != nil {
 			return err
 		}
 		defer resp.Body.Close()
-		
+
 		// 检查响应状态
 		if resp.StatusCode != 200 {
 			return Errors.ResponseError(resp.StatusCode)
 		}
-		
+
 		// 读取响应内容
 		buf := new(bytes.Buffer)
 		if _, err = buf.ReadFrom(resp.Body); err != nil {
 			return err
 		}
-		
+
 		// 检查设置是否成功(Steam返回"true"表示成功)
 		if buf.String() != "true" {
 			return Errors.Error("语言设置失败")
 		}
 	}
-	
+
 	return nil
 }

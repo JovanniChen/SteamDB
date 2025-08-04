@@ -1,6 +1,6 @@
-// Steam包 - Steam平台相关的配置和常量定义
+// Constants包 - Steam平台相关的配置和常量定义
 // 包含Steam各个服务的域名、API端点和系统配置
-package Steam
+package Constants
 
 // domain 结构体定义Steam平台的各个域名
 // 用于构建不同服务的完整URL地址

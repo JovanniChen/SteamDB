@@ -4,8 +4,8 @@ package Dao
 
 import (
 	"crypto/tls"
-	"example.com/m/v2/Steam"
-	"example.com/m/v2/Steam/Errors"
+	"github.com/steamdb/steamdb-go/Steam/Constants"
+	"github.com/steamdb/steamdb-go/Steam/Errors"
 	"io"
 	"net"
 	"net/http"
@@ -86,7 +86,7 @@ func (d *Dao) NewRequest(method, url string, body io.Reader) (*http.Request, err
 	}
 	
 	// 设置浏览器用户代理，模拟真实浏览器请求以避免被反爬虫检测
-	req.Header.Set("User-Agent", Steam.UserAgent)
+	req.Header.Set("User-Agent", Constants.UserAgent)
 	
 	// 对于POST请求，设置表单数据的Content-Type
 	if method == "POST" {
