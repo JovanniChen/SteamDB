@@ -210,15 +210,25 @@ type AddReactionResult struct {
 //
 //	*AddReactionResult - 添加结果
 //	error - 操作错误
-func (c *Client) AddReaction(targetSteamID uint64, reactionType uint32, reactionID uint32) (*AddReactionResult, error) {
-	resultData, err := c.dao.AddReaction(targetSteamID, int32(reactionType), reactionID)
+func (c *Client) AddReaction(targetSteamID uint64, reactionType uint32, reactionID uint32, pointsCost int64) (*AddReactionResult, error) {
+	pointsRemainning, err := c.GetPointsSummary(c.GetSteamID())
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = c.dao.AddReaction(targetSteamID, int32(reactionType), reactionID)
+	if err != nil {
+		return nil, err
+	}
+
+	pointsNow, err := c.GetPointsSummary(c.GetSteamID())
 	if err != nil {
 		return nil, err
 	}
 
 	return &AddReactionResult{
-		Success:        resultData != nil, // 简单判断：非nil表示成功
-		PointsConsumed: 0,                 // 暂时无法从结果中获取具体消耗积分数
+		Success:        pointsRemainning.Points-pointsNow.Points == pointsCost, // 简单判断：非nil表示成功
+		PointsConsumed: pointsRemainning.Points - pointsNow.Points,             // 暂时无法从结果中获取具体消耗积分数
 	}, nil
 }
 
@@ -235,6 +245,10 @@ func (c *Client) AddReaction(targetSteamID uint64, reactionType uint32, reaction
 //	error - 查询错误
 func (c *Client) GetReactions(steamID uint64, reactionType uint32) (*Protoc.ReactionsReceive, error) {
 	return c.dao.GetReacionts(steamID, int32(reactionType))
+}
+
+func (c *Client) GetSteamIDByFriendLink(friendLink string) (uint64, error) {
+	return c.dao.GetSteamIDByFriendLink(friendLink)
 }
 
 // CheckLoginStatus 检查登录状态

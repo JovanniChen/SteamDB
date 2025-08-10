@@ -74,8 +74,9 @@ func (d *Dao) GetReacionts(targetId uint64, targetType int32) (*Protoc.Reactions
 
 	// 解析protobuf响应
 	reactionsReceive := &Protoc.ReactionsReceive{}
-	err = proto.Unmarshal(buf.Bytes(), reactionsReceive)
-	if err != nil {
+
+	// 使用重试机制解析protobuf
+	if err = protoUnmarshalWithRetry(buf.Bytes(), reactionsReceive, "GetReacionts", 3); err != nil {
 		return nil, err
 	}
 
@@ -139,7 +140,9 @@ func (d *Dao) GetSummary(steamId uint64) (*Protoc.SummaryReceive, error) {
 
 	// 解析protobuf响应
 	summaryReceive := &Protoc.SummaryReceive{}
-	if err := proto.Unmarshal(buf.Bytes(), summaryReceive); err != nil {
+
+	// 使用重试机制解析protobuf
+	if err := protoUnmarshalWithRetry(buf.Bytes(), summaryReceive, "GetSummary", 3); err != nil {
 		return nil, err
 	}
 
@@ -258,17 +261,19 @@ func (d *Dao) AddReaction(targetId uint64, targetType int32, reactionId uint32) 
 		return nil, Errors.ResponseError(resp.StatusCode)
 	}
 
-	// 读取响应数据
-	buf := new(bytes.Buffer)
-	if _, err := buf.ReadFrom(resp.Body); err != nil {
-		return nil, err
-	}
+	// // 读取响应数据
+	// buf := new(bytes.Buffer)
+	// if _, err := buf.ReadFrom(resp.Body); err != nil {
+	// 	return nil, err
+	// }
 
-	// 解析protobuf响应
-	addReactionReceive := &Protoc.AddReactionReceive{}
-	if err := proto.Unmarshal(buf.Bytes(), addReactionReceive); err != nil {
-		return nil, err
-	}
+	// // 解析protobuf响应
+	// addReactionReceive := &Protoc.AddReactionReceive{}
 
-	return addReactionReceive, nil
+	// // 使用重试机制解析protobuf
+	// if err := protoUnmarshalWithRetry(buf.Bytes(), addReactionReceive, "AddReaction", 3); err != nil {
+	// 	return nil, err
+	// }
+
+	return nil, nil
 }

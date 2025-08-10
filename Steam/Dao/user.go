@@ -5,7 +5,10 @@ package Dao
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -100,6 +103,69 @@ func (d *Dao) getUserInfo() (*UserInfo, error) {
 	}
 
 	return nil, nil
+}
+
+func (d *Dao) GetSteamIDByFriendLink(friendLink string) (uint64, error) {
+	// 创建认证请求
+	req, err := d.Request("GET", friendLink, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	// 发送请求获取响应
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	if resp.StatusCode != 200 {
+		return 0, Errors.ResponseError(resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	re := regexp.MustCompile(`"steamid":"(\d+)"`)
+	matches := re.FindStringSubmatch(string(body))
+	if len(matches) < 2 {
+		return 0, fmt.Errorf("SteamID not found in the page")
+	}
+
+	steamID, err := strconv.ParseUint(matches[1], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return steamID, nil
+
+	// 解析HTML文档
+	// doc, err := htmlquery.Parse(req.Body)
+	// if err != nil {
+	// 	return 0, err
+	// }
+
+	// info := &UserInfo{}
+
+	// // 提取钱包余额信息
+	// for _, name := range htmlquery.Find(doc, `//div[@class="accountData price"]/a/text()`) {
+	// 	info.Balance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
+	// }
+
+	// // 提取用户昵称
+	// for _, name := range htmlquery.Find(doc, `//*[@id="account_pulldown"]/text()`) {
+	// 	info.PersonName = strings.TrimSpace(name.Data)
+	// }
+
+	// // 提取待处理余额
+	// for _, name := range htmlquery.Find(doc, `//a[@id="header_wallet_balance"]/text()`) {
+	// 	info.WaitBalance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
+	// }
+
+	return 0, nil
 }
 
 // SetCookiesLanguage 设置Cookie中的语言偏好

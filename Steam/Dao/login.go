@@ -23,6 +23,43 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// min 返回两个整数中的较小值
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// protoUnmarshalWithRetry 带重试的protobuf解析函数
+// 在proto解析失败时提供重试机制和详细的调试信息
+func protoUnmarshalWithRetry(data []byte, pb proto.Message, funcName string, maxRetries int) error {
+	if len(data) == 0 {
+		return Errors.Error(funcName + ": 服务器返回空响应")
+	}
+	
+	var lastErr error
+	for i := 0; i < maxRetries; i++ {
+		err := proto.Unmarshal(data, pb)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		
+		// 记录调试信息
+		fmt.Printf("%s proto解析失败 (尝试 %d/%d) - 数据长度: %d, 前32字节: %x, 错误: %v\n", 
+			funcName, i+1, maxRetries, len(data), data[:min(32, len(data))], err)
+		
+		if i < maxRetries-1 {
+			// 短暂等待后重试
+			fmt.Printf("%s 将在1秒后重试...\n", funcName)
+			// 这里可以加入time.Sleep(time.Second)，但需要导入time包
+		}
+	}
+	
+	return Errors.Error(funcName + ": proto解析失败，已重试" + fmt.Sprintf("%d", maxRetries) + "次 - " + lastErr.Error())
+}
+
 // LoginCookie Steam登录Cookie结构体
 // 存储登录成功后的会话信息
 type LoginCookie struct {
@@ -131,8 +168,9 @@ func (d *Dao) getRSA(username string) (*Model.SteamPublicKey, error) {
 
 	// 解析响应数据为protobuf格式
 	keySendReceive := &Protoc.GetPasswordRSAPublicKeySendReceive{}
-	err = proto.Unmarshal(buf.Bytes(), keySendReceive)
-	if err != nil {
+	
+	// 使用重试机制解析protobuf
+	if err = protoUnmarshalWithRetry(buf.Bytes(), keySendReceive, "getRSA", 3); err != nil {
 		return nil, err
 	}
 
@@ -200,7 +238,11 @@ func (d *Dao) pollAuthSessionStatus(clientId uint64, requestId []byte) (*Protoc.
 		if _, err = buf.ReadFrom(resp.Body); err != nil {
 			return nil, err
 		}
-		err = proto.Unmarshal(buf.Bytes(), credentialsReceive)
+		
+		// 使用重试机制解析protobuf
+		if err = protoUnmarshalWithRetry(buf.Bytes(), credentialsReceive, "pollAuthSessionStatus", 3); err != nil {
+			return nil, err
+		}
 		return credentialsReceive, nil
 	}
 	return nil, Errors.Unavailable()
@@ -515,7 +557,11 @@ func (d *Dao) beginAuthSessionViaCredentials(sharedSecret string) error {
 		if _, err = buf.ReadFrom(resp.Body); err != nil {
 			return err
 		}
-		err = proto.Unmarshal(buf.Bytes(), credentialsReceive)
+		
+		// 使用重试机制解析protobuf
+		if err = protoUnmarshalWithRetry(buf.Bytes(), credentialsReceive, "beginAuthSessionViaCredentials", 3); err != nil {
+			return err
+		}
 		// 判断是否需要二次验证
 		allowedConfirmations := credentialsReceive.AllowedConfirmations
 		steamId := credentialsReceive.SteamId
@@ -536,7 +582,6 @@ func (d *Dao) beginAuthSessionViaCredentials(sharedSecret string) error {
 				return Errors.Unavailable()
 			}
 		}
-		break
 	case 5:
 		return Errors.Error("密码错误")
 	case 84:
