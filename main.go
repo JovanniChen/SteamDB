@@ -20,8 +20,8 @@ func main() {
 
 	// 获取令牌代码，用于双因素认证
 	// 参数是base64编码的身份标识符
-	// code, _ := d.GetTokenCode("vNVDHuqBle/rnsG7EQW2xQUqlME=")
-	// fmt.Println(code)
+	code, _ := d.GetTokenCode("yKuRsv/OmI584XxMt2LUWWbCM+Y=")
+	fmt.Println(code)
 
 	// 用户登录Steam平台
 	// 参数：用户名，密码，令牌代码
@@ -44,11 +44,11 @@ func main() {
 	// fmt.Println(string(str))
 
 	// 获取用户信息（已注释）
-	err = d.UserInfo()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// err = d.UserInfo()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
 	// 设置语言为简体中文（已注释）
 	//err = d.SetLanguage("schinese")
@@ -66,9 +66,9 @@ func main() {
 	// fmt.Println(len(result.Reactionids))
 	// fmt.Println(result) // 获取反应
 	// fmt.Println(d.GetSteamID())
-	// fmt.Println(d.GetSummary(d.GetSteamID())) // 获取摘要
+	fmt.Println(d.GetSummary(d.GetSteamID())) // 获取摘要
 	// fmt.Println(d.GetReactionConfig()) // 获取反应配置
-	fmt.Println(d.GetSteamIDByFriendLink("https://steamcommunity.com/user/chbn-qbdd/KCDRCPRT/"))
+	// fmt.Println(d.GetSteamIDByFriendLink("https://steamcommunity.com/user/chbn-qbdd/KCDRCPRT/"))
 
 	// 为指定用户添加反应
 	// 参数：用户SteamID，反应类型，反应ID

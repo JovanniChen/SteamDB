@@ -37,7 +37,7 @@ func protoUnmarshalWithRetry(data []byte, pb proto.Message, funcName string, max
 	if len(data) == 0 {
 		return Errors.Error(funcName + ": 服务器返回空响应")
 	}
-	
+
 	var lastErr error
 	for i := 0; i < maxRetries; i++ {
 		err := proto.Unmarshal(data, pb)
@@ -45,18 +45,18 @@ func protoUnmarshalWithRetry(data []byte, pb proto.Message, funcName string, max
 			return nil
 		}
 		lastErr = err
-		
+
 		// 记录调试信息
-		fmt.Printf("%s proto解析失败 (尝试 %d/%d) - 数据长度: %d, 前32字节: %x, 错误: %v\n", 
+		fmt.Printf("%s proto解析失败 (尝试 %d/%d) - 数据长度: %d, 前32字节: %x, 错误: %v\n",
 			funcName, i+1, maxRetries, len(data), data[:min(32, len(data))], err)
-		
+
 		if i < maxRetries-1 {
 			// 短暂等待后重试
 			fmt.Printf("%s 将在1秒后重试...\n", funcName)
 			// 这里可以加入time.Sleep(time.Second)，但需要导入time包
 		}
 	}
-	
+
 	return Errors.Error(funcName + ": proto解析失败，已重试" + fmt.Sprintf("%d", maxRetries) + "次 - " + lastErr.Error())
 }
 
@@ -93,6 +93,12 @@ func (d *Dao) AccessToken() (string, error) {
 	return d.credentials.AccessToken, nil
 }
 
+// GetUsername 获取当前用户的用户名
+// 返回值：Username
+func (d *Dao) GetUsername() string {
+	return d.credentials.Username
+}
+
 // GetSteamID 获取当前用户的Steam ID
 // 返回值：Steam ID
 func (d *Dao) GetSteamID() uint64 {
@@ -115,6 +121,12 @@ func (d *Dao) GetRefreshToken() string {
 // 返回值：国家代码字符串
 func (d *Dao) GetCountryCode() string {
 	return d.credentials.CountryCode
+}
+
+// GetLoginCookies 获取登录Cookie信息
+// 返回值：登录Cookie映射
+func (d *Dao) GetLoginCookies() map[string]*LoginCookie {
+	return d.credentials.LoginCookies
 }
 
 // getRSA 获取Steam RSA公钥用于密码加密
@@ -168,7 +180,7 @@ func (d *Dao) getRSA(username string) (*Model.SteamPublicKey, error) {
 
 	// 解析响应数据为protobuf格式
 	keySendReceive := &Protoc.GetPasswordRSAPublicKeySendReceive{}
-	
+
 	// 使用重试机制解析protobuf
 	if err = protoUnmarshalWithRetry(buf.Bytes(), keySendReceive, "getRSA", 3); err != nil {
 		return nil, err
@@ -238,7 +250,7 @@ func (d *Dao) pollAuthSessionStatus(clientId uint64, requestId []byte) (*Protoc.
 		if _, err = buf.ReadFrom(resp.Body); err != nil {
 			return nil, err
 		}
-		
+
 		// 使用重试机制解析protobuf
 		if err = protoUnmarshalWithRetry(buf.Bytes(), credentialsReceive, "pollAuthSessionStatus", 3); err != nil {
 			return nil, err
@@ -557,7 +569,7 @@ func (d *Dao) beginAuthSessionViaCredentials(sharedSecret string) error {
 		if _, err = buf.ReadFrom(resp.Body); err != nil {
 			return err
 		}
-		
+
 		// 使用重试机制解析protobuf
 		if err = protoUnmarshalWithRetry(buf.Bytes(), credentialsReceive, "beginAuthSessionViaCredentials", 3); err != nil {
 			return err
@@ -661,4 +673,15 @@ func (d *Dao) SetLoginInfo(username, password, accessToken, countryCode string, 
 		return Errors.Error(err.Error())
 	}
 	return nil
+}
+
+// SetLoginInfoDirect 直接设置登录信息（用于恢复会话）
+func (d *Dao) SetLoginInfoDirect(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*LoginCookie) {
+	d.credentials.Username = username
+	d.credentials.SteamID = steamID
+	d.credentials.Nickname = nickname
+	d.credentials.CountryCode = countryCode
+	d.credentials.AccessToken = accessToken
+	d.credentials.RefreshToken = refreshToken
+	d.credentials.LoginCookies = loginCookies
 }

@@ -89,21 +89,31 @@ func (c *Client) Login(credentials *LoginCredentials) (*UserInfo, error) {
 		return nil, err
 	}
 
-	// 获取用户信息
-	userInfo := &UserInfo{
-		SteamID:      c.GetSteamID(),
-		Username:     credentials.Username,
-		Nickname:     c.GetNickname(),
-		RefreshToken: c.GetRefreshToken(),
-		CountryCode:  c.GetCountryCode(),
+	if err := c.dao.UserInfo(); err != nil {
+		return nil, err
 	}
+
+	// 在登录完成后立即获取所有用户信息，确保一致性
+	steamID := c.GetSteamID()
+	nickname := c.GetNickname()
+	refreshToken := c.GetRefreshToken()
+	countryCode := c.GetCountryCode()
 
 	// 获取访问令牌
 	accessToken, err := c.dao.AccessToken()
 	if err != nil {
 		return nil, err
 	}
-	userInfo.AccessToken = accessToken
+
+	// 使用同一时间点获取的一致数据创建UserInfo
+	userInfo := &UserInfo{
+		SteamID:      steamID,
+		Username:     credentials.Username,
+		Nickname:     nickname,
+		RefreshToken: refreshToken,
+		CountryCode:  countryCode,
+		AccessToken:  accessToken,
+	}
 
 	return userInfo, nil
 }
@@ -290,6 +300,11 @@ func (c *Client) GetUserInfo() error {
 
 // 以下是一些便捷的getter方法，用于获取用户信息
 
+// GetUsername 获取当前登录用户的用户名
+func (c *Client) GetUsername() string {
+	return c.dao.GetUsername()
+}
+
 // GetSteamID 获取当前登录用户的Steam ID
 func (c *Client) GetSteamID() uint64 {
 	return c.dao.GetSteamID()
@@ -313,4 +328,14 @@ func (c *Client) GetNickname() string {
 // GetCountryCode 获取用户国家代码
 func (c *Client) GetCountryCode() string {
 	return c.dao.GetCountryCode()
+}
+
+// GetLoginCookies 获取登录Cookie信息
+func (c *Client) GetLoginCookies() map[string]*Dao.LoginCookie {
+	return c.dao.GetLoginCookies()
+}
+
+// SetLoginInfo 设置登录信息（用于恢复会话）
+func (c *Client) SetLoginInfo(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*Dao.LoginCookie) {
+	c.dao.SetLoginInfoDirect(username, steamID, nickname, countryCode, accessToken, refreshToken, loginCookies)
 }
