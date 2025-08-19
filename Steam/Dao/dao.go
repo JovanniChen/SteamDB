@@ -12,8 +12,8 @@ import (
 	u "net/url"
 	"time"
 
-	"github.com/steamdb/steamdb-go/Steam/Constants"
-	"github.com/steamdb/steamdb-go/Steam/Errors"
+	"github.com/JovanniChen/SteamDB/Steam/Constants"
+	"github.com/JovanniChen/SteamDB/Steam/Errors"
 )
 
 // Dao 数据访问对象结构体

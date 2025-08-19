@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/steamdb/steamdb-go/Steam/Constants"
-	"github.com/steamdb/steamdb-go/Steam/Errors"
-	"github.com/steamdb/steamdb-go/Steam/Model"
-	"github.com/steamdb/steamdb-go/Steam/Param"
-	"github.com/steamdb/steamdb-go/Steam/Protoc"
+	"github.com/JovanniChen/SteamDB/Steam/Constants"
+	"github.com/JovanniChen/SteamDB/Steam/Errors"
+	"github.com/JovanniChen/SteamDB/Steam/Model"
+	"github.com/JovanniChen/SteamDB/Steam/Param"
+	"github.com/JovanniChen/SteamDB/Steam/Protoc"
 	"google.golang.org/protobuf/proto"
 )
 

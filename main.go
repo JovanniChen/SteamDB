@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/steamdb/steamdb-go/Steam/Dao"
+	"github.com/JovanniChen/SteamDB/Steam/Dao"
 )
 
 // main 主函数，程序入口点
@@ -20,20 +20,20 @@ func main() {
 
 	// 获取令牌代码，用于双因素认证
 	// 参数是base64编码的身份标识符
-	code, _ := d.GetTokenCode("yKuRsv/OmI584XxMt2LUWWbCM+Y=")
+	code, _ := d.GetTokenCode("ELYLgQOKGniuFg3tVxajtstv6kM=")
 	fmt.Println(code)
 
 	// 用户登录Steam平台
 	// 参数：用户名，密码，令牌代码
 	// err := d.Login("rgckq82191", "vxlu26493E", "")
-	err := d.Login("za0ww9ml4xl2", "HLHxGyRMm6Zi", "F54xOr9Tpyd5fAxgKx+RHR7vHik=") // xv6753
+	// err := d.Login("za0ww9ml4xl2", "HLHxGyRMm6Zi", "F54xOr9Tpyd5fAxgKx+RHR7vHik=") // xv6753
 	// err := d.Login("zytmnd2097", "awtekBcEkXz9", "vNVDHuqBle/rnsG7EQW2xQUqlME=") // 4wzwg
 	// err := d.Login("zwrvsq6897", "5uoIBclSSBI8", "kUcQLn0pJutKt9oeh8yRDG7t+o8=") // wqrmhz
 	// err := d.Login("zuzuaw8238", "uYj035ynLA5N", "yKuRsv/OmI584XxMt2LUWWbCM+Y=") // kxweoq
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
 	// 获取用户Cookie信息（已注释）
 	// str, err := d.GetUserCookies()
@@ -66,7 +66,7 @@ func main() {
 	// fmt.Println(len(result.Reactionids))
 	// fmt.Println(result) // 获取反应
 	// fmt.Println(d.GetSteamID())
-	fmt.Println(d.GetSummary(d.GetSteamID())) // 获取摘要
+	// fmt.Println(d.GetSummary(d.GetSteamID())) // 获取摘要
 	// fmt.Println(d.GetReactionConfig()) // 获取反应配置
 	// fmt.Println(d.GetSteamIDByFriendLink("https://steamcommunity.com/user/chbn-qbdd/KCDRCPRT/"))
 

@@ -5,8 +5,8 @@ package Steam
 import (
 	"time"
 
-	"github.com/steamdb/steamdb-go/Steam/Dao"
-	"github.com/steamdb/steamdb-go/Steam/Protoc"
+	"github.com/JovanniChen/SteamDB/Steam/Dao"
+	"github.com/JovanniChen/SteamDB/Steam/Protoc"
 )
 
 // Client Steam客户端结构体

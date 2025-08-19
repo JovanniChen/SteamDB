@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/steamdb/steamdb-go/Steam"
+	"github.com/JovanniChen/SteamDB/Steam"
 )
 
 func main() {

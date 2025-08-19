@@ -13,9 +13,9 @@ import (
 	"strings"
 
 	"github.com/antchfx/htmlquery"
-	"github.com/steamdb/steamdb-go/Steam/Constants"
-	"github.com/steamdb/steamdb-go/Steam/Errors"
-	"github.com/steamdb/steamdb-go/Steam/Param"
+	"github.com/JovanniChen/SteamDB/Steam/Constants"
+	"github.com/JovanniChen/SteamDB/Steam/Errors"
+	"github.com/JovanniChen/SteamDB/Steam/Param"
 )
 
 // UserInfo 用户信息结构体

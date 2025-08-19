@@ -5,8 +5,8 @@ package Dao
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/steamdb/steamdb-go/Steam/Constants"
-	"github.com/steamdb/steamdb-go/Steam/Errors"
+	"github.com/JovanniChen/SteamDB/Steam/Constants"
+	"github.com/JovanniChen/SteamDB/Steam/Errors"
 	"strconv"
 	"time"
 )

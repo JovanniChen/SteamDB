@@ -6,61 +6,41 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/steamdb/steamdb-go/Steam/Config"
-	"github.com/steamdb/steamdb-go/Steam/Dao"
+	"github.com/JovanniChen/SteamDB/Steam"
+	"github.com/JovanniChen/SteamDB/Steam/Dao"
 )
 
 // LibraryUsageExample 库使用示例
 func LibraryUsageExample() {
-	// 方式1：直接创建配置（最灵活，推荐用于库引用）
-	config := Config.NewConfigWithCredentials(
-		"your_username",
-		"your_password", 
-		"", // SharedSecret可选
-	)
-	
-	// 可选：调整网络配置
-	config.RequestTimeout = 60
-	config.MaxRetries = 3
-	config.EnableTLSVerify = true
-	
 	// 创建Steam客户端
-	steamClient := Dao.NewWithConfig(
-		config.Proxy,
-		config.EnableTLSVerify,
-		config.RequestTimeout,
-		config.MaxRetries,
-	)
+	client, err := Steam.NewClient(Steam.DefaultConfig())
+	if err != nil {
+		log.Fatalf("创建客户端失败: %v", err)
+	}
 	
-	// 使用客户端
-	err := steamClient.Login(config.Username, config.Password, config.SharedSecret)
+	// 登录凭据
+	credentials := &Steam.LoginCredentials{
+		Username:     "your_username",
+		Password:     "your_password", 
+		SharedSecret: "", // Steam Guard共享密钥，可选
+	}
+	
+	// 执行登录
+	userInfo, err := client.Login(credentials)
 	if err != nil {
 		log.Fatalf("登录失败: %v", err)
 	}
 	
-	fmt.Println("Steam登录成功")
+	fmt.Printf("Steam登录成功！用户: %s, Steam ID: %d\n", userInfo.Username, userInfo.SteamID)
 }
 
 // DaoLayerUsageExample DAO层使用示例
 func DaoLayerUsageExample() {
-	// 创建配置
-	config := Config.NewConfig()
+	// 创建DAO实例，参数为代理地址，空字符串表示不使用代理
+	dao := Dao.New("")
 	
-	// 从调用方自己的配置系统设置凭据
-	// 例如：从数据库、命令行参数、自定义配置文件等
-	config.Username = getUsernameFromYourSystem()
-	config.Password = getPasswordFromYourSystem()
-	
-	// 创建DAO实例
-	dao := Dao.NewWithConfig(
-		config.Proxy,
-		config.EnableTLSVerify,
-		config.RequestTimeout,
-		config.MaxRetries,
-	)
-	
-	// 使用DAO层API
-	err := dao.Login(config.Username, config.Password, config.SharedSecret)
+	// 执行登录
+	err := dao.Login("your_username", "your_password", "")
 	if err != nil {
 		log.Fatalf("DAO层登录失败: %v", err)
 	}
@@ -68,32 +48,40 @@ func DaoLayerUsageExample() {
 	fmt.Println("DAO层登录成功")
 }
 
-// EnvironmentBasedUsageExample 基于环境变量的使用示例  
-func EnvironmentBasedUsageExample() {
-	// 创建默认配置
-	config := Config.NewConfig()
-	
-	// 让调用方决定是否从环境变量加载
-	config.LoadFromEnv()
-	
-	// 验证配置
-	if err := config.Validate(); err != nil {
-		log.Fatalf("配置验证失败: %v", err)
+// AdvancedUsageExample 高级使用示例
+func AdvancedUsageExample() {
+	// 创建带代理的客户端配置
+	config := &Steam.Config{
+		Proxy:   "127.0.0.1:8080", // 可选：使用代理
+		Timeout: 60,               // 60秒超时
 	}
 	
-	// 使用配置...
-	fmt.Println("基于环境变量的配置完成")
-}
-
-// 模拟调用方自己的配置系统
-func getUsernameFromYourSystem() string {
-	// 这里可以是从数据库、配置服务、命令行等任何地方获取
-	return "your_steam_username"
-}
-
-func getPasswordFromYourSystem() string {
-	// 这里可以是从安全存储、密钥管理服务等获取
-	return "your_steam_password"
+	client, err := Steam.NewClient(config)
+	if err != nil {
+		log.Fatalf("创建客户端失败: %v", err)
+	}
+	
+	// 使用Steam Guard
+	credentials := &Steam.LoginCredentials{
+		Username:     "your_username",
+		Password:     "your_password",
+		SharedSecret: "your_shared_secret", // base64编码的共享密钥
+	}
+	
+	userInfo, err := client.Login(credentials)
+	if err != nil {
+		log.Fatalf("登录失败: %v", err)
+	}
+	
+	// 获取用户积分信息
+	summary, err := client.GetPointsSummary(userInfo.SteamID)
+	if err != nil {
+		log.Printf("获取积分信息失败: %v", err)
+	} else {
+		fmt.Printf("用户积分: %d, 等级: %d\n", summary.Points, summary.Level)
+	}
+	
+	fmt.Println("高级功能使用完成")
 }
 
 func MainExample() {
@@ -106,8 +94,8 @@ func MainExample() {
 	fmt.Println("\n2. DAO层使用示例:")
 	DaoLayerUsageExample()
 	
-	fmt.Println("\n3. 环境变量配置示例:")
-	EnvironmentBasedUsageExample()
+	fmt.Println("\n3. 高级功能示例:")
+	AdvancedUsageExample()
 }
 
 // 避免main函数冲突的初始化函数

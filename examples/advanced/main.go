@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/steamdb/steamdb-go/Steam"
+	"github.com/JovanniChen/SteamDB/Steam"
 )
 
 func main() {
@@ -169,7 +169,9 @@ func addReactionToUser(client *Steam.Client) {
 	fmt.Printf("正在为用户 %d 添加反应 (类型: %d, ID: %d)...\n", 
 		targetSteamID, reactionType, reactionID)
 
-	result, err := client.AddReaction(targetSteamID, uint32(reactionType), uint32(reactionID))
+	// 这里需要从反应配置中获取积分消耗，暂时使用默认值
+	pointsCost := int64(1) // 默认消耗1积分
+	result, err := client.AddReaction(targetSteamID, uint32(reactionType), uint32(reactionID), pointsCost)
 	if err != nil {
 		fmt.Printf("添加反应失败: %v\n", err)
 		return
