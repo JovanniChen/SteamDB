@@ -16,7 +16,7 @@
 ### 安装
 
 ```bash
-go get github.com/steamdb/steamdb-go
+go get github.com/JovanniChen/SteamDB
 ```
 
 ### 基本使用
@@ -28,7 +28,7 @@ import (
     "fmt"
     "log"
     
-    "github.com/steamdb/steamdb-go/Steam"
+    "github.com/JovanniChen/SteamDB/Steam"
 )
 
 func main() {
@@ -305,6 +305,11 @@ credentials := &Steam.LoginCredentials{
 3. **合规使用**: 请遵守Steam的使用条款，仅用于个人学习和合规目的
 4. **错误重试**: 库内置了重试机制，但仍建议在应用层面进行适当的错误处理
 
+## 项目地址
+
+- **GitHub**: https://github.com/JovanniChen/SteamDB
+- **Go Module**: `github.com/JovanniChen/SteamDB`
+
 ## 许可证
 
 本项目采用MIT许可证，详见LICENSE文件。
@@ -313,10 +318,13 @@ credentials := &Steam.LoginCredentials{
 
 欢迎提交Issue和Pull Request来改进这个项目。
 
+- 提交Issue: https://github.com/JovanniChen/SteamDB/issues
+- 提交Pull Request: https://github.com/JovanniChen/SteamDB/pulls
+
 ## 支持
 
 如果你在使用过程中遇到问题，可以：
 
 1. 查看examples目录中的示例代码
-2. 提交Issue描述你的问题
+2. 在GitHub上提交Issue描述你的问题
 3. 查阅Steam官方API文档

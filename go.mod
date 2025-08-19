@@ -1,4 +1,4 @@
-module github.com/steamdb/steamdb-go
+module github.com/JovanniChen/SteamDB
 
 go 1.24.0
 
