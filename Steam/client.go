@@ -31,6 +31,13 @@ func DefaultConfig() *Config {
 	}
 }
 
+func NewConfig(proxy string) *Config {
+	return &Config{
+		Proxy:   proxy,
+		Timeout: 30 * time.Second,
+	}
+}
+
 // NewClient 创建新的Steam客户端实例
 // 参数:
 //

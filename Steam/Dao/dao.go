@@ -218,8 +218,8 @@ func New(proxy string) *Dao {
 				Proxy:        proxyFn,                                                                // 代理配置
 				TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper), // 禁用HTTP/2
 				Dial: (&net.Dialer{
-					Timeout:   10 * time.Second, // 连接超时时间
-					KeepAlive: 10 * time.Second, // 保持连接时间
+					Timeout:   30 * time.Second, // 连接超时时间
+					KeepAlive: 30 * time.Second, // 保持连接时间
 				}).Dial,
 				TLSHandshakeTimeout: 30 * time.Second, // TLS握手超时时间
 

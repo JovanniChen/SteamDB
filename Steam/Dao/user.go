@@ -12,10 +12,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antchfx/htmlquery"
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
 	"github.com/JovanniChen/SteamDB/Steam/Param"
+	"github.com/antchfx/htmlquery"
 )
 
 // UserInfo 用户信息结构体
