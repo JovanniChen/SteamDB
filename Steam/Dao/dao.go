@@ -4,7 +4,6 @@ package Dao
 
 import (
 	"crypto/tls"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -33,7 +32,6 @@ type Dao struct {
 //
 // 返回值：配置好认证信息的HTTP请求对象
 func (d *Dao) Request(method, url string, body io.Reader) (*http.Request, error) {
-	fmt.Println(url)
 	// 创建基础HTTP请求
 	req, err := d.NewRequest(method, url, body)
 	if err != nil {

@@ -146,9 +146,6 @@ func (d *Dao) GetSummary(steamId uint64) (*Protoc.SummaryReceive, error) {
 		return nil, err
 	}
 
-	// 输出摘要数据(调试用)
-	fmt.Printf("%+v\n", summaryReceive)
-
 	return summaryReceive, nil
 }
 

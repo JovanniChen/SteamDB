@@ -268,6 +268,22 @@ func (c *Client) GetSteamIDByFriendLink(friendLink string) (uint64, error) {
 	return c.dao.GetSteamIDByFriendLink(friendLink)
 }
 
+func (c *Client) GetInventory() error {
+	return c.dao.GetInventory()
+}
+
+func (c *Client) PutList(assetID string, price float64, currency int) error {
+	return c.dao.PutList(assetID, price, currency)
+}
+
+func (c *Client) GetMyListings() error {
+	return c.dao.GetMyListings()
+}
+
+func (c *Client) GetConfirmations() error {
+	return c.dao.GetConfirmations()
+}
+
 // CheckLoginStatus 检查登录状态
 // 验证当前客户端是否已成功登录Steam
 // 参数:

@@ -141,31 +141,6 @@ func (d *Dao) GetSteamIDByFriendLink(friendLink string) (uint64, error) {
 	}
 
 	return steamID, nil
-
-	// 解析HTML文档
-	// doc, err := htmlquery.Parse(req.Body)
-	// if err != nil {
-	// 	return 0, err
-	// }
-
-	// info := &UserInfo{}
-
-	// // 提取钱包余额信息
-	// for _, name := range htmlquery.Find(doc, `//div[@class="accountData price"]/a/text()`) {
-	// 	info.Balance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
-	// }
-
-	// // 提取用户昵称
-	// for _, name := range htmlquery.Find(doc, `//*[@id="account_pulldown"]/text()`) {
-	// 	info.PersonName = strings.TrimSpace(name.Data)
-	// }
-
-	// // 提取待处理余额
-	// for _, name := range htmlquery.Find(doc, `//a[@id="header_wallet_balance"]/text()`) {
-	// 	info.WaitBalance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
-	// }
-
-	return 0, nil
 }
 
 // SetCookiesLanguage 设置Cookie中的语言偏好

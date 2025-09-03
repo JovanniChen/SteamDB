@@ -137,7 +137,7 @@ func (d *Dao) getRSA(username string) (*Model.SteamPublicKey, error) {
 	// 构建获取公钥的请求参数
 	publicKeySend := &Protoc.GetPasswordRSAPublicKeySend{
 		AccountName: username,
-	}
+	} 
 
 	// 将请求参数序列化为protobuf格式
 	data, err := proto.Marshal(publicKeySend)

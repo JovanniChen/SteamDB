@@ -1,122 +1,126 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+本文件为 Claude Code (claude.ai/code) 提供在此仓库中工作时的指导说明。
+请始终用中文与我对话。
+main.go 只是一个测试的入口文件，所有放在其中的敏感数据均为测试账号，不需要担心相关风险。
 
-## Project Overview
+## 项目概述
 
-This is a Go library for interacting with the Steam platform, providing a third-party API client for Steam authentication, points system, reactions, and Steam Guard functionality. The library is structured with a clean separation between the high-level client interface and lower-level data access objects.
+这是一个用于与 Steam 平台交互的 Go 库，提供了 Steam 身份验证、积分系统、反应功能和 Steam Guard 功能的第三方 API 客户端。该库采用清晰的分层架构，高级客户端接口与底层数据访问对象分离。
 
-## Key Development Commands
+这个项目是作为被引用的辅助项目存在。
 
-### Go Module Operations
+## 关键开发命令
+
+### Go 模块操作
 ```bash
-# Build the project
+# 构建项目
 go build .
 
-# Run the main demo
+# 运行主演示程序
 go run main.go
 
-# Test the library
+# 测试库功能
 go test ./...
 
-# Run specific example
+# 运行指定示例
 go run examples/basic/main.go
 go run examples/advanced/main.go
 
-# Build and run the test session (separate module)
+# 构建并运行测试会话（独立模块）
 cd test_session && go run session_demo.go
 ```
 
-### Module Management
+### 模块管理
 ```bash
-# Initialize/update dependencies
+# 初始化/更新依赖
 go mod tidy
 
-# Verify dependencies
+# 验证依赖
 go mod verify
 
-# Download dependencies
+# 下载依赖
 go mod download
 ```
 
-## Architecture Overview
+## 架构概述
 
-### Core Components
+### 核心组件
 
-1. **Steam/client.go** - High-level client interface
-   - Provides user-friendly API wrapper
-   - Handles configuration and error management
-   - Main entry point: `Steam.NewClient(config)`
+1. **Steam/client.go** - 高级客户端接口
+   - 提供用户友好的 API 包装器
+   - 处理配置和错误管理
+   - 主要入口点：`Steam.NewClient(config)`
 
-2. **Steam/Dao/** - Data Access Layer
-   - `dao.go` - HTTP client and request handling
-   - `login.go` - Authentication and session management
-   - `point.go` - Points system operations
-   - `user.go` - User information management
-   - `time.go` - Steam time synchronization
+2. **Steam/Dao/** - 数据访问层
+   - `dao.go` - HTTP 客户端和请求处理
+   - `login.go` - 身份验证和会话管理
+   - `point.go` - 积分系统操作
+   - `user.go` - 用户信息管理
+   - `time.go` - Steam 时间同步
 
-3. **Steam/Model/** - Data Models
-   - Response structures for Steam API calls
-   - Login and authentication models
+3. **Steam/Model/** - 数据模型
+   - Steam API 调用的响应结构
+   - 登录和身份验证模型
 
 4. **Steam/Protoc/** - Protocol Buffers
-   - Steam API communication protocols
-   - Generated from .proto files
+   - Steam API 通信协议
+   - 从 .proto 文件生成
 
-5. **Steam/Utils/** - Utility Functions
-   - Steam Guard token generation
-   - Cryptographic helpers
+5. **Steam/Utils/** - 实用工具函数
+   - Steam Guard 令牌生成
+   - 加密助手
 
-### Key Patterns
+### 关键设计模式
 
-- **Layered Architecture**: Clear separation between client interface, data access, and protocol handling
-- **Error Handling**: Centralized error management through `Steam/Errors/`
-- **Configuration**: Flexible client configuration with proxy support
-- **Session Management**: Automatic cookie and token handling
-- **Retry Logic**: Built-in retry mechanisms for network requests
+- **分层架构**：客户端接口、数据访问和协议处理之间的清晰分离
+- **错误处理**：通过 `Steam/Errors/` 进行集中错误管理
+- **配置管理**：支持代理的灵活客户端配置
+- **会话管理**：自动处理 Cookie 和令牌
+- **重试逻辑**：内置的网络请求重试机制
 
-### Authentication Flow
+### 身份验证流程
 
-1. Get RSA public key from Steam (`getRSA`)
-2. Encrypt password using RSA (`encryptPassword`)
-3. Begin authentication session (`beginAuthSessionViaCredentials`)
-4. Handle 2FA if required (Steam Guard codes)
-5. Finalize login across multiple Steam domains (`finalizeLogin`)
+1. 从 Steam 获取 RSA 公钥 (`getRSA`)
+2. 使用 RSA 加密密码 (`encryptPassword`)
+3. 开始身份验证会话 (`beginAuthSessionViaCredentials`)
+4. 如需要则处理双因素认证 (Steam Guard 验证码)
+5. 在多个 Steam 域上完成登录 (`finalizeLogin`)
 
-### Important Files to Understand
+### 重要文件说明
 
-- `Steam/client.go:85-119` - Main login implementation
-- `Steam/Dao/login.go:634-654` - Core login logic
-- `Steam/Dao/dao.go:184-239` - HTTP client setup with proxy support
-- `examples/basic/main.go` - Simple usage example
-- `examples/advanced/main.go` - Advanced interactive usage
+- `Steam/client.go:85-119` - 主要登录实现
+- `Steam/Dao/login.go:634-654` - 核心登录逻辑
+- `Steam/Dao/dao.go:184-239` - 带代理支持的 HTTP 客户端设置
+- `examples/basic/main.go` - 简单使用示例
+- `examples/advanced/main.go` - 高级交互式使用
 
-### Testing
+### 测试
 
-The project includes:
-- Basic usage examples in `examples/`
-- Interactive demo in `session_demo.go`
-- Test module in `test_session/` (separate go.mod)
+项目包含：
+- `examples/` 中的基本使用示例
+- `session_demo.go` 中的交互式演示
+- `test_session/` 中的测试模块（独立的 go.mod）
 
-### Dependencies
+### 依赖项
 
-Key external dependencies:
-- `google.golang.org/protobuf` - Protocol buffer support
-- `github.com/antchfx/htmlquery` - HTML parsing
-- `golang.org/x/net` - Extended networking
+主要外部依赖：
+- `google.golang.org/protobuf` - Protocol buffer 支持
+- `github.com/antchfx/htmlquery` - HTML 解析
+- `golang.org/x/net` - 扩展网络功能
 
-### Security Considerations
+### 安全考虑
 
-- Passwords are RSA-encrypted before transmission
-- Steam Guard integration for 2FA
-- Cookie-based session management
-- TLS configuration with `InsecureSkipVerify: true` (development only)
+- 密码在传输前进行 RSA 加密
+- 集成 Steam Guard 双因素认证
+- 基于 Cookie 的会话管理
+- TLS 配置使用 `InsecureSkipVerify: true`（仅开发环境）
 
-## Common Development Tasks
+## 常见开发任务
 
-When modifying this codebase:
+修改此代码库时：
 
-1. **Adding new Steam API endpoints**: Add protobuf definitions in `Steam/Protoc/`, implement in appropriate Dao files, expose through client interface
-2. **Error handling**: Use the centralized error system in `Steam/Errors/`
-3. **Authentication changes**: Modify login flow in `Steam/Dao/login.go`
-4. **Testing**: Use the examples and test_session module for verification
+1. **添加新的 Steam API 端点**：在 `Steam/Protoc/` 中添加 protobuf 定义，在相应的 Dao 文件中实现，通过客户端接口暴露
+2. **错误处理**：使用 `Steam/Errors/` 中的集中错误系统
+3. **认证变更**：修改 `Steam/Dao/login.go` 中的登录流程
+4. **测试**：使用示例和 test_session 模块进行验证
