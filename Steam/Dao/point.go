@@ -6,12 +6,12 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
+	"github.com/JovanniChen/SteamDB/Steam/Logger"
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Param"
 	"github.com/JovanniChen/SteamDB/Steam/Protoc"
@@ -159,7 +159,7 @@ func (d *Dao) GetReactionConfig() (*Model.JsonData, error) {
 	params.SetString("input_protobuf_encoded", "") // 配置查询无需额外数据
 
 	// 输出请求URL(调试用)
-	fmt.Println(Constants.GetReactionConfig + "?" + params.ToUrl())
+	Logger.Debug(Constants.GetReactionConfig + "?" + params.ToUrl())
 
 	// 创建GET请求
 	req, err := d.NewRequest(http.MethodGet, Constants.GetReactionConfig+"?"+params.ToUrl(), nil)
@@ -190,7 +190,7 @@ func (d *Dao) GetReactionConfig() (*Model.JsonData, error) {
 	}
 
 	// 输出原始响应(调试用)
-	fmt.Println(buf.String())
+	Logger.Debug(buf.String())
 
 	// 解析JSON响应
 	var data Model.JsonData
@@ -257,20 +257,6 @@ func (d *Dao) AddReaction(targetId uint64, targetType int32, reactionId uint32) 
 	if resp.StatusCode != 200 {
 		return nil, Errors.ResponseError(resp.StatusCode)
 	}
-
-	// // 读取响应数据
-	// buf := new(bytes.Buffer)
-	// if _, err := buf.ReadFrom(resp.Body); err != nil {
-	// 	return nil, err
-	// }
-
-	// // 解析protobuf响应
-	// addReactionReceive := &Protoc.AddReactionReceive{}
-
-	// // 使用重试机制解析protobuf
-	// if err := protoUnmarshalWithRetry(buf.Bytes(), addReactionReceive, "AddReaction", 3); err != nil {
-	// 	return nil, err
-	// }
 
 	return nil, nil
 }

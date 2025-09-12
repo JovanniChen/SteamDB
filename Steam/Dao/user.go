@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
@@ -124,7 +123,7 @@ func (d *Dao) GetSteamIDByFriendLink(friendLink string) (uint64, error) {
 		return 0, Errors.ResponseError(resp.StatusCode)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return 0, err
 	}

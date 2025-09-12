@@ -131,11 +131,11 @@ func (d *Dao) RetryRequest(tries int, request *http.Request) (*http.Response, er
 		}
 
 		// 如果HTTP状态码不是200，关闭响应体并等待2秒后重试
-		if resp.StatusCode != http.StatusOK {
-			resp.Body.Close()
-			time.Sleep(2 * time.Second)
-			continue
-		}
+		// if resp.StatusCode != http.StatusOK {
+		// 	resp.Body.Close()
+		// 	time.Sleep(2 * time.Second)
+		// 	continue
+		// }
 
 		// 请求成功，返回响应
 		return resp, err

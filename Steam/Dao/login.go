@@ -16,6 +16,7 @@ import (
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
+	"github.com/JovanniChen/SteamDB/Steam/Logger"
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Param"
 	"github.com/JovanniChen/SteamDB/Steam/Protoc"
@@ -47,12 +48,12 @@ func protoUnmarshalWithRetry(data []byte, pb proto.Message, funcName string, max
 		lastErr = err
 
 		// 记录调试信息
-		fmt.Printf("%s proto解析失败 (尝试 %d/%d) - 数据长度: %d, 前32字节: %x, 错误: %v\n",
+		Logger.Warnf("%s proto解析失败 (尝试 %d/%d) - 数据长度: %d, 前32字节: %x, 错误: %v",
 			funcName, i+1, maxRetries, len(data), data[:min(32, len(data))], err)
 
 		if i < maxRetries-1 {
 			// 短暂等待后重试
-			fmt.Printf("%s 将在1秒后重试...\n", funcName)
+			Logger.Infof("%s 将在1秒后重试...", funcName)
 			// 这里可以加入time.Sleep(time.Second)，但需要导入time包
 		}
 	}
@@ -386,7 +387,7 @@ func (d *Dao) AutoLogin(url, nonce, auth string, steamID uint64, reDir string) (
 			}
 		}
 		if steamLoginSecure == "" {
-			fmt.Println("steamLoginSecure is empty")
+			Logger.Warn("steamLoginSecure is empty")
 		}
 		if sessionid == "" {
 			sessionid = Utils.SafeHexString(12)

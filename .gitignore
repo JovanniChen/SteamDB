@@ -115,3 +115,6 @@ data/
 # Local development
 local/
 dev/
+
+session_*.json
+*.maFile

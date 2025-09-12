@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/JovanniChen/SteamDB/Steam/Dao"
+	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Protoc"
 )
 
@@ -268,12 +269,24 @@ func (c *Client) GetSteamIDByFriendLink(friendLink string) (uint64, error) {
 	return c.dao.GetSteamIDByFriendLink(friendLink)
 }
 
-func (c *Client) GetInventory() error {
-	return c.dao.GetInventory()
+func (c *Client) GetInventory(gameID int, categoryId int) ([]Model.Item, error) {
+	return c.dao.GetInventory(gameID, categoryId)
 }
 
 func (c *Client) PutList(assetID string, price float64, currency int) error {
 	return c.dao.PutList(assetID, price, currency)
+}
+
+func (c *Client) BuyListing(creatorId string, name string) error {
+	return c.dao.BuyListing(creatorId, name, "0")
+}
+
+func (c *Client) RemoveMyListings(creatorId string) error {
+	return c.dao.RemoveMyListings(creatorId)
+}
+
+func (c *Client) RemoveAllMyListings() error {
+	return c.dao.RemoveAllMyListings()
 }
 
 func (c *Client) GetMyListings() error {
@@ -281,7 +294,7 @@ func (c *Client) GetMyListings() error {
 }
 
 func (c *Client) GetConfirmations() error {
-	return c.dao.GetConfirmations()
+	return c.dao.GetConfirmations("", "", "")
 }
 
 // CheckLoginStatus 检查登录状态
