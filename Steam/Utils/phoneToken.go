@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"math"
 	"net/url"
-	"os"
 
 	"github.com/JovanniChen/SteamDB/Steam/Param"
 )
@@ -37,14 +36,9 @@ type PhoneToken struct {
 }
 
 // LoadMaFile 加载maFile文件
-func LoadMaFile(filePath string) (*PhoneToken, error) {
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("读取maFile失败: %v", err)
-	}
-
+func LoadMaFile(fileContent string) (*PhoneToken, error) {
 	var maFile MaFile
-	if err := json.Unmarshal(data, &maFile); err != nil {
+	if err := json.Unmarshal([]byte(fileContent), &maFile); err != nil {
 		return nil, fmt.Errorf("解析maFile失败: %v", err)
 	}
 

@@ -5,7 +5,6 @@ package Dao
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -38,10 +37,6 @@ func (d *Dao) SteamTime() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	fmt.Println("**************************")
-	fmt.Println("offset:", offset)
-	fmt.Println("**************************")
 
 	// 返回修正后的Steam服务器时间
 	i := time.Now().Unix() + offset

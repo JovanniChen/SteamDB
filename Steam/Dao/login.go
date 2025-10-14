@@ -124,6 +124,26 @@ func (d *Dao) GetCountryCode() string {
 	return d.credentials.CountryCode
 }
 
+// GetBalance 获取用户余额
+// 返回值：余额
+func (d *Dao) GetBalance() int {
+	userInfo, err := d.getUserInfo()
+	if err != nil {
+		return 0
+	}
+	return userInfo.Balance
+}
+
+// GetWaitBalance 获取待处理余额
+// 返回值：待处理余额
+func (d *Dao) GetWaitBalance() int {
+	userInfo, err := d.getUserInfo()
+	if err != nil {
+		return 0
+	}
+	return userInfo.WaitBalance
+}
+
 // GetLoginCookies 获取登录Cookie信息
 // 返回值：登录Cookie映射
 func (d *Dao) GetLoginCookies() map[string]*LoginCookie {
@@ -138,7 +158,7 @@ func (d *Dao) getRSA(username string) (*Model.SteamPublicKey, error) {
 	// 构建获取公钥的请求参数
 	publicKeySend := &Protoc.GetPasswordRSAPublicKeySend{
 		AccountName: username,
-	} 
+	}
 
 	// 将请求参数序列化为protobuf格式
 	data, err := proto.Marshal(publicKeySend)

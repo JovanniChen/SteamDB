@@ -67,6 +67,7 @@ type LoginCredentials struct {
 	Username     string // Steam用户名
 	Password     string // Steam密码
 	SharedSecret string // Steam Guard共享密钥(base64编码)，如果没有2FA可以为空
+	MaFile       string
 }
 
 // UserInfo 用户信息结构体
@@ -78,6 +79,7 @@ type UserInfo struct {
 	AccessToken  string // 访问令牌
 	RefreshToken string // 刷新令牌
 	CountryCode  string // 国家代码
+	MaFile       string
 }
 
 // Login 执行Steam登录
@@ -121,6 +123,7 @@ func (c *Client) Login(credentials *LoginCredentials) (*UserInfo, error) {
 		RefreshToken: refreshToken,
 		CountryCode:  countryCode,
 		AccessToken:  accessToken,
+		MaFile:       credentials.MaFile,
 	}
 
 	return userInfo, nil
@@ -273,12 +276,16 @@ func (c *Client) GetInventory(gameID int, categoryId int) ([]Model.Item, error) 
 	return c.dao.GetInventory(gameID, categoryId)
 }
 
-func (c *Client) PutList(assetID string, price float64, currency int) error {
-	return c.dao.PutList(assetID, price, currency)
+func (c *Client) PutList(assetID string, price float64, currency int, maFileContent string) error {
+	return c.dao.PutList(assetID, price, currency, maFileContent)
 }
 
-func (c *Client) BuyListing(creatorId string, name string) error {
-	return c.dao.BuyListing(creatorId, name, "0")
+func (c *Client) BuyListing(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, maFileContent string) error {
+	return c.dao.BuyListing(creatorId, name, buyerPrice, sellerReceivePrice, "0", maFileContent)
+}
+
+func (c *Client) CreateOrder(marketHashName string, price float64, quantity int64, maFileContent string) error {
+	return c.dao.CreateOrder(marketHashName, price, quantity, maFileContent)
 }
 
 func (c *Client) RemoveMyListings(creatorId string) error {
@@ -289,12 +296,12 @@ func (c *Client) RemoveAllMyListings() error {
 	return c.dao.RemoveAllMyListings()
 }
 
-func (c *Client) GetMyListings() error {
+func (c *Client) GetMyListings() ([]Model.MyListingReponse, error) {
 	return c.dao.GetMyListings()
 }
 
-func (c *Client) GetConfirmations() error {
-	return c.dao.GetConfirmations("", "", "")
+func (c *Client) GetConfirmations(maFileContent string) error {
+	return c.dao.GetAndOperateConfirmations("allow", maFileContent)
 }
 
 // CheckLoginStatus 检查登录状态
@@ -369,6 +376,14 @@ func (c *Client) GetCountryCode() string {
 // GetLoginCookies 获取登录Cookie信息
 func (c *Client) GetLoginCookies() map[string]*Dao.LoginCookie {
 	return c.dao.GetLoginCookies()
+}
+
+func (c *Client) GetBalance() int {
+	return c.dao.GetBalance()
+}
+
+func (c *Client) GetWaitBalance() int {
+	return c.dao.GetWaitBalance()
 }
 
 // SetLoginInfo 设置登录信息（用于恢复会话）

@@ -66,8 +66,48 @@ type ProcessConfirmationResponse struct {
 	Success bool `json:"success"`
 }
 
-type BuyListingResponse struct {
+type BuyListingNeedConfirmationResponse struct {
 	NeedConfirmation bool              `json:"need_confirmation"`
 	Confirmation     map[string]string `json:"confirmation"`
 	Success          int               `json:"success"`
+}
+
+// {"wallet_info":{"wallet_currency":23,"wallet_country":"CN","wallet_state":"","wallet_fee":"1","wallet_fee_minimum":"1","wallet_fee_percent":"0.05","wallet_publisher_fee_percent_default":"0.10","wallet_fee_base":"0","wallet_balance":"1036","wallet_delayed_balance":"0","wallet_max_balance":"1400000","wallet_trade_max_balance":"1260000","success":1,"rwgrsn":-2}}
+type BuyListingResponse struct {
+	WalletInfo WalletInfo `json:"wallet_info"`
+}
+
+type WalletInfo struct {
+	WalletCurrency                   int     `json:"wallet_currency"`           // 币种代码
+	WalletCountry                    string  `json:"wallet_country"`            // 国家代码
+	WalletState                      string  `json:"wallet_state"`              // 州/省（空串）
+	WalletFee                        float64 `json:"wallet_fee,string"`         // 手续费（元）
+	WalletFeeMinimum                 float64 `json:"wallet_fee_minimum,string"` // 最低手续费
+	WalletFeePercent                 float64 `json:"wallet_fee_percent,string"` // 手续费百分比
+	WalletPublisherFeePercentDefault float64 `json:"wallet_publisher_fee_percent_default,string"`
+	WalletFeeBase                    float64 `json:"wallet_fee_base,string"` // 基础手续费
+	WalletBalance                    int64   `json:"wallet_balance,string"`  // 当前余额（分）
+	WalletDelayedBalance             int64   `json:"wallet_delayed_balance,string"`
+	WalletMaxBalance                 int64   `json:"wallet_max_balance,string"`       // 钱包上限
+	WalletTradeMaxBalance            int64   `json:"wallet_trade_max_balance,string"` // 单次交易上限
+	Success                          int     `json:"success"`
+	Rwgrsn                           int     `json:"rwgrsn"`
+}
+
+type CreateOrderResponse struct {
+	NeedConfirmation bool              `json:"need_confirmation"`
+	Confirmation     map[string]string `json:"confirmation"`
+	Success          int               `json:"success"`
+}
+
+type GetMyListingResponse struct {
+	Success     bool   `json:"success"`
+	ResultsHTML string `json:"results_html"`
+}
+
+type MyListingReponse struct {
+	ListingID          string  // Listing唯一ID
+	MarketHashName     string  // 物品市场名称
+	BuyerPrice         float64 // 买家支付价
+	SellerReceivePrice float64 // 卖家到账价
 }

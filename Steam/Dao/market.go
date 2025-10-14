@@ -9,8 +9,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
@@ -18,15 +20,18 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Param"
 	"github.com/JovanniChen/SteamDB/Steam/Utils"
+	"github.com/antchfx/htmlquery"
 )
 
 // GetMyListings 获取用户的上架列表
-func (d *Dao) GetMyListings() error {
+func (d *Dao) GetMyListings() ([]Model.MyListingReponse, error) {
 	Logger.Infof("获取用户 %s 的上架列表", d.GetUsername())
+
+	var items []Model.MyListingReponse
 
 	req, err := d.NewRequest(http.MethodGet, Constants.GetMyListings, nil)
 	if err != nil {
-		return err
+		return items, err
 	}
 
 	// 如果有会话信息，添加Cookie
@@ -37,31 +42,41 @@ func (d *Dao) GetMyListings() error {
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
-		return err
+		return items, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return items, err
 	}
 
-	Logger.Debug(string(body))
+	fmt.Println(resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
-		return Errors.ResponseError(resp.StatusCode)
+		return items, Errors.ResponseError(resp.StatusCode)
 	}
 
 	// 读取响应数据
 	buf := new(bytes.Buffer)
 	if _, err := buf.ReadFrom(resp.Body); err != nil {
-		return err
+		return items, err
 	}
 
-	// 输出原始响应(调试用)
-	Logger.Debug(buf.String())
+	var response Model.GetMyListingResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		Logger.Error("JSON解析错误:", err)
+		return items, err
+	}
 
-	return nil
+	items, err = parseSteamMarketHTML(response.ResultsHTML)
+	if err != nil {
+		Logger.Error("从html中解析上架物品失败:", err)
+		return items, err
+	}
+
+	return items, nil
 }
 
 // Remove 删除上架物品
@@ -69,7 +84,9 @@ func (d *Dao) RemoveMyListings(creatorId string) error {
 	Logger.Infof("删除用户 [%d] 的上架物品，creatorId: %s", d.GetSteamID(), creatorId)
 
 	params := Param.Params{}
-	params.SetString("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
+	if d.GetLoginCookies()["steamcommunity.com"] != nil {
+		params.SetString("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
+	}
 
 	req, err := d.NewRequest(http.MethodPost, Constants.RemoveMyListings+"/"+creatorId, strings.NewReader(params.Encode()))
 	if err != nil {
@@ -85,21 +102,18 @@ func (d *Dao) RemoveMyListings(creatorId string) error {
 	req.Header.Add("origin", Constants.CommunityOrigin)
 	req.Header.Set("referer", fmt.Sprintf("%s/market", Constants.CommunityOrigin))
 
-	fmt.Println(req.URL.String())
-	fmt.Println(req.Header)
-
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+	// body, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return err
+	// }
 
-	Logger.Debug(string(body))
+	// Logger.Debug(string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return Errors.ResponseError(resp.StatusCode)
@@ -112,16 +126,21 @@ func (d *Dao) RemoveAllMyListings() error {
 	return nil
 }
 
-// BuyListing 购买物品
-func (d *Dao) BuyListing(creatorId string, name string, confirmation string) error {
-	Logger.Infof("购买用户 [%d] 的上架物品，creatorId: %s", d.GetSteamID(), creatorId)
+func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string, maFileContent string) error {
+	Logger.Infof("用户[%s]购买物品[creatorId: %s", d.GetUsername(), creatorId)
+
+	buyerPriceStr := strconv.FormatFloat(buyerPrice*100, 'f', 0, 64)
+	sellerReceivePriceStr := strconv.FormatFloat(sellerReceivePrice*100, 'f', 0, 64)
+	feeStr := strconv.FormatFloat(buyerPrice*100-sellerReceivePrice*100, 'f', 0, 64)
 
 	params := Param.Params{}
-	params.SetString("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
+	if d.GetLoginCookies()["steamcommunity.com"] != nil {
+		params.SetString("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
+	}
 	params.SetString("currency", "23")
-	params.SetString("subtotal", "10") // 转换为分
-	params.SetString("fee", "2")
-	params.SetString("total", "12")
+	params.SetString("subtotal", sellerReceivePriceStr)
+	params.SetString("fee", feeStr)
+	params.SetString("total", buyerPriceStr)
 	params.SetString("quantity", "1")
 	params.SetString("confirmation", confirmation)
 
@@ -145,12 +164,8 @@ func (d *Dao) BuyListing(creatorId string, name string, confirmation string) err
 	}
 	defer resp.Body.Close()
 
-	Logger.Debug(resp.StatusCode)
-	Logger.Debug(resp.Body)
-
 	var reader io.Reader = resp.Body
 
-	Logger.Debug(resp.Header.Get("Content-Encoding"))
 	switch resp.Header.Get("Content-Encoding") {
 	case "gzip":
 		gzReader, err := gzip.NewReader(resp.Body)
@@ -167,22 +182,153 @@ func (d *Dao) BuyListing(creatorId string, name string, confirmation string) err
 	if err != nil {
 		return err
 	}
-	Logger.Debug(string(body))
 
-	var buyResp Model.BuyListingResponse
-	if err := json.Unmarshal(body, &buyResp); err != nil {
-		return fmt.Errorf("解析购买响应失败: %w", err)
-	}
-
-	Logger.Debug(buyResp)
+	Logger.Debugf("[BuyListing] HTTP响应状态码: %d，响应内容: %s", resp.StatusCode, string(body))
 
 	if resp.StatusCode == http.StatusNotAcceptable {
-		if buyResp.NeedConfirmation {
-			Logger.Debug("购买需要手机令牌确认")
-			d.GetConfirmations(creatorId, name, buyResp.Confirmation["confirmation_id"])
+		var buyListingResp Model.BuyListingNeedConfirmationResponse
+		if err := json.Unmarshal(body, &buyListingResp); err != nil {
+			return err
+		}
+
+		if buyListingResp.NeedConfirmation {
+			for i := range Constants.Tries {
+				Logger.Infof("用户[%s]购买物品[creatorId: %s]需要手机令牌确认", d.GetUsername(), creatorId)
+				if err := d.GetAndOperateConfirmations("allow", maFileContent); err != nil {
+					if i == Constants.Tries-1 {
+						return err
+					}
+					time.Sleep(1 * time.Second)
+					continue
+				}
+
+				if err := d.buy(creatorId, name, buyerPrice, sellerReceivePrice, buyListingResp.Confirmation["confirmation_id"], maFileContent); err != nil {
+					return err
+				}
+			}
+
+		}
+	} else if resp.StatusCode == http.StatusOK {
+		Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']", d.GetUsername(), creatorId, confirmation)
+		var buyListingResp Model.BuyListingResponse
+		if err := json.Unmarshal(body, &buyListingResp); err != nil {
+			return err
+		}
+
+		if buyListingResp.WalletInfo.Success == 1 {
+			Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']成功", d.GetUsername(), creatorId, confirmation)
+			return nil
+		} else {
+			Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']失败", d.GetUsername(), creatorId, confirmation)
+			return fmt.Errorf("购买失败，错误码: %d", buyListingResp.WalletInfo.Success)
 		}
 	}
 
+	return nil
+}
+
+// BuyListing 购买物品
+func (d *Dao) BuyListing(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string, maFileContent string) error {
+	if err := d.buy(creatorId, name, buyerPrice, sellerReceivePrice, confirmation, maFileContent); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, confirmation string, maFileContent string) error {
+	Logger.Infof("用户 [%s] 开始挂单，饰品名称: %s，数量：%d", d.GetUsername(), marketHashName, quantity)
+
+	var createOrderResp Model.CreateOrderResponse
+
+	priceTotalStr := strconv.FormatFloat(price*float64(quantity)*100, 'f', 0, 64)
+
+	params := Param.Params{}
+	if d.GetLoginCookies()["steamcommunity.com"] != nil {
+		params.SetString("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
+	}
+	params.SetString("currency", "23")
+	params.SetInt64("appid", int64(Constants.Dota2))
+	params.SetString("market_hash_name", marketHashName)
+	params.SetString("price_total", priceTotalStr)
+	params.SetInt64("tradefee_tax", 0)
+	params.SetInt64("quantity", quantity)
+	params.SetInt64("save_my_address", 0)
+	params.SetString("confirmation", confirmation)
+
+	req, err := d.NewRequest(http.MethodPost, Constants.CreateOrder, strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+
+	// 如果有会话信息，添加Cookie
+	if d.GetLoginCookies()["steamcommunity.com"] != nil {
+		req.AddCookie(&http.Cookie{Name: "sessionid", Value: d.GetLoginCookies()["steamcommunity.com"].SessionId})
+		req.AddCookie(&http.Cookie{Name: "steamLoginSecure", Value: d.GetLoginCookies()["steamcommunity.com"].SteamLoginSecure})
+	}
+
+	req.Header.Add("origin", Constants.CommunityOrigin)
+	req.Header.Set("referer", fmt.Sprintf("%s/market/listings/570/%s", Constants.CommunityOrigin, marketHashName))
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var reader io.Reader = resp.Body
+
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		gzReader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return err
+		}
+		defer gzReader.Close()
+		reader = gzReader
+	case "deflate":
+		reader = flate.NewReader(resp.Body)
+	}
+
+	body, err := io.ReadAll(reader)
+	if err != nil {
+		return err
+	}
+
+	Logger.Debugf("[CreateOrder] HTTP响应状态码: %d", resp.StatusCode)
+	Logger.Debugf("[CreateOrder] HTTP响应内容: %s", string(body))
+
+	if err := json.Unmarshal(body, &createOrderResp); err != nil {
+		return err
+	}
+
+	Logger.Debugf("[CreateOrder] 创建订单响应: %+v", createOrderResp)
+
+	if resp.StatusCode == http.StatusNotAcceptable {
+		if createOrderResp.NeedConfirmation {
+			for i := range Constants.Tries {
+				Logger.Debug("================================================")
+				Logger.Debugf("挂单需要手机令牌确认，第 %d 次尝试", i+1)
+				if err := d.GetAndOperateConfirmations("allow", maFileContent); err != nil {
+					if i == Constants.Tries-1 {
+						return err
+					}
+					time.Sleep(1 * time.Second)
+					continue
+				}
+
+				if err := d.createOrder(marketHashName, price, quantity, createOrderResp.Confirmation["confirmation_id"], maFileContent); err != nil {
+					return err
+				}
+			}
+
+		}
+	}
+
+	return nil
+}
+
+func (d *Dao) CreateOrder(marketHashName string, price float64, quantity int64, maFileContent string) error {
+	d.createOrder(marketHashName, price, quantity, "", maFileContent)
 	return nil
 }
 
@@ -278,7 +424,7 @@ func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, u
 			}
 
 			// 只包含可交易和可市场交易的物品
-			if desc.Tradable == 1 && desc.Marketable == 1 {
+			if desc.Marketable == 1 {
 				items = append(items, Model.Item{
 					AssetID:    asset.AssetID,
 					ClassID:    asset.ClassID,
@@ -309,11 +455,13 @@ func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, u
 }
 
 // PutList 上架物品，需要二次手机令牌确认
-func (d *Dao) PutList(assetID string, price float64, currency int) error {
+func (d *Dao) PutList(assetID string, price float64, currency int, maFileContent string) error {
 	Logger.Infof("用户 [%d] 上架物品，AssetID: %s, 价格: %.2f", d.GetSteamID(), assetID, price)
 
 	data := url.Values{}
-	data.Set("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
+	if d.GetLoginCookies()["steamcommunity.com"] != nil {
+		data.Set("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
+	}
 	data.Set("appid", "570")   // dota2
 	data.Set("contextid", "2") // 分类
 	data.Set("assetid", assetID)
@@ -359,7 +507,19 @@ func (d *Dao) PutList(assetID string, price float64, currency int) error {
 	// 如果需要手机令牌确认
 	if sellResp.RequiresConfirmation == 1 && sellResp.NeedsMobileConfirmation {
 		Logger.Infof("物品上架需要手机令牌确认，assetID: %s", assetID)
-		// 进行手机令牌操作
+		// 进行手机令牌操作，多次尝试
+		for i := range Constants.Tries {
+			err := d.GetAndOperateConfirmations("allow", maFileContent)
+			if err != nil {
+				if i == Constants.Tries-1 {
+					return err
+				}
+				time.Sleep(1 * time.Second)
+				continue
+			} else {
+				break
+			}
+		}
 	} else {
 		Logger.Warnf("无法进行确认操作，assetID: %s, RequiresConfirmation: %d", assetID, sellResp.RequiresConfirmation)
 	}
@@ -367,11 +527,11 @@ func (d *Dao) PutList(assetID string, price float64, currency int) error {
 	return nil
 }
 
-func (d *Dao) GetConfirmations(creatorId string, name string, id string) error {
+func (d *Dao) GetAndOperateConfirmations(op string, maFileContent string) error {
 	username := d.GetUsername()
 	Logger.Infof("开始获取用户 [%s] 待确认请求", username)
 
-	pt, err := Utils.LoadMaFile(d.GetUsername() + ".maFile")
+	pt, err := Utils.LoadMaFile(maFileContent)
 	if err != nil {
 		Logger.Errorf("加载 [%s] 令牌文件失败，错误： %v", username, err)
 		return err
@@ -415,7 +575,7 @@ func (d *Dao) GetConfirmations(creatorId string, name string, id string) error {
 	}
 
 	if !confirmResp.Success {
-		Logger.Errorf("待确认API返回失败，用户: [%s], success字段: %t", username, confirmResp.Success)
+		Logger.Errorf("待确认API返回失败，用户: [%s], success字段: %t, 返回码：%d", username, confirmResp.Success, resp.StatusCode)
 		return fmt.Errorf("待确认API返回失败")
 	}
 
@@ -426,26 +586,21 @@ func (d *Dao) GetConfirmations(creatorId string, name string, id string) error {
 	}
 
 	for _, conf := range confirmResp.Confirmations {
-		err = d.AllowSingleConfirmation(pt, conf, steamTime)
-		if err != nil {
-			Logger.Errorf("允许待确认失败，用户: [%s], 错误: %v", username, err)
-			return err
+		switch op {
+		case "allow":
+			err = d.AllowSingleConfirmation(pt, conf, steamTime)
+			if err != nil {
+				Logger.Errorf("允许待确认失败，用户: [%s], 错误: %v", username, err)
+				return err
+			}
+		case "cancel":
+			err = d.CancelSingleConfirmation(pt, conf, steamTime)
+			if err != nil {
+				Logger.Errorf("拒绝待确认失败，用户: [%s], 错误: %v", username, err)
+				return err
+			}
 		}
-
-		// err = d.CancelSingleConfirmation(pt, conf, steamTime)
-		// if err != nil {
-		// 	Logger.Errorf("拒绝待确认失败，用户: [%s], 错误: %v", username, err)
-		// 	return err
-		// }
 	}
-
-	// Logger.Debug("开始最后一次购买操作")
-	// err = d.BuyListing(creatorId, name, id)
-	// if err != nil {
-	// 	Logger.Debug("最后一次购买操作失败")
-	// 	Logger.Debug(err)
-	// }
-	// Logger.Debug("最后一次购买操作成功")
 
 	return nil
 }
@@ -507,4 +662,206 @@ func (d *Dao) AllowSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model.C
 
 func (d *Dao) CancelSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model.Confirmation, timestamp int64) error {
 	return d.processSingleConfirmation(phoneToken, conf, "cancel")
+}
+
+func parseSteamMarketHTMLWithXPath(htmlContent string) ([]Model.MyListingReponse, error) {
+	var items []Model.MyListingReponse
+
+	// 解析HTML文档
+	doc, err := htmlquery.Parse(strings.NewReader(htmlContent))
+	if err != nil {
+		return nil, fmt.Errorf("解析HTML文档失败: %v", err)
+	}
+
+	// 使用XPath查找所有市场列表行
+	listingRows := htmlquery.Find(doc, "//div[@class='market_listing_row market_recent_listing_row']")
+
+	for _, row := range listingRows {
+		item := Model.MyListingReponse{}
+
+		// 提取Listing ID (从id属性中获取)
+		if idAttr := htmlquery.SelectAttr(row, "id"); idAttr != "" {
+			// 从 "mylisting_654831914932301672" 中提取数字部分
+			if strings.HasPrefix(idAttr, "mylisting_") {
+				item.ListingID = strings.TrimPrefix(idAttr, "mylisting_")
+			}
+		}
+
+		// 提取物品名称 (使用正则表达式从HTML中提取URL中的英文名称)
+		rowHTML := htmlquery.OutputHTML(row, false)
+		nameRegex := regexp.MustCompile(`href="https://steamcommunity.com/market/listings/\d+/([^"]+)"`)
+		nameMatch := nameRegex.FindStringSubmatch(rowHTML)
+		if len(nameMatch) > 1 {
+			// URL解码物品名称
+			encodedName := nameMatch[1]
+			if decodedName, err := url.QueryUnescape(encodedName); err == nil {
+				item.MarketHashName = strings.TrimSpace(decodedName)
+			} else {
+				// 如果URL解码失败，使用简单的字符串替换
+				decodedName := strings.ReplaceAll(encodedName, "%20", " ")
+				decodedName = strings.ReplaceAll(decodedName, "%25", "%")
+				decodedName = strings.ReplaceAll(decodedName, "%26", "&")
+				decodedName = strings.ReplaceAll(decodedName, "%27", "'")
+				item.MarketHashName = strings.TrimSpace(decodedName)
+			}
+		}
+
+		// 提取买家价格 (第一个价格span)
+		buyerPriceNode := htmlquery.FindOne(row, ".//span[@class='market_listing_price']/span/span[1]")
+		if buyerPriceNode != nil {
+			priceText := strings.TrimSpace(htmlquery.InnerText(buyerPriceNode))
+			item.BuyerPrice = parsePrice(priceText)
+		}
+
+		// 提取卖家到账价格 (括号内的价格)
+		sellerPriceNode := htmlquery.FindOne(row, ".//span[@class='market_listing_price']/span/span[2]")
+		if sellerPriceNode != nil {
+			priceText := strings.TrimSpace(htmlquery.InnerText(sellerPriceNode))
+			// 移除括号
+			priceText = strings.Trim(priceText, "()")
+			item.SellerReceivePrice = parsePrice(priceText)
+		}
+
+		items = append(items, item)
+	}
+
+	return items, nil
+}
+
+// 保留原有的正则表达式方法作为备用
+func parseSteamMarketHTML(htmlContent string) ([]Model.MyListingReponse, error) {
+	// 首先尝试XPath方法
+	items, err := parseSteamMarketHTMLWithXPath(htmlContent)
+	if err == nil && len(items) > 0 {
+		fmt.Println("XPath方法成功，获取到", len(items), "个物品")
+		return items, nil
+	}
+
+	// XPath方法失败时使用正则表达式方法（支持中英文）
+	return parseSteamMarketHTMLWithRegex(htmlContent)
+}
+
+// parseSteamMarketHTMLWithRegex 使用正则表达式解析（支持中英文）
+func parseSteamMarketHTMLWithRegex(htmlContent string) ([]Model.MyListingReponse, error) {
+	var items []Model.MyListingReponse
+
+	// 检测是否为中文版本
+	isChinese := strings.Contains(htmlContent, "我正在出售的物品") || strings.Contains(htmlContent, "这是买家所要支付")
+
+	// 先找到所有唯一的listing ID
+	listingIDRegex := regexp.MustCompile(`listing_(\d+)`)
+	listingMatches := listingIDRegex.FindAllStringSubmatch(htmlContent, -1)
+
+	// 使用map去重
+	uniqueListingIDs := make(map[string]bool)
+	for _, match := range listingMatches {
+		if len(match) > 1 {
+			uniqueListingIDs[match[1]] = true
+		}
+	}
+
+	// 提取所有物品名称（从URL中获取英文名称）
+	// 简单有效的方法：用简单的字符串操作
+	nameMatches := extractItemNamesFromHTML(htmlContent)
+
+	// 根据语言版本选择不同的正则表达式
+	var priceMatches [][]string
+	if isChinese {
+		// 中文版价格提取
+		buyerPriceRegex := regexp.MustCompile(`这是买家所要支付[^>]*>\s*([^<]+)\s*<`)
+		priceMatches = buyerPriceRegex.FindAllStringSubmatch(htmlContent, -1)
+	} else {
+		// 英文版价格提取
+		buyerPriceRegex := regexp.MustCompile(`This is the price the buyer pays[^>]*>\s*([^<]+)\s*<`)
+		priceMatches = buyerPriceRegex.FindAllStringSubmatch(htmlContent, -1)
+	}
+
+	// 提取所有卖家到账价格
+	sellerPriceRegex := regexp.MustCompile(`\(¥ ([^)]+)\)`)
+	sellerMatches := sellerPriceRegex.FindAllStringSubmatch(htmlContent, -1)
+
+	// 将listing ID转换为切片以便按顺序访问
+	var listingIDs []string
+	for listingID := range uniqueListingIDs {
+		listingIDs = append(listingIDs, listingID)
+	}
+
+	// 为每个listing ID创建物品，按顺序分配信息
+	for i, listingID := range listingIDs {
+		item := Model.MyListingReponse{
+			ListingID: listingID,
+		}
+
+		// 按顺序分配信息
+		if i < len(nameMatches) {
+			item.MarketHashName = strings.TrimSpace(nameMatches[i])
+		}
+		if i < len(priceMatches) {
+			// 清理价格字符串
+			price := strings.ReplaceAll(priceMatches[i][1], "\\n", "")
+			price = strings.ReplaceAll(price, "\\t", "")
+			price = strings.ReplaceAll(price, "\n", "")
+			price = strings.ReplaceAll(price, "\t", "")
+			item.BuyerPrice = parsePrice(price)
+		}
+		if i < len(sellerMatches) {
+			item.SellerReceivePrice = parsePrice(sellerMatches[i][1])
+		}
+
+		items = append(items, item)
+	}
+
+	return items, nil
+}
+
+// extractItemNamesFromHTML 从HTML中提取物品的英文名称
+func extractItemNamesFromHTML(htmlContent string) []string {
+	var names []string
+
+	// 直接在整个HTML内容中搜索，不按行分割
+	searchPattern := "steamcommunity.com/market/listings/570/"
+	content := htmlContent
+
+	for {
+		// 找到下一个市场链接
+		pos := strings.Index(content, searchPattern)
+		if pos == -1 {
+			break
+		}
+
+		// 移动到物品名称开始位置
+		startPos := pos + len(searchPattern)
+
+		// 找到物品名称结束位置（引号）
+		endPos := strings.Index(content[startPos:], "\"")
+		if endPos != -1 {
+			encodedName := content[startPos : startPos+endPos]
+			if decodedName, err := url.QueryUnescape(encodedName); err == nil {
+				// 清理物品名称，移除多余的字符
+				cleanedName := strings.TrimSpace(decodedName)
+				cleanedName = strings.TrimRight(cleanedName, "\\") // 移除末尾的反斜杠
+				names = append(names, cleanedName)
+			}
+		}
+
+		// 移动到下一个搜索位置
+		content = content[startPos+1:]
+	}
+
+	return names
+}
+
+// parsePrice 从价格字符串中提取数字部分并转换为float64
+func parsePrice(priceStr string) float64 {
+	// 移除所有非数字和小数点的字符
+	priceStr = strings.TrimSpace(priceStr)
+	// 使用正则表达式提取数字部分（包括小数点）
+	priceRegex := regexp.MustCompile(`(\d+\.?\d*)`)
+	matches := priceRegex.FindStringSubmatch(priceStr)
+	if len(matches) > 1 {
+		if price, err := strconv.ParseFloat(matches[1], 64); err == nil {
+			return price
+		}
+	}
+	return 0.0
 }

@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -15,31 +16,42 @@ import (
 )
 
 var accounts = []Account{
-	{Username: "za0ww9ml4xl2", Password: "HLHxGyRMm6Zi", SharedSecret: "F54xOr9Tpyd5fAxgKx+RHR7vHik="}, // [0] [xv6753] [46]
-	{Username: "zytmnd2097", Password: "awtekBcEkXz9", SharedSecret: "vNVDHuqBle/rnsG7EQW2xQUqlME="},   // [1] [4wzwg]  [45]
-	{Username: "zwrvsq6897", Password: "5uoIBclSSBI8", SharedSecret: "kUcQLn0pJutKt9oeh8yRDG7t+o8="},   // [2] [wqrmhz] [44]
-	{Username: "zuzuaw8238", Password: "uYj035ynLA5N", SharedSecret: "yKuRsv/OmI584XxMt2LUWWbCM+Y="},   // [3] [kxweoq] [40]
-	{Username: "yrknu899", Password: "FyoR1QV8brUd", SharedSecret: "q8JcjcE5jc65C7YntMrME8HJ9sY="},     // [4] [3zgmh7] [47]
-	{Username: "mbkle379", Password: "CFs91IvocA39", SharedSecret: "sIF2wljQzxzya9xVO/VtEs1pUwc="},     // [5] [x5x3g8] [48]
+	{Username: "za0ww9ml4xl2", Password: "HLHxGyRMm6Zi", SharedSecret: "F54xOr9Tpyd5fAxgKx+RHR7vHik="},   // [0] [xv6753] [46]
+	{Username: "zytmnd2097", Password: "awtekBcEkXz9", SharedSecret: "vNVDHuqBle/rnsG7EQW2xQUqlME="},     // [1] [4wzwg]  [45]
+	{Username: "zwrvsq6897", Password: "5uoIBclSSBI8", SharedSecret: "kUcQLn0pJutKt9oeh8yRDG7t+o8="},     // [2] [wqrmhz] [44]
+	{Username: "zuzuaw8238", Password: "uYj035ynLA5N", SharedSecret: "yKuRsv/OmI584XxMt2LUWWbCM+Y="},     // [3] [kxweoq] [40]
+	{Username: "yrknu899", Password: "FyoR1QV8brUd", SharedSecret: "q8JcjcE5jc65C7YntMrME8HJ9sY="},       // [4] [3zgmh7] [47]
+	{Username: "mbkle379", Password: "CFs91IvocA39", SharedSecret: "sIF2wljQzxzya9xVO/VtEs1pUwc="},       // [5] [x5x3g8] [48]
+	{Username: "ugsxh51037", Password: "z0dAC0nic9Ec", SharedSecret: "KXdQ/El9khZe6K3HIxLS7IwrDi4="},     // [6] [x5x3g8] [49]
+	{Username: "cv71oebl0wvj6z", Password: "uolMwmIPT8Uo", SharedSecret: "ireKAD4ZX7HfC45M23iKiYiobqU="}, // [67 [x5x3g8] [49]
+
 }
+
+// var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.215.254.6:8080")
+
+var config *Steam.Config = Steam.NewConfig("")
 
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	// TestGetTokenCode(2)
-	// TestLogin(4)
-	// TestGetSummary(4)
-	// TestGetInventory(4)
-
-	TestGetMyListings(4)
-	// TestPutList(4)
-	// TestGetConfirmations(4)
+	// TestGetTokenCode(6)
+	TestLogin(5)
+	// TestGetSummary(7)
+	// TestGetInventory(7)
+	// TestGetMyListings(3)
+	// TestPutList(5)
+	TestPutList2(5)
+	// TestGetConfirmations(3)
 	// TestRemoveMyListings(4)
-	// TestBuyListing(2)
+	// TestBuyListing(4)
+	// TestGetBalance(7)
+	// TestGetWaitBalance(3)
+	// TestGetInventoryAndPutList(4)
+	// TestCreateOrder(3)
 }
 
 func TestGetTokenCode(accountIndex int) {
-	client, err := Steam.NewClient(Steam.NewConfig(""))
+	client, err := Steam.NewClient(config)
 	if err != nil {
 		Logger.Error(err)
 		return
@@ -51,9 +63,14 @@ func TestGetTokenCode(accountIndex int) {
 func TestLogin(accountIndex int) {
 	account := getAccount(accountIndex)
 
-	client, err := Steam.NewClient(Steam.NewConfig(""))
+	client, err := Steam.NewClient(config)
 	if err != nil {
 		Logger.Error(err)
+		return
+	}
+
+	maFile, err := os.ReadFile(account.Username + ".maFile")
+	if err != nil {
 		return
 	}
 
@@ -61,6 +78,7 @@ func TestLogin(accountIndex int) {
 		Username:     account.GetUsername(),
 		Password:     account.GetPassword(),
 		SharedSecret: account.GetSharedSecret(),
+		MaFile:       string(maFile),
 	})
 	if err != nil {
 		Logger.Error(err)
@@ -106,7 +124,7 @@ func TestGetSummary(accountIndex int) {
 		return
 	}
 	summary, err := client.GetPointsSummary(client.GetSteamID())
-	Logger.Info(summary)
+	Logger.Info("GetSummary -> ", summary)
 }
 
 func TestGetMyListings(accountIndex int) {
@@ -133,17 +151,83 @@ func TestPutList(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	// 32169268728
-	Logger.Info(client.PutList("32169283736", 0.1, 1))
+
+	items, err := client.GetInventory(Constants.Dota2, Constants.Catetory)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	// 随机
+	randomIndex := rand.Intn(len(items))
+	randomItem := items[randomIndex]
+
+	data, err := os.ReadFile(client.GetUsername() + ".maFile")
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	if err := client.PutList(randomItem.AssetID, 2, 10, string(data)); err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	client.GetMyListings()
 }
 
-func TestBuyListing(accountIndex int) {
+func TestPutList2(accountIndex int) {
+	// 32849705541
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.BuyListing("654831914925835322", "Skirt of the Mage Slayer"))
+
+	data, err := os.ReadFile(client.GetUsername() + ".maFile")
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	if err := client.PutList("32849705541", 2, 10, string(data)); err != nil {
+		Logger.Error(err)
+		return
+	}
+}
+
+func TestGetInventoryAndPutList(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	items, err := client.GetInventory(Constants.Dota2, Constants.Catetory)
+	if err != nil {
+		Logger.Error("获取库存失败，错误：", err)
+		return
+	}
+
+	if len(items) == 0 {
+		Logger.Warn("该用户没有可用库存")
+		return
+	}
+
+	if err := client.PutList(items[0].AssetID, 0.1, 1, ""); err != nil {
+		Logger.Error("上架失败失败，错误：", err)
+	}
+
+	Logger.Info("上架成功!")
+}
+
+func TestBuyListing(accountIndex int) {
+	// client, err := loadFromSession(accountIndex)
+	// if err != nil {
+	// 	Logger.Error(err)
+	// 	return
+	// }
+	// Logger.Info(client.BuyListing("640197019947684853", "Skirt of the Mage Slayer"))
 }
 
 func TestRemoveMyListings(accountIndex int) {
@@ -161,13 +245,55 @@ func TestGetConfirmations(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.GetConfirmations())
+	data, err := os.ReadFile(client.GetUsername() + ".maFile")
+	if err != nil {
+		return
+	}
+
+	maFileContent := string(data)
+
+	Logger.Info(client.GetConfirmations(maFileContent))
+}
+
+func TestGetBalance(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.GetBalance())
+}
+
+func TestGetWaitBalance(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.GetWaitBalance())
+}
+
+func TestCreateOrder(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	data, err := os.ReadFile(client.GetUsername() + ".maFile")
+	if err != nil {
+		return
+	}
+
+	maFileContent := string(data)
+
+	Logger.Info(client.CreateOrder("Heat of the Sixth Hell - Back", 0.05, 5, maFileContent))
 }
 
 func loadFromSession(accountIndex int) (*Steam.Client, error) {
 	session := &SteamSession{}
 	session.Load(accountIndex)
-	client, err := Steam.NewClient(Steam.NewConfig(""))
+	client, err := Steam.NewClient(config)
 	if err != nil {
 		Logger.Error(err)
 		return nil, err

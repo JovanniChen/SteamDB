@@ -31,7 +31,7 @@ var globalLogger *Logger
 // init 初始化全局日志器
 func init() {
 	globalLogger = &Logger{
-		level:  DEBUG, // 默认日志级别为 DEBUG，便于开发调试
+		level:  DEBUG,                     // 默认日志级别为 DEBUG，便于开发调试
 		logger: log.New(os.Stdout, "", 0), // 去掉默认的标志，我们自己格式化
 	}
 }
@@ -63,7 +63,7 @@ func getCallerInfo() string {
 // formatLog 格式化日志消息
 func formatLog(level string, callerInfo string, message string) string {
 	now := time.Now().Format("2006/01/02 15:04:05")
-	return fmt.Sprintf("%s [%s] %s: %s", now, level, callerInfo, message)
+	return fmt.Sprintf("[SteamDB] [%s] [%s] %s: %s", now, level, callerInfo, message)
 }
 
 // Debug 输出调试日志
@@ -84,7 +84,6 @@ func Debugf(format string, v ...any) {
 		message := fmt.Sprintf(format, v...)
 		logMessage := formatLog("DEBUG", callerInfo, message)
 		globalLogger.logger.Println(logMessage)
-		globalLogger.logger.Println()
 	}
 }
 
@@ -95,7 +94,6 @@ func Info(v ...any) {
 		message := fmt.Sprint(v...)
 		logMessage := formatLog("INFO", callerInfo, message)
 		globalLogger.logger.Println(logMessage)
-		globalLogger.logger.Println()
 	}
 }
 
@@ -106,7 +104,6 @@ func Infof(format string, v ...any) {
 		message := fmt.Sprintf(format, v...)
 		logMessage := formatLog("INFO", callerInfo, message)
 		globalLogger.logger.Println(logMessage)
-		globalLogger.logger.Println()
 	}
 }
 
@@ -117,7 +114,6 @@ func Warn(v ...any) {
 		message := fmt.Sprint(v...)
 		logMessage := formatLog("WARN", callerInfo, message)
 		globalLogger.logger.Println(logMessage)
-		globalLogger.logger.Println()
 	}
 }
 
@@ -128,7 +124,6 @@ func Warnf(format string, v ...any) {
 		message := fmt.Sprintf(format, v...)
 		logMessage := formatLog("WARN", callerInfo, message)
 		globalLogger.logger.Println(logMessage)
-		globalLogger.logger.Println()
 	}
 }
 
@@ -139,7 +134,6 @@ func Error(v ...any) {
 		message := fmt.Sprint(v...)
 		logMessage := formatLog("ERROR", callerInfo, message)
 		globalLogger.logger.Println(logMessage)
-		globalLogger.logger.Println()
 	}
 }
 
@@ -150,7 +144,6 @@ func Errorf(format string, v ...any) {
 		message := fmt.Sprintf(format, v...)
 		logMessage := formatLog("ERROR", callerInfo, message)
 		globalLogger.logger.Println(logMessage)
-		globalLogger.logger.Println()
 	}
 }
 
@@ -160,7 +153,6 @@ func Print(v ...any) {
 	message := fmt.Sprint(v...)
 	logMessage := formatLog("", callerInfo, message)
 	globalLogger.logger.Println(logMessage)
-	globalLogger.logger.Println()
 }
 
 // Printf 格式化输出普通日志（兼容 fmt.Printf）
@@ -169,7 +161,6 @@ func Printf(format string, v ...any) {
 	message := fmt.Sprintf(format, v...)
 	logMessage := formatLog("", callerInfo, message)
 	globalLogger.logger.Println(logMessage)
-	globalLogger.logger.Println()
 }
 
 // Println 输出普通日志并换行（兼容 fmt.Println）
@@ -178,5 +169,4 @@ func Println(v ...any) {
 	message := fmt.Sprint(v...)
 	logMessage := formatLog("", callerInfo, message)
 	globalLogger.logger.Println(logMessage)
-	globalLogger.logger.Println()
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
 	"github.com/JovanniChen/SteamDB/Steam/Param"
+	"github.com/JovanniChen/SteamDB/Steam/Utils"
 	"github.com/antchfx/htmlquery"
 )
 
@@ -42,8 +43,11 @@ func (d *Dao) userInfo(body io.ReadCloser) (*UserInfo, error) {
 	info := &UserInfo{}
 
 	// 提取钱包余额信息
-	for _, name := range htmlquery.Find(doc, `//div[@class="accountData price"]/a/text()`) {
-		info.Balance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
+	//div[@class="accountData price"]/a/text()
+	for _, name := range htmlquery.Find(doc, `//a[@id="header_wallet_balance"]/text()`) {
+		// fmt.Println("info.Balance.name ->", name.Data)
+		// info.Balance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
+		info.Balance = Utils.WalletConvert(name.Data)
 	}
 
 	// 提取用户昵称
@@ -52,8 +56,11 @@ func (d *Dao) userInfo(body io.ReadCloser) (*UserInfo, error) {
 	}
 
 	// 提取待处理余额
-	for _, name := range htmlquery.Find(doc, `//a[@id="header_wallet_balance"]/text()`) {
-		info.WaitBalance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
+	//a[@id="header_wallet_balance"]/text()
+	for _, name := range htmlquery.Find(doc, `//a[@id="header_wallet_balance"]/span/text()`) {
+		// fmt.Println("info.WaitBalance.name ->", name.Data)
+		// info.WaitBalance, _ = strconv.Atoi(strings.TrimSpace(name.Data))
+		info.WaitBalance = Utils.WalletConvert(name.Data)
 	}
 
 	// 提取应用配置信息(语言、国家等)
