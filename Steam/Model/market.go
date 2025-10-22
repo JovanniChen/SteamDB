@@ -56,14 +56,21 @@ type ConfirmationsResponse struct {
 
 // Confirmation 待确认项目
 type Confirmation struct {
+	Type      int    `json:"type"`
 	ID        string `json:"id"`
 	Nonce     string `json:"nonce"`
 	CreatorID string `json:"creator_id"`
+	Headline  string `json:"headline"`
 }
 
 // ProcessConfirmationResponse 处理确认请求响应
 type ProcessConfirmationResponse struct {
 	Success bool `json:"success"`
+}
+
+type ConfirmationResult struct {
+	Success bool
+	Result  []string
 }
 
 type BuyListingNeedConfirmationResponse struct {
@@ -92,6 +99,10 @@ type WalletInfo struct {
 	WalletTradeMaxBalance            int64   `json:"wallet_trade_max_balance,string"` // 单次交易上限
 	Success                          int     `json:"success"`
 	Rwgrsn                           int     `json:"rwgrsn"`
+}
+
+type BuyListingFailedResponse struct {
+	Message string `json:"message"`
 }
 
 type CreateOrderResponse struct {

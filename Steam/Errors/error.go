@@ -3,6 +3,7 @@
 package Errors
 
 import (
+	"errors"
 	"fmt"
 	"runtime"
 	"strconv"
@@ -10,27 +11,29 @@ import (
 
 // 错误消息模板定义
 var (
-	errorGettingKey   = "异常错误, 原因: %s"      // 通用错误消息模板
+	errorGettingKey   = "异常错误, 原因: %s"            // 通用错误消息模板
 	errorResponseCode = "请求返回异常 responseCode: %s" // HTTP响应错误模板
-	unavailable       = "异常错误"                // 服务不可用错误消息
+	unavailable       = "异常错误"                    // 服务不可用错误消息
 )
 
 // printStack 打印错误堆栈信息
 // 获取当前调用堆栈并格式化错误信息，便于调试和问题定位
 // 参数：
-//   errKey - 错误消息模板
-//   errStr - 具体错误内容
+//
+//	errKey - 错误消息模板
+//	errStr - 具体错误内容
+//
 // 返回值：包含堆栈信息的格式化错误对象
 func printStack(errKey, errStr string) error {
 	var buf [4096]byte // 堆栈缓冲区，最大4KB
-	
+
 	// 获取调用堆栈信息
 	n := runtime.Stack(buf[:], false) // false表示只获取当前goroutine的堆栈
-	
+
 	// 格式化错误消息
 	message := fmt.Sprintf(errKey, errStr)
 	message += "\n" + string(buf[:n]) // 添加堆栈信息
-	
+
 	return fmt.Errorf(errKey, message)
 }
 
@@ -55,4 +58,15 @@ func ResponseError(errStr int) error {
 // 返回值：服务不可用错误对象
 func Unavailable() error {
 	return printStack(unavailable, "")
+}
+
+// ErrRateLimited 表示API请求速率受限（HTTP 429）
+var ErrRateLimited = errors.New("steam api rate limited (429)")
+
+// IsRateLimitError 检查错误是否为速率限制错误
+func IsRateLimitError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, ErrRateLimited)
 }

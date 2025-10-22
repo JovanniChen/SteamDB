@@ -5,6 +5,7 @@ package Dao
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -153,13 +154,20 @@ func (d *Dao) GetSteamIDByFriendLink(friendLink string) (uint64, error) {
 // 更新内部凭据中的语言设置
 // 参数：language - 语言代码(如"schinese", "english"等)
 func (d *Dao) SetCookiesLanguage(language string) {
-	d.credentials.Language = language
+	if d.credentials != nil {
+		d.credentials.Language = language
+	}
 }
 
 // UserInfo 更新用户详细信息到内部凭据
 // 获取并更新用户的国家代码、语言、昵称等信息
 // 返回值：操作成功返回nil，失败返回错误
 func (d *Dao) UserInfo() error {
+	// 检查credentials是否已初始化
+	if d.credentials == nil {
+		return errors.New("credentials未初始化，请先执行登录操作")
+	}
+
 	// 获取用户信息
 	info, err := d.getUserInfo()
 	if err != nil {

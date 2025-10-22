@@ -16,38 +16,45 @@ import (
 )
 
 var accounts = []Account{
-	{Username: "za0ww9ml4xl2", Password: "HLHxGyRMm6Zi", SharedSecret: "F54xOr9Tpyd5fAxgKx+RHR7vHik="},   // [0] [xv6753] [46]
-	{Username: "zytmnd2097", Password: "awtekBcEkXz9", SharedSecret: "vNVDHuqBle/rnsG7EQW2xQUqlME="},     // [1] [4wzwg]  [45]
-	{Username: "zwrvsq6897", Password: "5uoIBclSSBI8", SharedSecret: "kUcQLn0pJutKt9oeh8yRDG7t+o8="},     // [2] [wqrmhz] [44]
-	{Username: "zuzuaw8238", Password: "uYj035ynLA5N", SharedSecret: "yKuRsv/OmI584XxMt2LUWWbCM+Y="},     // [3] [kxweoq] [40]
-	{Username: "yrknu899", Password: "FyoR1QV8brUd", SharedSecret: "q8JcjcE5jc65C7YntMrME8HJ9sY="},       // [4] [3zgmh7] [47]
-	{Username: "mbkle379", Password: "CFs91IvocA39", SharedSecret: "sIF2wljQzxzya9xVO/VtEs1pUwc="},       // [5] [x5x3g8] [48]
-	{Username: "ugsxh51037", Password: "z0dAC0nic9Ec", SharedSecret: "KXdQ/El9khZe6K3HIxLS7IwrDi4="},     // [6] [x5x3g8] [49]
-	{Username: "cv71oebl0wvj6z", Password: "uolMwmIPT8Uo", SharedSecret: "ireKAD4ZX7HfC45M23iKiYiobqU="}, // [67 [x5x3g8] [49]
-
+	{Username: "za0ww9ml4xl2", Password: "HLHxGyRMm6Zi", SharedSecret: "F54xOr9Tpyd5fAxgKx+RHR7vHik="}, // [0] [xv6753] [46]
+	{Username: "zytmnd2097", Password: "awtekBcEkXz9", SharedSecret: "vNVDHuqBle/rnsG7EQW2xQUqlME="},   // [1] [4wzwg]  [45]
+	{Username: "zwrvsq6897", Password: "5uoIBclSSBI8", SharedSecret: "kUcQLn0pJutKt9oeh8yRDG7t+o8="},   // [2] [wqrmhz] [44]
+	{Username: "zuzuaw8238", Password: "uYj035ynLA5N", SharedSecret: "yKuRsv/OmI584XxMt2LUWWbCM+Y="},   // [3] [kxweoq] [40]
+	{Username: "yrknu899", Password: "FyoR1QV8brUd", SharedSecret: "q8JcjcE5jc65C7YntMrME8HJ9sY="},     // [4] [3zgmh7] [47]
+	{Username: "mbkle379", Password: "CFs91IvocA39", SharedSecret: "sIF2wljQzxzya9xVO/VtEs1pUwc="},     // [5] [x5x3g8] [48]
+	{Username: "lvqxpe8572", Password: "5gfweOafGM3S", SharedSecret: "QLWiEAN8ebHLkGtt7HHtuZyMwDg="},   // [6] [x5x3g8] [49]
+	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="},   // [7] [x5x3g8] [49]
+	{Username: "iatfqv6444", Password: "NOJsp0b1aqbj", SharedSecret: "wCdOSNrhPjXrJEpg3FX643+fseQ="},   // [8] [x5x3g8] [49]
+	{Username: "uwxhfw8800", Password: "ybuYe33Qg2Dr", SharedSecret: "ViUburoMwWe88QJfL5f0KPPoY68="},   // [9] [x5x3g8] [49]
+	{Username: "xqkea03549", Password: "wuwQJ5WFdZp1", SharedSecret: "59z0KMWJFdgfWrSgYYADD/LBPyU="},   // [10] [6ck2bcax] [53]
+	{Username: "ffotd74229", Password: "oP4M4CMHAftX", SharedSecret: "IDhBX3NM+8fZCti4C3d6oFhXI6E="},   // [11] [x5x3g8] [54]
+	{Username: "ttmsq72777", Password: "yoRD7x6LQvgu", SharedSecret: "5boHTiGFhQoszGcpFDLB7H7thng="},   // [12] [x5x3g8] [52]
+	{Username: "ddndd12412", Password: "New0KJYVv16", SharedSecret: "VoSY5VrnD+CJooEVrlADofTGTok="},    // [13] [x5x3g8] [51]
 }
 
-// var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.215.254.6:8080")
+// var config *Steam.Config = Steam.NewConfig("your_username:your_password@13.52.178.34:8080")
 
 var config *Steam.Config = Steam.NewConfig("")
 
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	// TestGetTokenCode(6)
-	TestLogin(5)
+	//TestGetTokenCode(13)
+	// TestLogin(12)
 	// TestGetSummary(7)
-	// TestGetInventory(7)
-	// TestGetMyListings(3)
-	// TestPutList(5)
-	TestPutList2(5)
-	// TestGetConfirmations(3)
+	// TestGetInventory(10)
+	//TestGetMyListings(13)
+
+	TestPutList(10)
+	// TestBuyListing(13)
+
+	// TestPutList2(5)
+	// TestGetConfirmations(12)
 	// TestRemoveMyListings(4)
-	// TestBuyListing(4)
-	// TestGetBalance(7)
+	// TestGetBalance(0)
 	// TestGetWaitBalance(3)
 	// TestGetInventoryAndPutList(4)
-	// TestCreateOrder(3)
+	// TestCreateOrder(10)
 }
 
 func TestGetTokenCode(accountIndex int) {
@@ -61,6 +68,7 @@ func TestGetTokenCode(accountIndex int) {
 }
 
 func TestLogin(accountIndex int) {
+	fmt.Println("开始测试登录")
 	account := getAccount(accountIndex)
 
 	client, err := Steam.NewClient(config)
@@ -69,7 +77,7 @@ func TestLogin(accountIndex int) {
 		return
 	}
 
-	maFile, err := os.ReadFile(account.Username + ".maFile")
+	maFile, err := os.ReadFile("mafiles/" + account.Username + ".maFile")
 	if err != nil {
 		return
 	}
@@ -142,7 +150,7 @@ func TestGetInventory(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.GetInventory(Constants.Dota2, Constants.Catetory))
+	Logger.Info(client.GetInventory(Constants.TeamFortress2, Constants.Catetory))
 }
 
 func TestPutList(accountIndex int) {
@@ -152,9 +160,14 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetInventory(Constants.Dota2, Constants.Catetory)
+	items, err := client.GetInventory(Constants.TeamFortress2, Constants.Catetory)
 	if err != nil {
 		Logger.Error(err)
+		return
+	}
+
+	if len(items) == 0 {
+		Logger.Error("无可用库存")
 		return
 	}
 
@@ -162,72 +175,42 @@ func TestPutList(accountIndex int) {
 	randomIndex := rand.Intn(len(items))
 	randomItem := items[randomIndex]
 
-	data, err := os.ReadFile(client.GetUsername() + ".maFile")
+	data, err := os.ReadFile("mafiles/" + client.GetUsername() + ".maFile")
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
 
-	if err := client.PutList(randomItem.AssetID, 2, 10, string(data)); err != nil {
-		Logger.Error(err)
-		return
-	}
-
-	client.GetMyListings()
-}
-
-func TestPutList2(accountIndex int) {
-	// 32849705541
-	client, err := loadFromSession(accountIndex)
+	listingIds, err := client.PutList(randomItem.AssetID, 0.14, 23, string(data))
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
 
-	data, err := os.ReadFile(client.GetUsername() + ".maFile")
-	if err != nil {
-		Logger.Error(err)
-		return
+	for _, listingId := range listingIds {
+		Logger.Debug("上架成功：", listingId)
 	}
 
-	if err := client.PutList("32849705541", 2, 10, string(data)); err != nil {
-		Logger.Error(err)
-		return
-	}
-}
-
-func TestGetInventoryAndPutList(accountIndex int) {
-	client, err := loadFromSession(accountIndex)
-	if err != nil {
-		Logger.Error(err)
-		return
-	}
-
-	items, err := client.GetInventory(Constants.Dota2, Constants.Catetory)
-	if err != nil {
-		Logger.Error("获取库存失败，错误：", err)
-		return
-	}
-
-	if len(items) == 0 {
-		Logger.Warn("该用户没有可用库存")
-		return
-	}
-
-	if err := client.PutList(items[0].AssetID, 0.1, 1, ""); err != nil {
-		Logger.Error("上架失败失败，错误：", err)
-	}
-
-	Logger.Info("上架成功!")
 }
 
 func TestBuyListing(accountIndex int) {
-	// client, err := loadFromSession(accountIndex)
-	// if err != nil {
-	// 	Logger.Error(err)
-	// 	return
-	// }
-	// Logger.Info(client.BuyListing("640197019947684853", "Skirt of the Mage Slayer"))
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	data, err := os.ReadFile("mafiles/" + client.GetUsername() + ".maFile")
+	if err != nil {
+		return
+	}
+
+	maFileContent := string(data)
+	//563637814507189205
+	//563637814507189205
+
+	//563637814507222895
+	Logger.Info(client.BuyListing("625562309703857739", "", 0.16, 0.14, maFileContent))
 }
 
 func TestRemoveMyListings(accountIndex int) {
@@ -245,7 +228,7 @@ func TestGetConfirmations(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	data, err := os.ReadFile(client.GetUsername() + ".maFile")
+	data, err := os.ReadFile("mafiles/" + client.GetUsername() + ".maFile")
 	if err != nil {
 		return
 	}
@@ -280,14 +263,14 @@ func TestCreateOrder(accountIndex int) {
 		return
 	}
 
-	data, err := os.ReadFile(client.GetUsername() + ".maFile")
+	data, err := os.ReadFile("mafiles/" + client.GetUsername() + ".maFile")
 	if err != nil {
 		return
 	}
 
 	maFileContent := string(data)
 
-	Logger.Info(client.CreateOrder("Heat of the Sixth Hell - Back", 0.05, 5, maFileContent))
+	Logger.Info(client.CreateOrder("Giftapult", 0.12, 10, maFileContent))
 }
 
 func loadFromSession(accountIndex int) (*Steam.Client, error) {
@@ -317,16 +300,16 @@ type SteamSession struct {
 
 func (s *SteamSession) Save(accountIndex int) {
 	json, _ := json.Marshal(s)
-	os.WriteFile(fmt.Sprintf("session_%d.json", accountIndex), json, 0644)
+	os.WriteFile(fmt.Sprintf("temp/session_%d.json", accountIndex), json, 0644)
 }
 
 func (s *SteamSession) Load(accountIndex int) {
-	data, _ := os.ReadFile(fmt.Sprintf("session_%d.json", accountIndex))
+	data, _ := os.ReadFile(fmt.Sprintf("temp/session_%d.json", accountIndex))
 	json.Unmarshal(data, s)
 }
 
 func (s *SteamSession) IsExist(accountIndex int) bool {
-	_, err := os.ReadFile(fmt.Sprintf("session_%d.json", accountIndex))
+	_, err := os.ReadFile(fmt.Sprintf("temp/session_%d.json", accountIndex))
 	return err == nil
 }
 

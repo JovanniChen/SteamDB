@@ -276,7 +276,7 @@ func (c *Client) GetInventory(gameID int, categoryId int) ([]Model.Item, error) 
 	return c.dao.GetInventory(gameID, categoryId)
 }
 
-func (c *Client) PutList(assetID string, price float64, currency int, maFileContent string) error {
+func (c *Client) PutList(assetID string, price float64, currency int, maFileContent string) ([]string, error) {
 	return c.dao.PutList(assetID, price, currency, maFileContent)
 }
 
@@ -301,7 +301,7 @@ func (c *Client) GetMyListings() ([]Model.MyListingReponse, error) {
 }
 
 func (c *Client) GetConfirmations(maFileContent string) error {
-	return c.dao.GetAndOperateConfirmations("allow", maFileContent)
+	return c.dao.GetConfirmations(maFileContent)
 }
 
 // CheckLoginStatus 检查登录状态

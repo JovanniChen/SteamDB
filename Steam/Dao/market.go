@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
@@ -28,8 +27,10 @@ func (d *Dao) GetMyListings() ([]Model.MyListingReponse, error) {
 	Logger.Infof("获取用户 %s 的上架列表", d.GetUsername())
 
 	var items []Model.MyListingReponse
+	params := Param.Params{}
+	params.SetString("count", "30")
 
-	req, err := d.NewRequest(http.MethodGet, Constants.GetMyListings, nil)
+	req, err := d.NewRequest(http.MethodGet, Constants.GetMyListings+"?"+params.ToUrl(), nil)
 	if err != nil {
 		return items, err
 	}
@@ -50,8 +51,6 @@ func (d *Dao) GetMyListings() ([]Model.MyListingReponse, error) {
 	if err != nil {
 		return items, err
 	}
-
-	fmt.Println(resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
 		return items, Errors.ResponseError(resp.StatusCode)
@@ -126,8 +125,15 @@ func (d *Dao) RemoveAllMyListings() error {
 	return nil
 }
 
-func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string, maFileContent string) error {
-	Logger.Infof("用户[%s]购买物品[creatorId: %s", d.GetUsername(), creatorId)
+type buyResult struct {
+	success          bool
+	needConfirmation bool
+	confirmationId   string
+	error            error
+}
+
+func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string) buyResult {
+	Logger.Infof("用户[%s]购买物品[%s][%s][%.02f][%.02f][%s]: ", d.GetUsername(), creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 
 	buyerPriceStr := strconv.FormatFloat(buyerPrice*100, 'f', 0, 64)
 	sellerReceivePriceStr := strconv.FormatFloat(sellerReceivePrice*100, 'f', 0, 64)
@@ -143,10 +149,16 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 	params.SetString("total", buyerPriceStr)
 	params.SetString("quantity", "1")
 	params.SetString("confirmation", confirmation)
+	params.SetInt64("save_my_address", 0)
 
 	req, err := d.NewRequest(http.MethodPost, Constants.BuyListing+"/"+creatorId, strings.NewReader(params.Encode()))
 	if err != nil {
-		return err
+		return buyResult{
+			success:          false,
+			needConfirmation: false,
+			confirmationId:   "",
+			error:            err,
+		}
 	}
 
 	// 如果有会话信息，添加Cookie
@@ -156,11 +168,16 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 	}
 
 	req.Header.Add("origin", Constants.CommunityOrigin)
-	req.Header.Set("referer", fmt.Sprintf("%s/market/listings/570/%s", Constants.CommunityOrigin, name))
+	req.Header.Set("referer", fmt.Sprintf("%s/market/listings/440/%s", Constants.CommunityOrigin, name))
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
-		return err
+		return buyResult{
+			success:          false,
+			needConfirmation: false,
+			confirmationId:   "",
+			error:            err,
+		}
 	}
 	defer resp.Body.Close()
 
@@ -170,7 +187,12 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 	case "gzip":
 		gzReader, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return err
+			return buyResult{
+				success:          false,
+				needConfirmation: false,
+				confirmationId:   "",
+				error:            err,
+			}
 		}
 		defer gzReader.Close()
 		reader = gzReader
@@ -180,59 +202,121 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 
 	body, err := io.ReadAll(reader)
 	if err != nil {
-		return err
+		return buyResult{
+			success:          false,
+			needConfirmation: false,
+			confirmationId:   "",
+			error:            err,
+		}
 	}
 
-	Logger.Debugf("[BuyListing] HTTP响应状态码: %d，响应内容: %s", resp.StatusCode, string(body))
+	Logger.Debugf("[BuyListing][%s]HTTP响应状态码: %d，响应内容: %s", creatorId, resp.StatusCode, string(body))
 
-	if resp.StatusCode == http.StatusNotAcceptable {
+	// 检测429状态码（访问频繁）
+	if resp.StatusCode == http.StatusTooManyRequests {
+		Logger.Warnf("用户 [%s] 购买物品遇到速率限制 (429)", d.GetUsername())
+		return buyResult{
+			success:          false,
+			needConfirmation: false,
+			confirmationId:   "",
+			error:            fmt.Errorf("购买失败: %w", Errors.ErrRateLimited),
+		}
+	} else if resp.StatusCode == http.StatusNotAcceptable {
 		var buyListingResp Model.BuyListingNeedConfirmationResponse
 		if err := json.Unmarshal(body, &buyListingResp); err != nil {
-			return err
-		}
-
-		if buyListingResp.NeedConfirmation {
-			for i := range Constants.Tries {
-				Logger.Infof("用户[%s]购买物品[creatorId: %s]需要手机令牌确认", d.GetUsername(), creatorId)
-				if err := d.GetAndOperateConfirmations("allow", maFileContent); err != nil {
-					if i == Constants.Tries-1 {
-						return err
-					}
-					time.Sleep(1 * time.Second)
-					continue
-				}
-
-				if err := d.buy(creatorId, name, buyerPrice, sellerReceivePrice, buyListingResp.Confirmation["confirmation_id"], maFileContent); err != nil {
-					return err
-				}
+			return buyResult{
+				success:          false,
+				needConfirmation: false,
+				confirmationId:   "",
+				error:            err,
 			}
-
 		}
+		return buyResult{
+			success:          buyListingResp.Success == 22,
+			needConfirmation: buyListingResp.NeedConfirmation,
+			confirmationId:   buyListingResp.Confirmation["confirmation_id"],
+			error:            nil,
+		}
+
 	} else if resp.StatusCode == http.StatusOK {
 		Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']", d.GetUsername(), creatorId, confirmation)
 		var buyListingResp Model.BuyListingResponse
 		if err := json.Unmarshal(body, &buyListingResp); err != nil {
-			return err
+			return buyResult{
+				success:          false,
+				needConfirmation: false,
+				confirmationId:   "",
+				error:            err,
+			}
 		}
 
 		if buyListingResp.WalletInfo.Success == 1 {
 			Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']成功", d.GetUsername(), creatorId, confirmation)
-			return nil
+			return buyResult{
+				success:          true,
+				needConfirmation: false,
+				confirmationId:   "",
+				error:            nil,
+			}
 		} else {
 			Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']失败", d.GetUsername(), creatorId, confirmation)
-			return fmt.Errorf("购买失败，错误码: %d", buyListingResp.WalletInfo.Success)
+			return buyResult{
+				success:          false,
+				needConfirmation: false,
+				confirmationId:   "",
+				error:            fmt.Errorf("购买失败，错误码: %d", buyListingResp.WalletInfo.Success),
+			}
+		}
+	} else if resp.StatusCode == http.StatusBadRequest {
+		return buyResult{
+			success:          false,
+			needConfirmation: false,
+			confirmationId:   "",
+			error:            fmt.Errorf("购买失败，错误码: %d，错误信息: %s", resp.StatusCode, "返回为空"),
+		}
+	} else {
+		var buyListingFailedResp Model.BuyListingFailedResponse
+		if err := json.Unmarshal(body, &buyListingFailedResp); err != nil {
+			return buyResult{
+				success:          false,
+				needConfirmation: false,
+				confirmationId:   "",
+				error:            err,
+			}
+		}
+		return buyResult{
+			success:          false,
+			needConfirmation: false,
+			confirmationId:   "",
+			error:            fmt.Errorf("购买失败，错误码: %d，错误信息: %s", resp.StatusCode, buyListingFailedResp.Message),
 		}
 	}
-
-	return nil
 }
 
 // BuyListing 购买物品
 func (d *Dao) BuyListing(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string, maFileContent string) error {
-	if err := d.buy(creatorId, name, buyerPrice, sellerReceivePrice, confirmation, maFileContent); err != nil {
-		return err
+	br := d.buy(creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
+	if br.success && br.needConfirmation {
+		Logger.Infof("用户[%s]购买物品[%s][%s]需要手机令牌确认", d.GetUsername(), creatorId, name)
+		for i := range Constants.Tries {
+			if err := d.ConfirmationForBuyListAndOrder("allow", maFileContent); err != nil {
+				if i == Constants.Tries-1 {
+					return err
+				}
+			} else {
+				break
+			}
+		}
+		brAgain := d.buy(creatorId, name, buyerPrice, sellerReceivePrice, br.confirmationId)
+		if brAgain.success {
+			return nil
+		} else {
+			return brAgain.error
+		}
+	} else {
+		Logger.Infof("用户[%s]购买物品[%s][%s][%+v]", d.GetUsername(), creatorId, name, br)
 	}
-	return nil
+	return br.error
 }
 
 func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, confirmation string, maFileContent string) error {
@@ -247,7 +331,7 @@ func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, 
 		params.SetString("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
 	}
 	params.SetString("currency", "23")
-	params.SetInt64("appid", int64(Constants.Dota2))
+	params.SetInt64("appid", int64(Constants.TeamFortress2))
 	params.SetString("market_hash_name", marketHashName)
 	params.SetString("price_total", priceTotalStr)
 	params.SetInt64("tradefee_tax", 0)
@@ -257,6 +341,7 @@ func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, 
 
 	req, err := d.NewRequest(http.MethodPost, Constants.CreateOrder, strings.NewReader(params.Encode()))
 	if err != nil {
+
 		return err
 	}
 
@@ -267,10 +352,11 @@ func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, 
 	}
 
 	req.Header.Add("origin", Constants.CommunityOrigin)
-	req.Header.Set("referer", fmt.Sprintf("%s/market/listings/570/%s", Constants.CommunityOrigin, marketHashName))
+	req.Header.Set("referer", fmt.Sprintf("%s/market/listings/440/%s", Constants.CommunityOrigin, marketHashName))
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
+		Logger.Errorf("[CreateOrder] 创建订单请求时 RetryRequest 失败: %v", err)
 		return err
 	}
 	defer resp.Body.Close()
@@ -281,6 +367,7 @@ func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, 
 	case "gzip":
 		gzReader, err := gzip.NewReader(resp.Body)
 		if err != nil {
+			Logger.Errorf("[CreateOrder] 创建订单请求时 NewReader 失败: %v", err)
 			return err
 		}
 		defer gzReader.Close()
@@ -291,34 +378,43 @@ func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, 
 
 	body, err := io.ReadAll(reader)
 	if err != nil {
+		Logger.Errorf("[CreateOrder] 创建订单请求时 ReadAll 失败: %v", err)
 		return err
 	}
 
-	Logger.Debugf("[CreateOrder] HTTP响应状态码: %d", resp.StatusCode)
-	Logger.Debugf("[CreateOrder] HTTP响应内容: %s", string(body))
+	// type CreateOrderResponse struct {
+	// 	NeedConfirmation bool              `json:"need_confirmation"`
+	// 	Confirmation     map[string]string `json:"confirmation"`
+	// 	Success          int               `json:"success"`
+	// }
+
+	if resp.StatusCode != 429 {
+		Logger.Debugf("[CreateOrder] HTTP响应状态码: %d, HTTP响应内容: %s", resp.StatusCode, string(body))
+	}
 
 	if err := json.Unmarshal(body, &createOrderResp); err != nil {
+		Logger.Errorf("[CreateOrder] 创建订单请求时 Unmarshal 失败: %v", err)
 		return err
 	}
 
 	Logger.Debugf("[CreateOrder] 创建订单响应: %+v", createOrderResp)
 
-	if resp.StatusCode == http.StatusNotAcceptable {
+	if resp.StatusCode == http.StatusNotAcceptable && createOrderResp.Success == 22 {
 		if createOrderResp.NeedConfirmation {
 			for i := range Constants.Tries {
-				Logger.Debug("================================================")
 				Logger.Debugf("挂单需要手机令牌确认，第 %d 次尝试", i+1)
-				if err := d.GetAndOperateConfirmations("allow", maFileContent); err != nil {
+				if err := d.ConfirmationForBuyListAndOrder("allow", maFileContent); err != nil {
 					if i == Constants.Tries-1 {
+						Logger.Errorf("[CreateOrder] 创建订单请求时 ConfirmationForBuyListAndOrder 失败: %v", err)
 						return err
 					}
-					time.Sleep(1 * time.Second)
 					continue
 				}
 
-				if err := d.createOrder(marketHashName, price, quantity, createOrderResp.Confirmation["confirmation_id"], maFileContent); err != nil {
-					return err
-				}
+				// if err := d.createOrder(marketHashName, price, quantity, createOrderResp.Confirmation["confirmation_id"], maFileContent); err != nil {
+				// 	Logger.Errorf("[CreateOrder] 创建订单请求时 createOrder 失败: %v", err)
+				// 	return err
+				// }
 			}
 
 		}
@@ -355,6 +451,22 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 	if err != nil {
 		Logger.Errorf("读取库存响应失败，用户: [%s], 错误: %v", username, err)
 		return nil, fmt.Errorf("读取库存响应失败: %w", err)
+	}
+
+	Logger.Debugf("库存响应: %s", string(body))
+
+	// 检测429状态码（访问频繁）
+	if resp.StatusCode == http.StatusTooManyRequests {
+		Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)
+		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
+	}
+
+	// 检查是否为GZIP压缩数据
+	if len(body) > 2 && body[0] == 0x1f && body[1] == 0x8b {
+		// 解压GZIP数据
+		reader, _ := gzip.NewReader(bytes.NewReader(body))
+		defer reader.Close()
+		body, _ = io.ReadAll(reader)
 	}
 
 	var inventoryResponse Model.InventoryResponse
@@ -455,14 +567,14 @@ func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, u
 }
 
 // PutList 上架物品，需要二次手机令牌确认
-func (d *Dao) PutList(assetID string, price float64, currency int, maFileContent string) error {
+func (d *Dao) PutList(assetID string, price float64, currency int, maFileContent string) ([]string, error) {
 	Logger.Infof("用户 [%d] 上架物品，AssetID: %s, 价格: %.2f", d.GetSteamID(), assetID, price)
 
 	data := url.Values{}
 	if d.GetLoginCookies()["steamcommunity.com"] != nil {
 		data.Set("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
 	}
-	data.Set("appid", "570")   // dota2
+	data.Set("appid", strconv.Itoa(Constants.TeamFortress2))
 	data.Set("contextid", "2") // 分类
 	data.Set("assetid", assetID)
 	data.Set("amount", "1")
@@ -470,7 +582,7 @@ func (d *Dao) PutList(assetID string, price float64, currency int, maFileContent
 
 	req, err := d.Request(http.MethodPost, Constants.PutList, strings.NewReader(data.Encode()))
 	if err != nil {
-		return err
+		return []string{}, err
 	}
 
 	req.Header.Add("origin", Constants.CommunityOrigin)
@@ -478,30 +590,36 @@ func (d *Dao) PutList(assetID string, price float64, currency int, maFileContent
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
-		return err
+		return []string{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return []string{}, err
 	}
 
-	Logger.Infof("用户 [%d] 上架物品，返回结果: %s，返回状态码: %d", d.GetSteamID(), string(body), resp.StatusCode)
+	Logger.Infof("用户 [%s] 上架物品，返回结果: %s，返回状态码: %d", d.GetUsername(), string(body), resp.StatusCode)
+
+	// 检测429状态码（访问频繁）
+	if resp.StatusCode == http.StatusTooManyRequests {
+		Logger.Warnf("用户 [%d] 上架物品遇到速率限制 (429)", d.GetSteamID())
+		return []string{}, fmt.Errorf("上架失败: %w", Errors.ErrRateLimited)
+	}
 
 	// 先行处理返回状态码不为200的情况
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("上架失败: %v", string(body))
+		return []string{}, fmt.Errorf("上架失败: %v", string(body))
 	}
 
 	var sellResp Model.PutListResponse
 	if err := json.Unmarshal(body, &sellResp); err != nil {
-		return fmt.Errorf("解析上架响应失败: %w", err)
+		return []string{}, fmt.Errorf("解析上架响应失败: %w", err)
 	}
 
 	// 再行处理返回数据不为成功的情况
 	if !sellResp.Success {
-		return fmt.Errorf("上架失败: %v", sellResp)
+		return []string{}, fmt.Errorf("上架失败: %v", sellResp)
 	}
 
 	// 如果需要手机令牌确认
@@ -509,25 +627,184 @@ func (d *Dao) PutList(assetID string, price float64, currency int, maFileContent
 		Logger.Infof("物品上架需要手机令牌确认，assetID: %s", assetID)
 		// 进行手机令牌操作，多次尝试
 		for i := range Constants.Tries {
-			err := d.GetAndOperateConfirmations("allow", maFileContent)
-			if err != nil {
+			result := d.ConfirmationForPutList("allow", maFileContent)
+			if !result.Success {
 				if i == Constants.Tries-1 {
-					return err
+					return []string{}, fmt.Errorf("上架失败: %v", "尝试三次确认均未成功")
 				}
-				time.Sleep(1 * time.Second)
 				continue
 			} else {
-				break
+				return result.Result, nil
 			}
 		}
 	} else {
 		Logger.Warnf("无法进行确认操作，assetID: %s, RequiresConfirmation: %d", assetID, sellResp.RequiresConfirmation)
 	}
+	return []string{}, nil
+}
+
+func (d *Dao) ConfirmationForPutList(op string, maFileContent string) *Model.ConfirmationResult {
+	username := d.GetUsername()
+	Logger.Infof("开始获取用户 [%s] 待确认请求", username)
+
+	pt, err := Utils.LoadMaFile(maFileContent)
+	if err != nil {
+		Logger.Errorf("加载 [%s] 令牌文件失败，错误： %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+			Result:  []string{},
+		}
+	}
+
+	steamTime, err := d.SteamTime()
+	if err != nil {
+		Logger.Errorf("获取 Steam 服务器时间失败，错误： %v", err)
+		return &Model.ConfirmationResult{
+			Success: false,
+			Result:  []string{},
+		}
+	}
+
+	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, strconv.Itoa(int(pt.MaFile.Session.SteamID)), steamTime, "conf")
+	if err != nil {
+		Logger.Errorf("构建获取待确认请求参数失败，错误： %v", err)
+		return &Model.ConfirmationResult{
+			Success: false,
+			Result:  []string{},
+		}
+	}
+
+	req, err := d.Request(http.MethodGet, Constants.GetConfirmationList+"?"+queryParams.ToUrl(), nil)
+	if err != nil {
+		Logger.Errorf("创建待确认请求失败，用户: [%s], 错误: %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+			Result:  []string{},
+		}
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		Logger.Errorf("执行待确认请求失败，用户: [%s], 错误: %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+			Result:  []string{},
+		}
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		Logger.Errorf("读取待确认响应失败，用户: [%s], 错误: %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+			Result:  []string{},
+		}
+	}
+
+	var confirmResp Model.ConfirmationsResponse
+	if err := json.Unmarshal(body, &confirmResp); err != nil {
+		Logger.Errorf("解析待确认响应失败，用户: [%s], 错误: %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+			Result:  []string{},
+		}
+	}
+
+	Logger.Debugf("待确认响应:%+v", confirmResp)
+
+	if !confirmResp.Success {
+		Logger.Errorf("待确认API返回失败，用户: [%s], success字段: %t, 返回码：%d", username, confirmResp.Success, resp.StatusCode)
+		return &Model.ConfirmationResult{
+			Success: false,
+			Result:  []string{},
+		}
+	}
+
+	Logger.Infof("获取用户 [%s] 的待确认完成，共找到 %d 个待确认请求", username, len(confirmResp.Confirmations))
+
+	// 初始化最终返回结果
+	finalResult := &Model.ConfirmationResult{
+		Success: true,
+		Result:  []string{},
+	}
+
+	for _, conf := range confirmResp.Confirmations {
+		if conf.Type != 3 {
+			Logger.Infof("非上架确认不予处理:%+v", conf)
+			continue
+		}
+		switch op {
+		case "allow":
+			err = d.AllowSingleConfirmation(pt, conf, steamTime)
+			if err != nil {
+				Logger.Errorf("允许待确认失败，用户: [%s], 错误: %v", username, err)
+				return &Model.ConfirmationResult{
+					Success: false,
+					Result:  []string{},
+				}
+			}
+			finalResult.Result = append(finalResult.Result, conf.CreatorID)
+		case "cancel":
+			err = d.CancelSingleConfirmation(pt, conf, steamTime)
+			if err != nil {
+				Logger.Errorf("拒绝待确认失败，用户: [%s], 错误: %v", username, err)
+				return &Model.ConfirmationResult{
+					Success: false,
+					Result:  []string{},
+				}
+			}
+		}
+	}
+
+	return finalResult
+}
+
+func (d *Dao) GetConfirmations(maFileContent string) error {
+	username := d.GetUsername()
+	pt, err := Utils.LoadMaFile(maFileContent)
+	if err != nil {
+		Logger.Errorf("加载 [%s] 令牌文件失败，错误： %v", username, err)
+		return err
+	}
+
+	steamTime, err := d.SteamTime()
+	if err != nil {
+		Logger.Errorf("获取 Steam 服务器时间失败，错误： %v", err)
+		return err
+	}
+
+	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, strconv.Itoa(int(pt.MaFile.Session.SteamID)), steamTime, "conf")
+	if err != nil {
+		Logger.Errorf("构建获取待确认请求参数失败，错误： %v", err)
+		return err
+	}
+
+	req, err := d.Request(http.MethodGet, Constants.GetConfirmationList+"?"+queryParams.ToUrl(), nil)
+	if err != nil {
+		Logger.Errorf("创建待确认请求失败，用户: [%s], 错误: %v", username, err)
+		return err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		Logger.Errorf("执行待确认请求失败，用户: [%s], 错误: %v", username, err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		Logger.Errorf("读取待确认响应失败，用户: [%s], 错误: %v", username, err)
+		return err
+	}
+
+	Logger.Infof("获取到的确认列表: %s", string(body))
 
 	return nil
 }
 
-func (d *Dao) GetAndOperateConfirmations(op string, maFileContent string) error {
+func (d *Dao) ConfirmationForBuyListAndOrder(op string, maFileContent string) error {
 	username := d.GetUsername()
 	Logger.Infof("开始获取用户 [%s] 待确认请求", username)
 
@@ -640,9 +917,6 @@ func (d *Dao) processSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model
 	if err != nil {
 		return err
 	}
-
-	Logger.Debug(resp.StatusCode)
-	Logger.Debug(string(body))
 
 	var acceptResp Model.ProcessConfirmationResponse
 	if err := json.Unmarshal(body, &acceptResp); err != nil {
@@ -819,7 +1093,7 @@ func extractItemNamesFromHTML(htmlContent string) []string {
 	var names []string
 
 	// 直接在整个HTML内容中搜索，不按行分割
-	searchPattern := "steamcommunity.com/market/listings/570/"
+	searchPattern := "steamcommunity.com/market/listings/440/"
 	content := htmlContent
 
 	for {
