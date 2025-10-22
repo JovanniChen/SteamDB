@@ -276,7 +276,7 @@ func (c *Client) GetInventory(gameID int, categoryId int) ([]Model.Item, error) 
 	return c.dao.GetInventory(gameID, categoryId)
 }
 
-func (c *Client) PutList(assetID string, price float64, currency int, maFileContent string) ([]string, error) {
+func (c *Client) PutList(assetID string, price float64, currency int, maFileContent string) (Model.MyListingReponse, error) {
 	return c.dao.PutList(assetID, price, currency, maFileContent)
 }
 

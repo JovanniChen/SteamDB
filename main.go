@@ -32,7 +32,7 @@ var accounts = []Account{
 	{Username: "ddndd12412", Password: "New0KJYVv16", SharedSecret: "VoSY5VrnD+CJooEVrlADofTGTok="},    // [13] [x5x3g8] [51]
 }
 
-// var config *Steam.Config = Steam.NewConfig("your_username:your_password@13.52.178.34:8080")
+// var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.153.12.107:8080")
 
 var config *Steam.Config = Steam.NewConfig("")
 
@@ -40,16 +40,20 @@ var config *Steam.Config = Steam.NewConfig("")
 // 执行Steam平台相关操作的演示流程
 func main() {
 	//TestGetTokenCode(13)
-	// TestLogin(12)
+	// TestLogin(13)
 	// TestGetSummary(7)
 	// TestGetInventory(10)
 	//TestGetMyListings(13)
 
-	TestPutList(10)
+	// TestGetConfirmations(13)
+	TestPutList(13)
 	// TestBuyListing(13)
 
 	// TestPutList2(5)
+	// TestGetConfirmations(10)
+	// TestGetConfirmations(11)
 	// TestGetConfirmations(12)
+	// TestGetConfirmations(11)
 	// TestRemoveMyListings(4)
 	// TestGetBalance(0)
 	// TestGetWaitBalance(3)
@@ -181,15 +185,15 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	listingIds, err := client.PutList(randomItem.AssetID, 0.14, 23, string(data))
+	_, err = client.PutList(randomItem.AssetID, 0.14, 23, string(data))
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
 
-	for _, listingId := range listingIds {
-		Logger.Debug("上架成功：", listingId)
-	}
+	// for _, listingId := range listingIds {
+	// 	Logger.Debug("上架成功：", listingId)
+	// }
 
 }
 

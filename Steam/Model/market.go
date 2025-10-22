@@ -46,6 +46,7 @@ type PutListResponse struct {
 	NeedsMobileConfirmation bool   `json:"needs_mobile_confirmation"`
 	NeedsEmailConfirmation  bool   `json:"needs_email_confirmation"`
 	EmailDomain             string `json:"email_domain"`
+	Message                 string `json:"message"`
 }
 
 // ConfirmationsResponse 确认列表响应
@@ -56,11 +57,12 @@ type ConfirmationsResponse struct {
 
 // Confirmation 待确认项目
 type Confirmation struct {
-	Type      int    `json:"type"`
-	ID        string `json:"id"`
-	Nonce     string `json:"nonce"`
-	CreatorID string `json:"creator_id"`
-	Headline  string `json:"headline"`
+	Type      int      `json:"type"`
+	ID        string   `json:"id"`
+	Nonce     string   `json:"nonce"`
+	CreatorID string   `json:"creator_id"`
+	Headline  string   `json:"headline"`
+	Summary   []string `json:"summary"`
 }
 
 // ProcessConfirmationResponse 处理确认请求响应
@@ -70,7 +72,7 @@ type ProcessConfirmationResponse struct {
 
 type ConfirmationResult struct {
 	Success bool
-	Result  []string
+	Result  MyListingReponse
 }
 
 type BuyListingNeedConfirmationResponse struct {
