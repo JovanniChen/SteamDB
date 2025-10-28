@@ -18,6 +18,7 @@ const (
 	Scheme    string = "https://"                                                                                                            // HTTPS协议前缀
 	Tries     int    = 3                                                                                                                     // 默认重试次数
 	UserAgent string = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36" // 浏览器用户代理字符串，用于模拟真实浏览器请求
+	// UserAgent string = "Dalvik/2.1.0 (Linux; U; Android 9; Valve Steam App Version/3)"
 )
 
 // 全局变量定义
@@ -69,4 +70,7 @@ var (
 	Confirmation        string = Scheme + Domain.Community + "/mobileconf/ajaxop"     // 确认上架
 	BuyListing          string = Scheme + Domain.Community + "/market/buylisting"     // 购买物品
 	CreateOrder         string = Scheme + Domain.Community + "/market/createbuyorder" // 创建订单
+
+	// 游戏更新
+	GetGameUpdateInofs string = Scheme + Domain.Store + "/news/app" // 获取游戏更新信息
 )

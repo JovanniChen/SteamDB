@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/JovanniChen/SteamDB/Steam"
@@ -30,25 +31,32 @@ var accounts = []Account{
 	{Username: "ffotd74229", Password: "oP4M4CMHAftX", SharedSecret: "IDhBX3NM+8fZCti4C3d6oFhXI6E="},   // [11] [x5x3g8] [54]
 	{Username: "ttmsq72777", Password: "yoRD7x6LQvgu", SharedSecret: "5boHTiGFhQoszGcpFDLB7H7thng="},   // [12] [x5x3g8] [52]
 	{Username: "ddndd12412", Password: "New0KJYVv16", SharedSecret: "VoSY5VrnD+CJooEVrlADofTGTok="},    // [13] [x5x3g8] [51]
+	{Username: "zdckla1506", Password: "d3c9InY7Epwi", SharedSecret: "rQJ4b42FyGsvGcp6XYx+SEYylyo="},   // [14] [x5x3g8] [51]
+	{Username: "uvtjrm4501", Password: "u9NIlsVugLH5", SharedSecret: "y77Jk5v4rxrck/149zDMB+b3s/U="},   // [15] [x5x3g8] [51]
+	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="},   // [16] [x5x3g8] [51]
+	{Username: "gbmqnl7210", Password: "i80sMCigz1rw", SharedSecret: "Uinb4sxNpcP8KQBcYgdAZ2eiJDg="},   // [17] [x5x3g8] [51]
 }
 
-// var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.153.12.107:8080")
+// var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.219.138.193:8080")
 
 var config *Steam.Config = Steam.NewConfig("")
 
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	//TestGetTokenCode(13)
-	// TestLogin(13)
+	TestGetGameUpdateInofs(3371510)
+	// TestGetTokenCode(17)
+	// TestLogin(15)
 	// TestGetSummary(7)
-	// TestGetInventory(10)
-	//TestGetMyListings(13)
+	// TestGetInventory(15)
+	// TestGetInventory(15)
 
-	// TestGetConfirmations(13)
-	TestPutList(13)
+	// TestGetMyListings(15)
+	// TestGetMyListings(17)
+	// TestGetConfirmations(15)
+	// TestGetConfirmations(17)
+	// TestPutList(15)
 	// TestBuyListing(13)
-
 	// TestPutList2(5)
 	// TestGetConfirmations(10)
 	// TestGetConfirmations(11)
@@ -58,7 +66,7 @@ func main() {
 	// TestGetBalance(0)
 	// TestGetWaitBalance(3)
 	// TestGetInventoryAndPutList(4)
-	// TestCreateOrder(10)
+	// TestCreateOrder(14)
 }
 
 func TestGetTokenCode(accountIndex int) {
@@ -71,62 +79,81 @@ func TestGetTokenCode(accountIndex int) {
 	Logger.Info(code)
 }
 
-func TestLogin(accountIndex int) {
-	fmt.Println("开始测试登录")
-	account := getAccount(accountIndex)
-
+func TestGetGameUpdateInofs(gameID int) {
 	client, err := Steam.NewClient(config)
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
-
-	maFile, err := os.ReadFile("mafiles/" + account.Username + ".maFile")
-	if err != nil {
-		return
-	}
-
-	userInfo, err := client.Login(&Steam.LoginCredentials{
-		Username:     account.GetUsername(),
-		Password:     account.GetPassword(),
-		SharedSecret: account.GetSharedSecret(),
-		MaFile:       string(maFile),
-	})
-	if err != nil {
+	if err := client.GetGameUpdateInofs(gameID); err != nil {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(userInfo)
+	fmt.Println("获取游戏更新信息成功")
+}
 
-	// 提取访问令牌
-	accessToken, err := client.GetAccessToken()
-	if err != nil {
-		accessToken = ""
+func TestLogin(accountIndex int) {
+	if _, err := os.Stat("temp/session_" + strconv.Itoa(accountIndex) + ".json"); os.IsNotExist(err) {
+		fmt.Println("开始测试登录")
+		account := getAccount(accountIndex)
+
+		client, err := Steam.NewClient(config)
+		if err != nil {
+			Logger.Error(err)
+			return
+		}
+
+		maFile, err := os.ReadFile("mafiles/" + account.Username + ".maFile")
+		if err != nil {
+			return
+		}
+
+		userInfo, err := client.Login(&Steam.LoginCredentials{
+			Username:     account.GetUsername(),
+			Password:     account.GetPassword(),
+			SharedSecret: account.GetSharedSecret(),
+			MaFile:       string(maFile),
+		})
+		if err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info(userInfo)
+
+		// 提取访问令牌
+		accessToken, err := client.GetAccessToken()
+		if err != nil {
+			accessToken = ""
+		}
+
+		steamOffset := client.GetSteamOffset()
+
+		// 提取刷新令牌
+		refreshToken := ""
+		if rt := client.GetRefreshToken(); rt != "" {
+			refreshToken = rt
+		}
+
+		// 提取登录Cookies
+		loginCookies := make(map[string]*Dao.LoginCookie)
+		if cookies := client.GetLoginCookies(); cookies != nil {
+			loginCookies = cookies
+		}
+		session := &SteamSession{
+			AccountIndex: accountIndex,
+			Username:     account.GetUsername(),
+			SteamID:      client.GetSteamID(),
+			Nickname:     client.GetNickname(),
+			CountryCode:  client.GetCountryCode(),
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+			LoginCookies: loginCookies,
+			LoginTime:    time.Now(),
+			SteamOffset:  steamOffset,
+		}
+		session.Save(accountIndex)
 	}
 
-	// 提取刷新令牌
-	refreshToken := ""
-	if rt := client.GetRefreshToken(); rt != "" {
-		refreshToken = rt
-	}
-
-	// 提取登录Cookies
-	loginCookies := make(map[string]*Dao.LoginCookie)
-	if cookies := client.GetLoginCookies(); cookies != nil {
-		loginCookies = cookies
-	}
-	session := &SteamSession{
-		AccountIndex: accountIndex,
-		Username:     account.GetUsername(),
-		SteamID:      client.GetSteamID(),
-		Nickname:     client.GetNickname(),
-		CountryCode:  client.GetCountryCode(),
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		LoginCookies: loginCookies,
-		LoginTime:    time.Now(),
-	}
-	session.Save(accountIndex)
 }
 
 func TestGetSummary(accountIndex int) {
@@ -145,7 +172,9 @@ func TestGetMyListings(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.GetMyListings())
+
+	client.GetMyListings()
+	// Logger.Infof("已上架物品 (%d 个) -> %+v\n", len(activeListings), activeListings)
 }
 
 func TestGetInventory(accountIndex int) {
@@ -154,7 +183,12 @@ func TestGetInventory(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.GetInventory(Constants.TeamFortress2, Constants.Catetory))
+
+	item, err := client.GetInventory(Constants.TeamFortress2, Constants.Catetory)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	fmt.Printf("%+v\n", item)
 }
 
 func TestPutList(accountIndex int) {
@@ -185,16 +219,19 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	_, err = client.PutList(randomItem.AssetID, 0.14, 23, string(data))
-	if err != nil {
-		Logger.Error(err)
-		return
+	for i := 0; i < 2; i++ {
+		fmt.Println("i: ", i)
+		go func() {
+			_, err = client.PutList(randomItem.AssetID, 2, 23, string(data))
+			fmt.Println("err: ", err)
+		}()
+		// _, err = client.PutList(randomItem.AssetID, 0.14, 23, string(data))
+		// if err != nil {
+		// 	Logger.Error(err)
+		// 	return
+		// }
+		time.Sleep(5 * time.Second)
 	}
-
-	// for _, listingId := range listingIds {
-	// 	Logger.Debug("上架成功：", listingId)
-	// }
-
 }
 
 func TestBuyListing(accountIndex int) {
@@ -274,7 +311,7 @@ func TestCreateOrder(accountIndex int) {
 
 	maFileContent := string(data)
 
-	Logger.Info(client.CreateOrder("Giftapult", 0.12, 10, maFileContent))
+	Logger.Info(client.CreateOrder("Giftapult", 0.12, 15, maFileContent))
 }
 
 func loadFromSession(accountIndex int) (*Steam.Client, error) {
@@ -285,7 +322,7 @@ func loadFromSession(accountIndex int) (*Steam.Client, error) {
 		Logger.Error(err)
 		return nil, err
 	}
-	client.SetLoginInfo(session.Username, session.SteamID, session.Nickname, session.CountryCode, session.AccessToken, session.RefreshToken, session.LoginCookies)
+	client.SetLoginInfo(session.Username, session.SteamID, session.Nickname, session.CountryCode, session.AccessToken, session.RefreshToken, session.LoginCookies, session.SteamOffset)
 	return client, nil
 }
 
@@ -300,6 +337,7 @@ type SteamSession struct {
 	RefreshToken string                      `json:"refresh_token"`
 	LoginCookies map[string]*Dao.LoginCookie `json:"login_cookies"`
 	LoginTime    time.Time                   `json:"login_time"`
+	SteamOffset  int64                       `json:"steam_offset"`
 }
 
 func (s *SteamSession) Save(accountIndex int) {

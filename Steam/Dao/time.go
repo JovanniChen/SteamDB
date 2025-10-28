@@ -37,9 +37,15 @@ func (d *Dao) SteamTime() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-
+	d.credentials.SteamOffset = offset
 	// 返回修正后的Steam服务器时间
 	i := time.Now().Unix() + offset
+
+	return i, nil
+}
+
+func (d *Dao) GetSteamTimeLocal() (int64, error) {
+	i := time.Now().Unix() + d.credentials.SteamOffset
 	return i, nil
 }
 
@@ -85,6 +91,7 @@ func (d *Dao) timeOffset() (int64, error) {
 
 	// 计算时间偏差：服务器时间 - 本地时间
 	timeoffset, _ := strconv.ParseInt(body.Response.ServerTime, 10, 64)
-	timeoffset -= time.Now().Unix()
+	localUnix := time.Now().Unix()
+	timeoffset -= localUnix
 	return timeoffset, nil
 }

@@ -81,6 +81,7 @@ type Credentials struct {
 	RefreshToken string                  // 刷新令牌
 	Language     string                  // 语言偏好设置
 	CountryCode  string                  // 国家代码
+	SteamOffset  int64                   // Steam服务器时间偏差
 	LoginCookies map[string]*LoginCookie // 各域名的登录Cookie映射
 }
 
@@ -94,10 +95,18 @@ func (d *Dao) AccessToken() (string, error) {
 	return d.credentials.AccessToken, nil
 }
 
+func (d *Dao) SteamOffset() int64 {
+	return d.credentials.SteamOffset
+}
+
 // GetUsername 获取当前用户的用户名
 // 返回值：Username
 func (d *Dao) GetUsername() string {
 	return d.credentials.Username
+}
+
+func (d *Dao) GetSteamOffset() int64 {
+	return d.credentials.SteamOffset
 }
 
 // GetSteamID 获取当前用户的Steam ID
@@ -697,7 +706,7 @@ func (d *Dao) SetLoginInfo(username, password, accessToken, countryCode string, 
 }
 
 // SetLoginInfoDirect 直接设置登录信息（用于恢复会话）
-func (d *Dao) SetLoginInfoDirect(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*LoginCookie) {
+func (d *Dao) SetLoginInfoDirect(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*LoginCookie, steamOffset int64) {
 	d.credentials.Username = username
 	d.credentials.SteamID = steamID
 	d.credentials.Nickname = nickname
@@ -705,4 +714,5 @@ func (d *Dao) SetLoginInfoDirect(username string, steamID uint64, nickname strin
 	d.credentials.AccessToken = accessToken
 	d.credentials.RefreshToken = refreshToken
 	d.credentials.LoginCookies = loginCookies
+	d.credentials.SteamOffset = steamOffset
 }

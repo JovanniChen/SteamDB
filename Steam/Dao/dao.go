@@ -18,8 +18,9 @@ import (
 // Dao 数据访问对象结构体
 // 封装了HTTP客户端和用户凭据，提供Steam API交互功能
 type Dao struct {
-	httpCli     *http.Client // HTTP客户端，用于发送网络请求
-	credentials *Credentials // 用户凭据信息，包含登录状态和认证信息
+	httpCli         *http.Client // HTTP客户端，用于发送网络请求
+	credentials     *Credentials // 用户凭据信息，包含登录状态和认证信息
+	requestCallback func()       // HTTP请求成功后的回调函数，用于外部监控请求
 }
 
 // Request 创建包含认证信息的HTTP请求
@@ -46,6 +47,7 @@ func (d *Dao) Request(method, url string, body io.Reader) (*http.Request, error)
 	if ck == nil {
 		return nil, Errors.Error("Cookie not exist")
 	}
+
 
 	// 添加Steam登录安全Cookie，用于身份验证
 	req.AddCookie(&http.Cookie{
@@ -137,12 +139,24 @@ func (d *Dao) RetryRequest(tries int, request *http.Request) (*http.Response, er
 		// 	continue
 		// }
 
-		// 请求成功，返回响应
+		// 请求成功，触发回调（如果设置了）
+		if d.requestCallback != nil {
+			d.requestCallback()
+		}
+
+		// 返回响应
 		return resp, err
 	}
 
 	// 所有重试都失败，返回错误信息
 	return resp, Errors.Error("多次请求后还是失败-->" + request.URL.String())
+}
+
+// SetRequestCallback 设置HTTP请求成功回调
+// 用于外部监控每次成功的HTTP请求，通常用于统计请求次数
+// 参数：callback - 回调函数，每次HTTP请求成功后调用
+func (d *Dao) SetRequestCallback(callback func()) {
+	d.requestCallback = callback
 }
 
 // CheckLogin 检查指定URL的登录状态

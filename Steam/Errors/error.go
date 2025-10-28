@@ -62,6 +62,7 @@ func Unavailable() error {
 
 // ErrRateLimited 表示API请求速率受限（HTTP 429）
 var ErrRateLimited = errors.New("steam api rate limited (429)")
+var ErrServerError = errors.New("steam server error(502)")
 
 // IsRateLimitError 检查错误是否为速率限制错误
 func IsRateLimitError(err error) bool {
@@ -69,4 +70,11 @@ func IsRateLimitError(err error) bool {
 		return false
 	}
 	return errors.Is(err, ErrRateLimited)
+}
+
+func IsServerError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, ErrServerError)
 }

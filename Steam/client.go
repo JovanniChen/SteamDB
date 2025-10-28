@@ -296,7 +296,7 @@ func (c *Client) RemoveAllMyListings() error {
 	return c.dao.RemoveAllMyListings()
 }
 
-func (c *Client) GetMyListings() ([]Model.MyListingReponse, error) {
+func (c *Client) GetMyListings() (activeListings []Model.MyListingReponse, err error) {
 	return c.dao.GetMyListings()
 }
 
@@ -358,6 +358,10 @@ func (c *Client) GetAccessToken() (string, error) {
 	return c.dao.AccessToken()
 }
 
+func (c *Client) GetSteamOffset() int64 {
+	return c.dao.SteamOffset()
+}
+
 // GetRefreshToken 获取刷新令牌
 func (c *Client) GetRefreshToken() string {
 	return c.dao.GetRefreshToken()
@@ -387,6 +391,17 @@ func (c *Client) GetWaitBalance() int {
 }
 
 // SetLoginInfo 设置登录信息（用于恢复会话）
-func (c *Client) SetLoginInfo(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*Dao.LoginCookie) {
-	c.dao.SetLoginInfoDirect(username, steamID, nickname, countryCode, accessToken, refreshToken, loginCookies)
+func (c *Client) SetLoginInfo(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*Dao.LoginCookie, steamOffset int64) {
+	c.dao.SetLoginInfoDirect(username, steamID, nickname, countryCode, accessToken, refreshToken, loginCookies, steamOffset)
+}
+
+// SetRequestCallback 设置HTTP请求成功回调
+// 用于外部监控每次成功的HTTP请求，通常用于统计代理使用次数
+// 参数：callback - 回调函数，每次HTTP请求成功后调用
+func (c *Client) SetRequestCallback(callback func()) {
+	c.dao.SetRequestCallback(callback)
+}
+
+func (c *Client) GetGameUpdateInofs(gameID int) error {
+	return c.dao.GetGameUpdateInofs(gameID)
 }

@@ -83,6 +83,7 @@ func (pt *PhoneToken) GenerateConfirmationHashForTime(timestamp int64, tag strin
 
 	// 编码并URL编码
 	encodedData := base64.StdEncoding.EncodeToString(hashedData)
+
 	return url.QueryEscape(encodedData), nil
 }
 
@@ -263,6 +264,6 @@ func GenerateConfirmationHashForTime(identitySecret string, time int64, tag stri
 	hashedData := hmacHash.Sum(nil)
 
 	// 返回Base64编码的签名
-	encodedData := base64.StdEncoding.EncodeToString(hashedData)
+	encodedData := url.QueryEscape(base64.StdEncoding.EncodeToString(hashedData))
 	return fmt.Sprintf("%s", encodedData)
 }
