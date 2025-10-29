@@ -13,3 +13,5 @@ require (
 	golang.org/x/net v0.33.0 // indirect; 网络库
 	golang.org/x/text v0.21.0 // indirect; 文本处理库
 )
+
+require github.com/mattn/go-sqlite3 v1.14.32 // indirect

@@ -402,6 +402,13 @@ func (c *Client) SetRequestCallback(callback func()) {
 	c.dao.SetRequestCallback(callback)
 }
 
-func (c *Client) GetGameUpdateInofs(gameID int) error {
+func (c *Client) GetGameUpdateInofs(gameID int) (*Model.GameUpdateEvents, error) {
 	return c.dao.GetGameUpdateInofs(gameID)
+}
+
+// GetGameUpdateEvents 获取游戏更新事件（简化版）
+// 参数：gameID - 游戏ID，limit - 提取数量限制
+// 返回：更新事件列表（包含UniqueID、AppID、StartTime、EventName）、总共找到的event_type=12的数量、是否需要更新
+func (c *Client) GetGameUpdateEvents(gameID int, limit int) ([]Model.UpdateEventInfo, int, bool, error) {
+	return c.dao.GetGameUpdateEvents(gameID, limit)
 }

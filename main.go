@@ -44,7 +44,8 @@ var config *Steam.Config = Steam.NewConfig("")
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	TestGetGameUpdateInofs(3371510)
+	TestGetGameUpdateInofs(960090)
+
 	// TestGetTokenCode(17)
 	// TestLogin(15)
 	// TestGetSummary(7)
@@ -85,11 +86,28 @@ func TestGetGameUpdateInofs(gameID int) {
 		Logger.Error(err)
 		return
 	}
-	if err := client.GetGameUpdateInofs(gameID); err != nil {
+
+	// 使用简化方法，直接获取提取的更新事件
+	updateEvents, totalFound, needUpdate, err := client.GetGameUpdateEvents(gameID, 1)
+	if err != nil {
 		Logger.Error(err)
 		return
 	}
-	fmt.Println("获取游戏更新信息成功")
+
+	// 简洁输出
+	fmt.Printf("游戏ID: %d | 找到: %d条 | 提取: %d条 | 需要更新: %v\n",
+		gameID, totalFound, len(updateEvents), needUpdate)
+
+	if len(updateEvents) == 0 {
+		fmt.Println("  ⚠️  未找到任何更新事件")
+		return
+	}
+
+	// 只显示最新的一条事件
+	if len(updateEvents) > 0 {
+		event := updateEvents[0]
+		fmt.Printf("  最新事件: %s (ID: %s)(Time: %d)\n", event.EventName, event.UniqueID, event.StartTime)
+	}
 }
 
 func TestLogin(accountIndex int) {
