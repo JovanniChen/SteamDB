@@ -48,7 +48,6 @@ func (d *Dao) Request(method, url string, body io.Reader) (*http.Request, error)
 		return nil, Errors.Error("Cookie not exist")
 	}
 
-
 	// 添加Steam登录安全Cookie，用于身份验证
 	req.AddCookie(&http.Cookie{
 		Name:   "steamLoginSecure",

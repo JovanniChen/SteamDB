@@ -153,6 +153,14 @@ func (d *Dao) GetWaitBalance() int {
 	return userInfo.WaitBalance
 }
 
+func (d *Dao) GetBalanceAndWaitBalance() (int, int) {
+	userInfo, err := d.getUserInfo()
+	if err != nil {
+		return 0, 0
+	}
+	return userInfo.Balance, userInfo.WaitBalance
+}
+
 // GetLoginCookies 获取登录Cookie信息
 // 返回值：登录Cookie映射
 func (d *Dao) GetLoginCookies() map[string]*LoginCookie {

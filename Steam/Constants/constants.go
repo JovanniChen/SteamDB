@@ -3,9 +3,14 @@ package Constants
 import "time"
 
 const (
-	Dota          int = 570
-	TeamFortress2 int = 440
-	Catetory      int = 2
+	Dota2         int = 570
+	Dota2Catetory int = 2
+
+	TeamFortress2         int = 440
+	TeamFortress2Catetory int = 2
+
+	PrimalCarnage             = 321360
+	PrimalCarnageCategory int = 1
 )
 
 const (

@@ -68,6 +68,8 @@ func (d *Dao) GetGameUpdateInofs(gameID int) (*Model.GameUpdateEvents, error) {
 		dataEvents = getAttrValue(node, "data-initialEvents")
 	}
 
+	fmt.Println(dataEvents)
+
 	if dataEvents == "" {
 		Logger.Warn("未找到data-initialevents属性")
 		return nil, fmt.Errorf("节点中不存在data-initialevents属性")
@@ -81,15 +83,6 @@ func (d *Dao) GetGameUpdateInofs(gameID int) (*Model.GameUpdateEvents, error) {
 	}
 
 	return &events, nil
-}
-
-// countChildren 计算节点的子节点数量
-func countChildren(node *html.Node) int {
-	count := 0
-	for child := node.FirstChild; child != nil; child = child.NextSibling {
-		count++
-	}
-	return count
 }
 
 // GetGameUpdateEvents 获取游戏更新事件（简化版，只返回关键字段）

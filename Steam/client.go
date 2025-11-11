@@ -254,7 +254,7 @@ func (c *Client) AddReaction(targetSteamID uint64, reactionType uint32, reaction
 }
 
 // GetReactions 获取用户的反应记录
-// 查询指定用户收到的所有反应记录
+// 查询指定用户收到的所有反应录记
 // 参数:
 //
 //	steamID - 目标用户的Steam ID
@@ -276,8 +276,8 @@ func (c *Client) GetInventory(gameID int, categoryId int) ([]Model.Item, error) 
 	return c.dao.GetInventory(gameID, categoryId)
 }
 
-func (c *Client) PutList(assetID string, price float64, currency int, maFileContent string) (Model.MyListingReponse, error) {
-	return c.dao.PutList(assetID, price, currency, maFileContent)
+func (c *Client) PutList(gameid int, contextId int, assetID string, price float64, currency int, maFileContent string) (Model.MyListingReponse, error) {
+	return c.dao.PutList(gameid, contextId, assetID, price, currency, maFileContent)
 }
 
 func (c *Client) BuyListing(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, maFileContent string) error {
@@ -388,6 +388,10 @@ func (c *Client) GetBalance() int {
 
 func (c *Client) GetWaitBalance() int {
 	return c.dao.GetWaitBalance()
+}
+
+func (c *Client) GetBalanceAndWaitBalance() (int, int) {
+	return c.dao.GetBalanceAndWaitBalance()
 }
 
 // SetLoginInfo 设置登录信息（用于恢复会话）

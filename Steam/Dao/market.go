@@ -20,7 +20,6 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Param"
 	"github.com/JovanniChen/SteamDB/Steam/Utils"
-	"github.com/antchfx/htmlquery"
 )
 
 // GetMyListings 获取用户的上架列表
@@ -338,7 +337,7 @@ func (d *Dao) BuyListing(creatorId string, name string, buyerPrice float64, sell
 	return br.error
 }
 
-func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, confirmation string, maFileContent string) error {
+func (d *Dao) createOrder(gameId int, marketHashName string, price float64, quantity int64, confirmation string, maFileContent string) error {
 	Logger.Infof("用户 [%s] 开始挂单，饰品名称: %s，数量：%d", d.GetUsername(), marketHashName, quantity)
 
 	var createOrderResp Model.CreateOrderResponse
@@ -350,7 +349,7 @@ func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, 
 		params.SetString("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
 	}
 	params.SetString("currency", "23")
-	params.SetInt64("appid", int64(Constants.TeamFortress2))
+	params.SetInt64("appid", int64(gameId))
 	params.SetString("market_hash_name", marketHashName)
 	params.SetString("price_total", priceTotalStr)
 	params.SetInt64("tradefee_tax", 0)
@@ -443,7 +442,7 @@ func (d *Dao) createOrder(marketHashName string, price float64, quantity int64, 
 }
 
 func (d *Dao) CreateOrder(marketHashName string, price float64, quantity int64, maFileContent string) error {
-	d.createOrder(marketHashName, price, quantity, "", maFileContent)
+	d.createOrder(570, marketHashName, price, quantity, "", maFileContent)
 	return nil
 }
 
@@ -478,12 +477,27 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
 	}
 
+	switch resp.StatusCode {
+	case 429:
+		Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)
+		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
+	case 401, 403:
+		Logger.Warnf("用户 [%s] 获取库存遇到授权失败 (401/403)", username)
+	}
+
 	// 检查是否为GZIP压缩数据
 	if len(body) > 2 && body[0] == 0x1f && body[1] == 0x8b {
 		// 解压GZIP数据
 		reader, _ := gzip.NewReader(bytes.NewReader(body))
 		defer reader.Close()
 		body, _ = io.ReadAll(reader)
+	}
+
+	Logger.Infof("库存响应状态码: %d", resp.StatusCode)
+	Logger.Infof("库存响应: %s", string(body))
+
+	if resp.StatusCode == 403 {
+		return nil, fmt.Errorf("获取库存失败，错误码: %d", resp.StatusCode)
 	}
 
 	var inventoryResponse Model.InventoryResponse
@@ -584,15 +598,15 @@ func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, u
 }
 
 // PutList 上架物品，需要二次手机令牌确认
-func (d *Dao) PutList(assetID string, price float64, currency int, maFileContent string) (Model.MyListingReponse, error) {
+func (d *Dao) PutList(gameId int, contextId int, assetID string, price float64, currency int, maFileContent string) (Model.MyListingReponse, error) {
 	Logger.Infof("用户 [%d] 上架物品，AssetID: %s, 价格: %.2f", d.GetSteamID(), assetID, price)
 
 	data := url.Values{}
 	if d.GetLoginCookies()["steamcommunity.com"] != nil {
 		data.Set("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
 	}
-	data.Set("appid", strconv.Itoa(Constants.TeamFortress2))
-	data.Set("contextid", "2") // 分类
+	data.Set("appid", strconv.Itoa(gameId))
+	data.Set("contextid", strconv.Itoa(contextId)) // 分类
 	data.Set("assetid", assetID)
 	data.Set("amount", "1")
 	data.Set("price", strconv.FormatInt(int64(price*100), 10))
@@ -636,7 +650,7 @@ func (d *Dao) PutList(assetID string, price float64, currency int, maFileContent
 
 	// 再行处理返回数据不为成功的情况
 	if !sellResp.Success {
-		return Model.MyListingReponse{}, fmt.Errorf("上架失败: %v", sellResp)
+		return Model.MyListingReponse{}, fmt.Errorf("上架失败: %s", sellResp.Message)
 	}
 
 	// 如果需要手机令牌确认
@@ -644,7 +658,7 @@ func (d *Dao) PutList(assetID string, price float64, currency int, maFileContent
 		Logger.Infof("物品上架需要手机令牌确认，assetID: %s", assetID)
 		result := d.ConfirmationForPutList("allow", maFileContent)
 		if !result.Success {
-			return Model.MyListingReponse{}, fmt.Errorf("上架失败: %s", assetID)
+			return Model.MyListingReponse{}, fmt.Errorf("上架确认失败: %s", assetID)
 		} else {
 			return result.Result, nil
 		}
@@ -1032,7 +1046,7 @@ func (d *Dao) ConfirmationForBuyListAndOrder(op string, maFileContent string) er
 
 func (d *Dao) AcceptConfirmations() {}
 
-func (d *Dao) processSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model.Confirmation, op string, timestamp int64) error {
+func (d *Dao) processSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model.Confirmation, op string) error {
 	Logger.Infof("处理用户 [%s] 确认请求，confID: %s，操作：%s", d.GetUsername(), conf.ID, op)
 	steamTime, err := d.GetSteamTimeLocal()
 	if err != nil {
@@ -1078,106 +1092,11 @@ func (d *Dao) processSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model
 }
 
 func (d *Dao) AllowSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model.Confirmation, timestamp int64) error {
-	return d.processSingleConfirmation(phoneToken, conf, "allow", timestamp)
+	return d.processSingleConfirmation(phoneToken, conf, "allow")
 }
 
 func (d *Dao) CancelSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model.Confirmation, timestamp int64) error {
-	return d.processSingleConfirmation(phoneToken, conf, "cancel", timestamp)
-}
-
-func parseSteamMarketHTMLWithXPath(htmlContent string) (activeListings []Model.MyListingReponse, pendingListings []Model.MyListingReponse, err error) {
-	// 解析HTML文档
-	doc, parseErr := htmlquery.Parse(strings.NewReader(htmlContent))
-	if parseErr != nil {
-		return nil, nil, fmt.Errorf("解析HTML文档失败: %v", parseErr)
-	}
-
-	// 使用XPath查找已上架区域内的市场列表行（排除等待确认的物品）
-	listingRows := htmlquery.Find(doc, "//div[@id='tabContentsMyActiveMarketListingsRows']//div[@class='market_listing_row market_recent_listing_row']")
-
-	for _, row := range listingRows {
-		item := Model.MyListingReponse{}
-
-		// 提取Listing ID (从id属性中获取)
-		if idAttr := htmlquery.SelectAttr(row, "id"); idAttr != "" {
-			// 从 "mylisting_654831914932301672" 中提取数字部分
-			if strings.HasPrefix(idAttr, "mylisting_") {
-				item.ListingID = strings.TrimPrefix(idAttr, "mylisting_")
-			}
-		}
-
-		// 提取Asset ID (从href="javascript:RemoveMarketListing(...)"中获取最后一个参数)
-		rowHTML := htmlquery.OutputHTML(row, false)
-
-		// 只处理包含 RemoveMarketListing 的行，跳过 CancelMarketListingConfirmation
-		if !strings.Contains(rowHTML, "RemoveMarketListing") {
-			Logger.Debugf("跳过等待确认的物品，Listing ID: %s", item.ListingID)
-			continue
-		}
-
-		// 提取Asset ID (从JavaScript函数调用中获取最后一个数字参数)
-		// 首先尝试精确匹配
-		assetIDRegex := regexp.MustCompile(`href="javascript:RemoveMarketListing\('mylisting', '[^']+', \d+, '[^']+', '([^']+)'\)"`)
-		assetIDMatch := assetIDRegex.FindStringSubmatch(rowHTML)
-
-		if len(assetIDMatch) > 1 {
-			item.AssetID = assetIDMatch[1]
-		} else {
-			// 尝试更宽松的匹配
-			looseRegex := regexp.MustCompile(`RemoveMarketListing\([^,]+,\s*'[^']+',\s*\d+,\s*'[^']+',\s*'([^']+)'\)`)
-			looseMatch := looseRegex.FindStringSubmatch(rowHTML)
-			if len(looseMatch) > 1 {
-				item.AssetID = looseMatch[1]
-			} else {
-				// 使用简单匹配作为最后手段
-				simpleRegex := regexp.MustCompile(`'(\d+)'\)`)
-				allMatches := simpleRegex.FindAllStringSubmatch(rowHTML, -1)
-				if len(allMatches) > 0 {
-					// 取最后一个匹配（通常是AssetID）
-					item.AssetID = allMatches[len(allMatches)-1][1]
-				}
-			}
-		}
-
-		// 提取物品名称 (使用正则表达式从HTML中提取URL中的英文名称)
-		nameRegex := regexp.MustCompile(`href="https://steamcommunity.com/market/listings/\d+/([^"]+)"`)
-		nameMatch := nameRegex.FindStringSubmatch(rowHTML)
-		if len(nameMatch) > 1 {
-			// URL解码物品名称
-			encodedName := nameMatch[1]
-			if decodedName, err := url.QueryUnescape(encodedName); err == nil {
-				item.MarketHashName = strings.TrimSpace(decodedName)
-			} else {
-				// 如果URL解码失败，使用简单的字符串替换
-				decodedName := strings.ReplaceAll(encodedName, "%20", " ")
-				decodedName = strings.ReplaceAll(decodedName, "%25", "%")
-				decodedName = strings.ReplaceAll(decodedName, "%26", "&")
-				decodedName = strings.ReplaceAll(decodedName, "%27", "'")
-				item.MarketHashName = strings.TrimSpace(decodedName)
-			}
-		}
-
-		// 提取买家价格 (第一个价格span)
-		buyerPriceNode := htmlquery.FindOne(row, ".//span[@class='market_listing_price']/span/span[1]")
-		if buyerPriceNode != nil {
-			priceText := strings.TrimSpace(htmlquery.InnerText(buyerPriceNode))
-			item.BuyerPrice = parsePrice(priceText)
-		}
-
-		// 提取卖家到账价格 (括号内的价格)
-		sellerPriceNode := htmlquery.FindOne(row, ".//span[@class='market_listing_price']/span/span[2]")
-		if sellerPriceNode != nil {
-			priceText := strings.TrimSpace(htmlquery.InnerText(sellerPriceNode))
-			// 移除括号
-			priceText = strings.Trim(priceText, "()")
-			item.SellerReceivePrice = parsePrice(priceText)
-		}
-
-		activeListings = append(activeListings, item)
-	}
-
-	// XPath 方法暂时只解析已上架物品，等待确认的物品返回空列表
-	return activeListings, []Model.MyListingReponse{}, nil
+	return d.processSingleConfirmation(phoneToken, conf, "cancel")
 }
 
 // 保留原有的正则表达式方法作为备用

@@ -5,7 +5,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"strconv"
 	"time"
@@ -16,25 +15,31 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Logger"
 )
 
+// {Username: "za0ww9ml4xl2", Password: "HLHxGyRMm6Zi", SharedSecret: "F54xOr9Tpyd5fAxgKx+RHR7vHik="}, // [0] [xv6753] [46]
+// 	{Username: "zytmnd2097", Password: "awtekBcEkXz9", SharedSecret: "vNVDHuqBle/rnsG7EQW2xQUqlME="},   // [1] [4wzwg]  [45]
+// 	{Username: "zwrvsq6897", Password: "5uoIBclSSBI8", SharedSecret: "kUcQLn0pJutKt9oeh8yRDG7t+o8="},   // [2] [wqrmhz] [44]
+// 	{Username: "zuzuaw8238", Password: "uYj035ynLA5N", SharedSecret: "yKuRsv/OmI584XxMt2LUWWbCM+Y="},   // [3] [kxweoq] [40]
+// 	{Username: "yrknu899", Password: "FyoR1QV8brUd", SharedSecret: "q8JcjcE5jc65C7YntMrME8HJ9sY="},     // [4] [3zgmh7] [47]
+// 	{Username: "mbkle379", Password: "CFs91IvocA39", SharedSecret: "sIF2wljQzxzya9xVO/VtEs1pUwc="},     // [5] [x5x3g8] [48]
+// 	{Username: "lvqxpe8572", Password: "5gfweOafGM3S", SharedSecret: "QLWiEAN8ebHLkGtt7HHtuZyMwDg="},   // [6] [x5x3g8] [49]
+// 	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="},   // [7] [x5x3g8] [49]
+// 	{Username: "iatfqv6444", Password: "NOJsp0b1aqbj", SharedSecret: "wCdOSNrhPjXrJEpg3FX643+fseQ="},   // [8] [x5x3g8] [49]
+// 	{Username: "uwxhfw8800", Password: "ybuYe33Qg2Dr", SharedSecret: "ViUburoMwWe88QJfL5f0KPPoY68="},   // [9] [x5x3g8] [49]
+// 	{Username: "xqkea03549", Password: "wuwQJ5WFdZp1", SharedSecret: "59z0KMWJFdgfWrSgYYADD/LBPyU="},   // [10] [6ck2bcax] [53]
+
 var accounts = []Account{
-	{Username: "za0ww9ml4xl2", Password: "HLHxGyRMm6Zi", SharedSecret: "F54xOr9Tpyd5fAxgKx+RHR7vHik="}, // [0] [xv6753] [46]
-	{Username: "zytmnd2097", Password: "awtekBcEkXz9", SharedSecret: "vNVDHuqBle/rnsG7EQW2xQUqlME="},   // [1] [4wzwg]  [45]
-	{Username: "zwrvsq6897", Password: "5uoIBclSSBI8", SharedSecret: "kUcQLn0pJutKt9oeh8yRDG7t+o8="},   // [2] [wqrmhz] [44]
-	{Username: "zuzuaw8238", Password: "uYj035ynLA5N", SharedSecret: "yKuRsv/OmI584XxMt2LUWWbCM+Y="},   // [3] [kxweoq] [40]
-	{Username: "yrknu899", Password: "FyoR1QV8brUd", SharedSecret: "q8JcjcE5jc65C7YntMrME8HJ9sY="},     // [4] [3zgmh7] [47]
-	{Username: "mbkle379", Password: "CFs91IvocA39", SharedSecret: "sIF2wljQzxzya9xVO/VtEs1pUwc="},     // [5] [x5x3g8] [48]
-	{Username: "lvqxpe8572", Password: "5gfweOafGM3S", SharedSecret: "QLWiEAN8ebHLkGtt7HHtuZyMwDg="},   // [6] [x5x3g8] [49]
-	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="},   // [7] [x5x3g8] [49]
-	{Username: "iatfqv6444", Password: "NOJsp0b1aqbj", SharedSecret: "wCdOSNrhPjXrJEpg3FX643+fseQ="},   // [8] [x5x3g8] [49]
-	{Username: "uwxhfw8800", Password: "ybuYe33Qg2Dr", SharedSecret: "ViUburoMwWe88QJfL5f0KPPoY68="},   // [9] [x5x3g8] [49]
-	{Username: "xqkea03549", Password: "wuwQJ5WFdZp1", SharedSecret: "59z0KMWJFdgfWrSgYYADD/LBPyU="},   // [10] [6ck2bcax] [53]
-	{Username: "ffotd74229", Password: "oP4M4CMHAftX", SharedSecret: "IDhBX3NM+8fZCti4C3d6oFhXI6E="},   // [11] [x5x3g8] [54]
-	{Username: "ttmsq72777", Password: "yoRD7x6LQvgu", SharedSecret: "5boHTiGFhQoszGcpFDLB7H7thng="},   // [12] [x5x3g8] [52]
-	{Username: "ddndd12412", Password: "New0KJYVv16", SharedSecret: "VoSY5VrnD+CJooEVrlADofTGTok="},    // [13] [x5x3g8] [51]
-	{Username: "zdckla1506", Password: "d3c9InY7Epwi", SharedSecret: "rQJ4b42FyGsvGcp6XYx+SEYylyo="},   // [14] [x5x3g8] [51]
-	{Username: "uvtjrm4501", Password: "u9NIlsVugLH5", SharedSecret: "y77Jk5v4rxrck/149zDMB+b3s/U="},   // [15] [x5x3g8] [51]
-	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="},   // [16] [x5x3g8] [51]
-	{Username: "gbmqnl7210", Password: "i80sMCigz1rw", SharedSecret: "Uinb4sxNpcP8KQBcYgdAZ2eiJDg="},   // [17] [x5x3g8] [51]
+	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="}, // [0] [45]
+	{Username: "gbmqnl7210", Password: "i80sMCigz1rw", SharedSecret: "Uinb4sxNpcP8KQBcYgdAZ2eiJDg="}, // [1] [46]
+	{Username: "zdckla1506", Password: "d3c9InY7Epwi", SharedSecret: "rQJ4b42FyGsvGcp6XYx+SEYylyo="}, // [2] [47]
+	{Username: "uvtjrm4501", Password: "u9NIlsVugLH5", SharedSecret: "y77Jk5v4rxrck/149zDMB+b3s/U="}, // [3] [48]
+	{Username: "ddndd12412", Password: "New0KJYVv16", SharedSecret: "VoSY5VrnD+CJooEVrlADofTGTok="},  // [4] [51]
+	{Username: "ttmsq72777", Password: "yoRD7x6LQvgu", SharedSecret: "5boHTiGFhQoszGcpFDLB7H7thng="}, // [5] [52]
+	{Username: "xqkea03549", Password: "wuwQJ5WFdZp1", SharedSecret: "59z0KMWJFdgfWrSgYYADD/LBPyU="}, // [6] [53]
+	{Username: "ffotd74229", Password: "oP4M4CMHAftX", SharedSecret: "IDhBX3NM+8fZCti4C3d6oFhXI6E="}, // [7] [54]
+	{Username: "j47hoord6j", Password: "NewRP7IhC9Z", SharedSecret: "Gwgztog4anK0soQp4IgLaZIki0s="},  // [8] [57] 市场不可用
+	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="}, // [9]
+	{Username: "j47hoord6j", Password: "NewRP7IhC9Z", SharedSecret: "Gwgztog4anK0soQp4IgLaZIki0s="},  // [10]
+
 }
 
 // var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.219.138.193:8080")
@@ -44,20 +49,19 @@ var config *Steam.Config = Steam.NewConfig("")
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	TestGetGameUpdateInofs(960090)
+	// TestGetGameUpdateInofs(1879330)
 
-	// TestGetTokenCode(17)
-	// TestLogin(15)
+	// TestGetTokenCode(9)
+	// TestLogin(10)
 	// TestGetSummary(7)
-	// TestGetInventory(15)
-	// TestGetInventory(15)
+	// TestGetInventory(10)
 
-	// TestGetMyListings(15)
+	// TestGetMyListings(10)
 	// TestGetMyListings(17)
-	// TestGetConfirmations(15)
+	// TestGetConfirmations(0)
 	// TestGetConfirmations(17)
-	// TestPutList(15)
-	// TestBuyListing(13)
+	// TestPutList(10)
+	TestBuyListing(9)
 	// TestPutList2(5)
 	// TestGetConfirmations(10)
 	// TestGetConfirmations(11)
@@ -112,7 +116,6 @@ func TestGetGameUpdateInofs(gameID int) {
 
 func TestLogin(accountIndex int) {
 	if _, err := os.Stat("temp/session_" + strconv.Itoa(accountIndex) + ".json"); os.IsNotExist(err) {
-		fmt.Println("开始测试登录")
 		account := getAccount(accountIndex)
 
 		client, err := Steam.NewClient(config)
@@ -202,11 +205,14 @@ func TestGetInventory(accountIndex int) {
 		return
 	}
 
-	item, err := client.GetInventory(Constants.TeamFortress2, Constants.Catetory)
+	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory)
 	if err != nil {
-		fmt.Println("err:", err)
+		Logger.Error("获取库存失败: ", err)
 	}
-	fmt.Printf("%+v\n", item)
+
+	for _, item := range items {
+		Logger.Infof("物品ID: %s, 名称: %s, 市场名称: %s, 价格: %f, 货币: %d, 是否可交易: %t, 是否可在市场交易: %t", item.AssetID, item.Name, item.MarketName, item.Price, item.Currency, item.Tradable, item.Marketable)
+	}
 }
 
 func TestPutList(accountIndex int) {
@@ -216,20 +222,20 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetInventory(Constants.TeamFortress2, Constants.Catetory)
-	if err != nil {
-		Logger.Error(err)
-		return
-	}
+	// items, err := client.GetInventory(Constants.PrimalCarnage, Constants.PrimalCarnageCategory)
+	// if err != nil {
+	// 	Logger.Error(err)
+	// 	return
+	// }
 
-	if len(items) == 0 {
-		Logger.Error("无可用库存")
-		return
-	}
+	// if len(items) == 0 {
+	// 	Logger.Error("无可用库存")
+	// 	return
+	// }
 
-	// 随机
-	randomIndex := rand.Intn(len(items))
-	randomItem := items[randomIndex]
+	// // 随机
+	// randomIndex := rand.Intn(len(items))
+	// randomItem := items[randomIndex]
 
 	data, err := os.ReadFile("mafiles/" + client.GetUsername() + ".maFile")
 	if err != nil {
@@ -237,19 +243,13 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	for i := 0; i < 2; i++ {
-		fmt.Println("i: ", i)
-		go func() {
-			_, err = client.PutList(randomItem.AssetID, 2, 23, string(data))
-			fmt.Println("err: ", err)
-		}()
-		// _, err = client.PutList(randomItem.AssetID, 0.14, 23, string(data))
-		// if err != nil {
-		// 	Logger.Error(err)
-		// 	return
-		// }
-		time.Sleep(5 * time.Second)
+	_, err = client.PutList(Constants.PrimalCarnage, Constants.PrimalCarnageCategory, "123123", 0.14, 23, string(data))
+	if err != nil {
+		Logger.Error(err)
+		return
 	}
+
+	Logger.Info("上架成功")
 }
 
 func TestBuyListing(accountIndex int) {
@@ -265,10 +265,6 @@ func TestBuyListing(accountIndex int) {
 	}
 
 	maFileContent := string(data)
-	//563637814507189205
-	//563637814507189205
-
-	//563637814507222895
 	Logger.Info(client.BuyListing("625562309703857739", "", 0.16, 0.14, maFileContent))
 }
 
