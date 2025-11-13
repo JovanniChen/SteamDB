@@ -280,8 +280,8 @@ func (c *Client) PutList(gameid int, contextId int, assetID string, price float6
 	return c.dao.PutList(gameid, contextId, assetID, price, currency, maFileContent)
 }
 
-func (c *Client) BuyListing(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, maFileContent string) error {
-	return c.dao.BuyListing(creatorId, name, buyerPrice, sellerReceivePrice, "0", maFileContent)
+func (c *Client) BuyListing(gameId, creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, maFileContent string) error {
+	return c.dao.BuyListing(gameId, creatorId, name, buyerPrice, sellerReceivePrice, "0", maFileContent)
 }
 
 func (c *Client) CreateOrder(marketHashName string, price float64, quantity int64, maFileContent string) error {

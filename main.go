@@ -265,7 +265,7 @@ func TestBuyListing(accountIndex int) {
 	}
 
 	maFileContent := string(data)
-	Logger.Info(client.BuyListing("625562309703857739", "", 0.16, 0.14, maFileContent))
+	Logger.Info(client.BuyListing("", "625562309703857739", "", 0.16, 0.14, maFileContent).Error())
 }
 
 func TestRemoveMyListings(accountIndex int) {

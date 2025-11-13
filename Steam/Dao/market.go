@@ -148,8 +148,8 @@ type buyResult struct {
 	error            error
 }
 
-func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string) buyResult {
-	Logger.Infof("用户[%s]购买物品[%s][%s][%.02f][%.02f][%s]: ", d.GetUsername(), creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
+func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string) buyResult {
+	Logger.Infof("[%s]购买[%s][%s][%.02f][%.02f][%s]", d.GetUsername(), creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 
 	buyerPriceStr := strconv.FormatFloat(buyerPrice*100, 'f', 0, 64)
 	sellerReceivePriceStr := strconv.FormatFloat(sellerReceivePrice*100, 'f', 0, 64)
@@ -173,7 +173,7 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 			success:          false,
 			needConfirmation: false,
 			confirmationId:   "",
-			error:            err,
+			error:            Errors.ErrNewRequest,
 		}
 	}
 
@@ -184,7 +184,7 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 	}
 
 	req.Header.Add("origin", Constants.CommunityOrigin)
-	req.Header.Set("referer", fmt.Sprintf("%s/market/listings/440/%s", Constants.CommunityOrigin, name))
+	req.Header.Set("referer", fmt.Sprintf("%s/market/listings/%s/%s", gameId, Constants.CommunityOrigin, name))
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
@@ -192,7 +192,7 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 			success:          false,
 			needConfirmation: false,
 			confirmationId:   "",
-			error:            err,
+			error:            Errors.ErrRetryRequest,
 		}
 	}
 	defer resp.Body.Close()
@@ -207,7 +207,7 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 				success:          false,
 				needConfirmation: false,
 				confirmationId:   "",
-				error:            err,
+				error:            Errors.ErrGzipReader,
 			}
 		}
 		defer gzReader.Close()
@@ -222,11 +222,15 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 			success:          false,
 			needConfirmation: false,
 			confirmationId:   "",
-			error:            err,
+			error:            Errors.ErrIOReadAll,
 		}
 	}
 
 	Logger.Debugf("[BuyListing][%s]HTTP响应状态码: %d，响应内容: %s", creatorId, resp.StatusCode, string(body))
+
+	switch resp.StatusCode {
+	case 200:
+	}
 
 	// 检测429状态码（访问频繁）
 	if resp.StatusCode == http.StatusTooManyRequests {
@@ -318,14 +322,14 @@ func (d *Dao) buy(creatorId string, name string, buyerPrice float64, sellerRecei
 }
 
 // BuyListing 购买物品
-func (d *Dao) BuyListing(creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string, maFileContent string) error {
-	br := d.buy(creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
+func (d *Dao) BuyListing(gameId, creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string, maFileContent string) error {
+	br := d.buy(gameId, creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 	if br.success && br.needConfirmation {
 		Logger.Infof("用户[%s]购买物品[%s][%s]需要手机令牌确认", d.GetUsername(), creatorId, name)
 		if err := d.ConfirmationForBuyList("allow", maFileContent); err != nil {
 			return err
 		}
-		brAgain := d.buy(creatorId, name, buyerPrice, sellerReceivePrice, br.confirmationId)
+		brAgain := d.buy(gameId, creatorId, name, buyerPrice, sellerReceivePrice, br.confirmationId)
 		if brAgain.success {
 			return nil
 		} else {
@@ -472,10 +476,10 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 	}
 
 	// 检测429状态码（访问频繁）
-	if resp.StatusCode == http.StatusTooManyRequests {
-		Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)
-		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
-	}
+	// if resp.StatusCode == http.StatusTooManyRequests {
+	// 	Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)
+	// 	return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
+	// }
 
 	switch resp.StatusCode {
 	case 429:
@@ -483,6 +487,7 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
 	case 401, 403:
 		Logger.Warnf("用户 [%s] 获取库存遇到授权失败 (401/403)", username)
+		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrAuthorizationFailed)
 	}
 
 	// 检查是否为GZIP压缩数据
@@ -630,7 +635,7 @@ func (d *Dao) PutList(gameId int, contextId int, assetID string, price float64, 
 		return Model.MyListingReponse{}, err
 	}
 
-	Logger.Infof("用户 [%s] 上架物品[%s]，返回结果: %s，返回状态码: %d", d.GetUsername(), assetID, string(body), resp.StatusCode)
+	Logger.Debugf("[PutListing][%s]HTTP响应状态码: %d，响应内容: %s", assetID, resp.StatusCode, string(body))
 
 	// 检测429状态码（访问频繁）
 	if resp.StatusCode == http.StatusTooManyRequests {
@@ -755,7 +760,8 @@ func (d *Dao) ConfirmationForPutList(op string, maFileContent string) *Model.Con
 
 		if i != 0 {
 			Logger.Infof("处理其他购买饰品确认")
-			err := d.AllowSingleConfirmation(pt, conf, steamTime)
+			sTime, _ := d.GetSteamTimeLocal()
+			err := d.AllowSingleConfirmation(pt, conf, sTime)
 			if err != nil {
 				Logger.Errorf("处理其他购买饰品确认失败，用户: [%s], 错误: %v", username, err)
 			}
@@ -763,7 +769,8 @@ func (d *Dao) ConfirmationForPutList(op string, maFileContent string) *Model.Con
 		} else {
 			Logger.Infof("处理本次购买饰品确认")
 			for j := 0; j < Constants.Tries; j++ {
-				err = d.AllowSingleConfirmation(pt, conf, steamTime)
+				sTime, _ := d.GetSteamTimeLocal()
+				err = d.AllowSingleConfirmation(pt, conf, sTime)
 				if err != nil {
 					Logger.Errorf("第 %d 次允许待确认失败，用户: [%s], 错误: %v", j+1, username, err)
 					time.Sleep(100 * time.Millisecond)
