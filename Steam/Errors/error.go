@@ -68,6 +68,14 @@ var ErrIOReadAll = errors.New("程序内部错误[IOReadAll]")
 var ErrRateLimited = errors.New("steam api rate limited (429)")
 var ErrServerError = errors.New("steam server error(502)")
 var ErrAuthorizationFailed = errors.New("steam authorization failed(401/403)")
+var ErrAccountBan = errors.New("您的帐户当前无法使用社区市场。")
+
+func IsAccountBan(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, ErrAccountBan)
+}
 
 // IsRateLimitError 检查错误是否为速率限制错误
 func IsRateLimitError(err error) bool {

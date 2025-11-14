@@ -228,10 +228,6 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 
 	Logger.Debugf("[BuyListing][%s]HTTP响应状态码: %d，响应内容: %s", creatorId, resp.StatusCode, string(body))
 
-	switch resp.StatusCode {
-	case 200:
-	}
-
 	// 检测429状态码（访问频繁）
 	if resp.StatusCode == http.StatusTooManyRequests {
 		Logger.Warnf("用户 [%s] 购买物品遇到速率限制 (429)", d.GetUsername())
@@ -243,12 +239,32 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 		}
 	} else if resp.StatusCode == 502 {
 		Logger.Warnf("用户 [%s] 购买物品遇到服务器错误 (502)", d.GetUsername())
-		return buyResult{
-			success:          false,
-			needConfirmation: false,
-			confirmationId:   "",
-			error:            fmt.Errorf("购买失败: %w", Errors.ErrServerError),
+		var buyListingFailedResp Model.BuyListingFailedResponse
+		if err := json.Unmarshal(body, &buyListingFailedResp); err != nil {
+			return buyResult{
+				success:          false,
+				needConfirmation: false,
+				confirmationId:   "",
+				error:            err,
+			}
 		}
+
+		if buyListingFailedResp.Message == `Your account is currently unable to use the Community Market.` || buyListingFailedResp.Message == `您的帐户当前无法使用社区市场。` {
+			return buyResult{
+				success:          false,
+				needConfirmation: false,
+				confirmationId:   "",
+				error:            Errors.ErrAccountBan,
+			}
+		} else {
+			return buyResult{
+				success:          false,
+				needConfirmation: false,
+				confirmationId:   "",
+				error:            fmt.Errorf("%w", Errors.ErrServerError),
+			}
+		}
+
 	} else if resp.StatusCode == http.StatusNotAcceptable {
 		var buyListingResp Model.BuyListingNeedConfirmationResponse
 		if err := json.Unmarshal(body, &buyListingResp); err != nil {
@@ -325,7 +341,6 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 func (d *Dao) BuyListing(gameId, creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string, maFileContent string) error {
 	br := d.buy(gameId, creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 	if br.success && br.needConfirmation {
-		Logger.Infof("用户[%s]购买物品[%s][%s]需要手机令牌确认", d.GetUsername(), creatorId, name)
 		if err := d.ConfirmationForBuyList("allow", maFileContent); err != nil {
 			return err
 		}
@@ -335,8 +350,6 @@ func (d *Dao) BuyListing(gameId, creatorId string, name string, buyerPrice float
 		} else {
 			return brAgain.error
 		}
-	} else {
-		Logger.Infof("用户[%s]购买物品[%s][%s][%+v]", d.GetUsername(), creatorId, name, br)
 	}
 	return br.error
 }
@@ -475,21 +488,6 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 		return nil, fmt.Errorf("读取库存响应失败: %w", err)
 	}
 
-	// 检测429状态码（访问频繁）
-	// if resp.StatusCode == http.StatusTooManyRequests {
-	// 	Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)
-	// 	return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
-	// }
-
-	switch resp.StatusCode {
-	case 429:
-		Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)
-		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
-	case 401, 403:
-		Logger.Warnf("用户 [%s] 获取库存遇到授权失败 (401/403)", username)
-		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrAuthorizationFailed)
-	}
-
 	// 检查是否为GZIP压缩数据
 	if len(body) > 2 && body[0] == 0x1f && body[1] == 0x8b {
 		// 解压GZIP数据
@@ -500,6 +498,15 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 
 	Logger.Infof("库存响应状态码: %d", resp.StatusCode)
 	Logger.Infof("库存响应: %s", string(body))
+
+	switch resp.StatusCode {
+	case 429:
+		Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)
+		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
+	case 401, 403:
+		Logger.Warnf("用户 [%s] 获取库存遇到授权失败 (401/403)", username)
+		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrAuthorizationFailed)
+	}
 
 	if resp.StatusCode == 403 {
 		return nil, fmt.Errorf("获取库存失败，错误码: %d", resp.StatusCode)
@@ -655,7 +662,14 @@ func (d *Dao) PutList(gameId int, contextId int, assetID string, price float64, 
 
 	// 再行处理返回数据不为成功的情况
 	if !sellResp.Success {
-		return Model.MyListingReponse{}, fmt.Errorf("上架失败: %s", sellResp.Message)
+		switch sellResp.Message {
+		case "您的帐户当前无法使用社区市场。":
+		case "Your account is currently unable to use the Community Market.":
+			return Model.MyListingReponse{}, Errors.ErrAccountBan
+		default:
+			return Model.MyListingReponse{}, fmt.Errorf("%s", sellResp.Message)
+		}
+
 	}
 
 	// 如果需要手机令牌确认

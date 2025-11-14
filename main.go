@@ -38,7 +38,6 @@ var accounts = []Account{
 	{Username: "ffotd74229", Password: "oP4M4CMHAftX", SharedSecret: "IDhBX3NM+8fZCti4C3d6oFhXI6E="}, // [7] [54]
 	{Username: "j47hoord6j", Password: "NewRP7IhC9Z", SharedSecret: "Gwgztog4anK0soQp4IgLaZIki0s="},  // [8] [57] 市场不可用
 	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="}, // [9]
-	{Username: "j47hoord6j", Password: "NewRP7IhC9Z", SharedSecret: "Gwgztog4anK0soQp4IgLaZIki0s="},  // [10]
 
 }
 
@@ -52,16 +51,16 @@ func main() {
 	// TestGetGameUpdateInofs(1879330)
 
 	// TestGetTokenCode(9)
-	// TestLogin(10)
+	// TestLogin(8)
 	// TestGetSummary(7)
-	// TestGetInventory(10)
+	// TestGetInventory(9)
 
 	// TestGetMyListings(10)
 	// TestGetMyListings(17)
 	// TestGetConfirmations(0)
 	// TestGetConfirmations(17)
-	// TestPutList(10)
-	TestBuyListing(9)
+	TestPutList(9)
+	TestBuyListing(8)
 	// TestPutList2(5)
 	// TestGetConfirmations(10)
 	// TestGetConfirmations(11)
@@ -205,7 +204,7 @@ func TestGetInventory(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory)
+	items, err := client.GetInventory(570, 2)
 	if err != nil {
 		Logger.Error("获取库存失败: ", err)
 	}
@@ -265,7 +264,7 @@ func TestBuyListing(accountIndex int) {
 	}
 
 	maFileContent := string(data)
-	Logger.Info(client.BuyListing("", "625562309703857739", "", 0.16, 0.14, maFileContent).Error())
+	Logger.Info(client.BuyListing("321360", "9079938361156157936", "", 0.16, 0.14, maFileContent).Error())
 }
 
 func TestRemoveMyListings(accountIndex int) {
