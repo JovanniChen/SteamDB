@@ -28,6 +28,7 @@ func (d *Dao) GetMyListings() (activeListings []Model.MyListingReponse, err erro
 	Logger.Infof("获取用户 %s 的上架列表", d.GetUsername())
 	params := Param.Params{}
 	params.SetString("count", "50")
+	// params.SetString("norender", "1")
 
 	req, err := d.NewRequest(http.MethodGet, Constants.GetMyListings+"?"+params.ToUrl(), nil)
 	if err != nil {
@@ -50,6 +51,8 @@ func (d *Dao) GetMyListings() (activeListings []Model.MyListingReponse, err erro
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, Errors.ResponseError(resp.StatusCode)
@@ -579,7 +582,7 @@ func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, u
 			}
 
 			// 只包含可交易和可市场交易的物品
-			if desc.Marketable == 1 {
+			if desc.Marketable == 1 && desc.Commodity == 0 {
 				items = append(items, Model.Item{
 					AssetID:    asset.AssetID,
 					ClassID:    asset.ClassID,

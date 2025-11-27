@@ -99,6 +99,14 @@ func (c *Client) Login(credentials *LoginCredentials) (*UserInfo, error) {
 		return nil, err
 	}
 
+	// available, err := c.dao.CheckAccountAvailable(strconv.FormatUint(c.GetSteamID(), 10))
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if !available {
+	// 	return nil, errors.New("account not available")
+	// }
+
 	if err := c.dao.UserInfo(); err != nil {
 		return nil, err
 	}
@@ -268,8 +276,20 @@ func (c *Client) GetReactions(steamID uint64, reactionType uint32) (*Protoc.Reac
 	return c.dao.GetReacionts(steamID, int32(reactionType))
 }
 
-func (c *Client) GetSteamIDByFriendLink(friendLink string) (uint64, error) {
-	return c.dao.GetSteamIDByFriendLink(friendLink)
+func (c *Client) AddFriendByLink(friendLink string) error {
+	return c.dao.AddFriendByLink(friendLink)
+}
+
+func (c *Client) AddFriendByFriendCode(friendCode uint32) error {
+	return c.dao.AddFriendByFriendCode(friendCode)
+}
+
+func (c *Client) RemoveFriend(steamID uint64) error {
+	return c.dao.RemoveFriend(steamID)
+}
+
+func (c *Client) CheckFriendStatus(friendLink string) error {
+	return c.dao.CheckFriendStatus(friendLink)
 }
 
 func (c *Client) GetInventory(gameID int, categoryId int) ([]Model.Item, error) {
@@ -415,4 +435,40 @@ func (c *Client) GetGameUpdateInofs(gameID int) (*Model.GameUpdateEvents, error)
 // 返回：更新事件列表（包含UniqueID、AppID、StartTime、EventName）、总共找到的event_type=12的数量、是否需要更新
 func (c *Client) GetGameUpdateEvents(gameID int, limit int) ([]Model.UpdateEventInfo, int, bool, error) {
 	return c.dao.GetGameUpdateEvents(gameID, limit)
+}
+
+func (c *Client) CheckAccountAvailable(steamId string) (bool, error) {
+	return c.dao.CheckAccountAvailable(steamId)
+}
+
+func (c *Client) ClearCart() error {
+	return c.dao.ClearCart()
+}
+
+func (c *Client) GetCart() error {
+	return c.dao.GetCart()
+}
+
+func (c *Client) AddItemToCart() error {
+	return c.dao.AddItemToCart()
+}
+
+func (c *Client) InitTransaction() error {
+	return c.dao.InitTransaction()
+}
+
+func (c *Client) CancelTransaction(transactionID string) error {
+	return c.dao.CancelTransaction(transactionID)
+}
+
+func (c *Client) GetFinalPrice(transactionID string) error {
+	return c.dao.GetFinalPrice(transactionID)
+}
+
+func (c *Client) UnsendGift(giftId string) error {
+	return c.dao.UnsendGift(giftId)
+}
+
+func (c *Client) TransactionStatus(transId string) error {
+	return c.dao.TransactionStatus(transId)
 }

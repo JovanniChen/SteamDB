@@ -11,6 +11,9 @@ const (
 
 	PrimalCarnage             = 321360
 	PrimalCarnageCategory int = 1
+
+	Steam         = 753
+	SteamCategory = 1
 )
 
 const (

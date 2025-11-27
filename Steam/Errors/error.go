@@ -53,6 +53,10 @@ func ResponseError(errStr int) error {
 	return printStack(errorResponseCode, strconv.Itoa(errStr))
 }
 
+func ResponseErrorWithMessage(message string) error {
+	return errors.New(message)
+}
+
 // Unavailable 创建服务不可用错误
 // 用于表示服务暂时不可用的情况
 // 返回值：服务不可用错误对象
@@ -90,4 +94,22 @@ func IsServerError(err error) bool {
 		return false
 	}
 	return errors.Is(err, ErrServerError)
+}
+
+var ErrNetwork = errors.New("网络错误，请检查网络或者代理可用性")
+
+func IsNetworkError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, ErrNetwork)
+}
+
+var ErrWrongPassword = errors.New("密码错误")
+
+func IsWrongPassword(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, ErrWrongPassword)
 }

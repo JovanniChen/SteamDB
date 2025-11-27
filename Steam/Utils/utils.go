@@ -6,9 +6,12 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"math/big"
+	"net/url"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // SafeHexString 生成安全的十六进制随机字符串
@@ -67,4 +70,91 @@ func WalletConvert(wallet string) int {
 
 	// 乘以100后转换为整数（以分为单位）
 	return int(money * 100)
+}
+
+func FriendCodeToSteamID64(friendCode uint32) uint64 {
+	const base = uint64(76561197960265728)
+	return base + uint64(friendCode)
+}
+
+func SteamID64ToFriendCode(id64 uint64) uint32 {
+	const base = uint64(76561197960265728)
+	return uint32(id64 - base)
+}
+
+func StructToURLValues(input any) url.Values {
+	values := url.Values{}
+	v := reflect.ValueOf(input)
+	t := reflect.TypeOf(input)
+
+	if t.Kind() == reflect.Ptr {
+		v = v.Elem()
+		t = t.Elem()
+	}
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldType := t.Field(i)
+		tag := fieldType.Tag.Get("form")
+
+		if tag == "" || tag == "-" {
+			continue
+		}
+
+		addField(values, tag, field)
+	}
+
+	return values
+}
+
+// addField 处理各种类型
+func addField(values url.Values, key string, v reflect.Value) {
+	if !v.IsValid() {
+		return
+	}
+
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return
+		}
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.String:
+		values.Set(key, v.String())
+
+	case reflect.Int, reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8:
+		values.Set(key, strconv.FormatInt(v.Int(), 10))
+
+	case reflect.Uint, reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8:
+		values.Set(key, strconv.FormatUint(v.Uint(), 10))
+
+	case reflect.Float64, reflect.Float32:
+		values.Set(key, strconv.FormatFloat(v.Float(), 'f', -1, 64))
+
+	case reflect.Bool:
+		if v.Bool() {
+			values.Set(key, "1")
+		} else {
+			values.Set(key, "0")
+		}
+
+	case reflect.Struct:
+		if t, ok := v.Interface().(time.Time); ok {
+			values.Set(key, t.Format(time.RFC3339))
+		} else {
+			// 嵌套 struct：递归
+			t := v.Type()
+			for i := 0; i < v.NumField(); i++ {
+				subField := v.Field(i)
+				subType := t.Field(i)
+				subTag := subType.Tag.Get("form")
+
+				if subTag != "" && subTag != "-" {
+					addField(values, subTag, subField)
+				}
+			}
+		}
+	}
 }

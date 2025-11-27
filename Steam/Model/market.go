@@ -23,6 +23,7 @@ type Description struct {
 	MarketName string `json:"market_name"`
 	Tradable   int    `json:"tradable"`
 	Marketable int    `json:"marketable"`
+	Commodity  int    `json:"commodity"`
 }
 
 // 将 Asset 和 Description 结合起来的结构体

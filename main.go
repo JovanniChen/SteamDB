@@ -38,29 +38,40 @@ var accounts = []Account{
 	{Username: "ffotd74229", Password: "oP4M4CMHAftX", SharedSecret: "IDhBX3NM+8fZCti4C3d6oFhXI6E="}, // [7] [54]
 	{Username: "j47hoord6j", Password: "NewRP7IhC9Z", SharedSecret: "Gwgztog4anK0soQp4IgLaZIki0s="},  // [8] [57] 市场不可用
 	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="}, // [9]
-
+	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="},
 }
 
-// var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.219.138.193:8080")
+// var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.241.80.163:8080")
 
 var config *Steam.Config = Steam.NewConfig("")
 
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	// TestGetGameUpdateInofs(1879330)
-
-	// TestGetTokenCode(9)
-	// TestLogin(8)
+	TestTransactionStatus(1)
+	// TestUnsendGift(1)
+	// TestGetTokenCode(3)
+	// TestLogin(1)
+	// TestClearCart(1)
+	// TestGetCart(1)
+	// TestAddItemToCart(7)
+	// TestCancelTransaction(1)
+	// TestInitTransaction(1)
+	// TestGetFinalPrice(1)
+	// TestInitTransactions(7)
+	// TestAddFriendByLink(7)
+	// TestCheckFriendStatus(7)
+	// TestAddFriendByFriendCode(7)
+	// TestRemoveFriend(1)
+	// TestCheckAccountAvailable(8)
 	// TestGetSummary(7)
-	// TestGetInventory(9)
-
-	// TestGetMyListings(10)
+	// TestGetInventory(1)
+	// TestGetMyListings(7)
 	// TestGetMyListings(17)
 	// TestGetConfirmations(0)
 	// TestGetConfirmations(17)
-	TestPutList(9)
-	TestBuyListing(8)
+	// TestPutList(9)
+	// TestBuyListing(8)
 	// TestPutList2(5)
 	// TestGetConfirmations(10)
 	// TestGetConfirmations(11)
@@ -71,6 +82,137 @@ func main() {
 	// TestGetWaitBalance(3)
 	// TestGetInventoryAndPutList(4)
 	// TestCreateOrder(14)
+	// TestGetGameUpdateInofs(1879330)
+}
+
+func TestTransactionStatus(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.TransactionStatus("193220467646477559"))
+}
+
+func TestUnsendGift(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.UnsendGift("193220467646470468"))
+}
+
+func TestGetFinalPrice(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.GetFinalPrice("193220467646175498"))
+}
+
+func TestCancelTransaction(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.CancelTransaction("193220467646174959"))
+}
+
+func TestInitTransaction(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.InitTransaction())
+}
+
+func TestAddItemToCart(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.AddItemToCart())
+}
+
+func TestGetCart(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.GetCart())
+}
+
+func TestClearCart(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	if err := client.ClearCart(); err != nil {
+		Logger.Error("清空购物车失败: ", err)
+		return
+	}
+	Logger.Info("清空购物车成功")
+}
+
+func TestRemoveFriend(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	if err := client.RemoveFriend(76561198313222178); err != nil {
+		Logger.Error("删除好友失败: ", err)
+		return
+	}
+	Logger.Info("删除好友成功")
+}
+
+func TestAddFriendByFriendCode(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	if err := client.AddFriendByFriendCode(1709637273); err != nil {
+		Logger.Error("添加好友失败: ", err)
+		return
+	}
+	Logger.Info("添加好友成功")
+}
+
+func TestCheckFriendStatus(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	if err = client.CheckFriendStatus("https://s.team/p/chbn-qbdd/KBPKBVMB"); err != nil {
+		Logger.Error("检查好友状态失败: ", err)
+		return
+	}
+	Logger.Info("检查好友状态成功")
+}
+
+func TestAddFriendByLink(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	if err = client.AddFriendByLink("https://s.team/p/chbn-qbdd/FVNCQFBM"); err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	Logger.Info("添加好友成功")
 }
 
 func TestGetTokenCode(accountIndex int) {
@@ -138,6 +280,8 @@ func TestLogin(accountIndex int) {
 			Logger.Error(err)
 			return
 		}
+
+		Logger.Info("登录成功")
 		Logger.Info(userInfo)
 
 		// 提取访问令牌
@@ -204,7 +348,7 @@ func TestGetInventory(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetInventory(570, 2)
+	items, err := client.GetInventory(Constants.Steam, Constants.SteamCategory)
 	if err != nil {
 		Logger.Error("获取库存失败: ", err)
 	}
@@ -325,6 +469,15 @@ func TestCreateOrder(accountIndex int) {
 	maFileContent := string(data)
 
 	Logger.Info(client.CreateOrder("Giftapult", 0.12, 15, maFileContent))
+}
+
+func TestCheckAccountAvailable(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.CheckAccountAvailable(strconv.FormatUint(client.GetSteamID(), 10)))
 }
 
 func loadFromSession(accountIndex int) (*Steam.Client, error) {

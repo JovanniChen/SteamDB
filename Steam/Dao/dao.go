@@ -93,6 +93,7 @@ func (d *Dao) NewRequest(method, url string, body io.Reader) (*http.Request, err
 
 	// 设置浏览器用户代理，模拟真实浏览器请求以避免被反爬虫检测
 	req.Header.Set("User-Agent", Constants.UserAgent)
+	// req.Header.Set("accept-language", "zh-CN,zh;q=0.9")
 
 	// 对于POST请求，设置表单数据的Content-Type
 	if method == "POST" {
@@ -148,7 +149,7 @@ func (d *Dao) RetryRequest(tries int, request *http.Request) (*http.Response, er
 	}
 
 	// 所有重试都失败，返回错误信息
-	return resp, Errors.Error("多次请求后还是失败-->" + request.URL.String())
+	return resp, Errors.ErrNetwork
 }
 
 // SetRequestCallback 设置HTTP请求成功回调

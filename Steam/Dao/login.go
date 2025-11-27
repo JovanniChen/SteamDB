@@ -9,6 +9,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -633,7 +635,7 @@ func (d *Dao) beginAuthSessionViaCredentials(sharedSecret string) error {
 			}
 		}
 	case 5:
-		return Errors.Error("密码错误")
+		return Errors.ErrWrongPassword
 	case 84:
 		return Errors.Error("请求过于频繁,请稍后再试")
 	default:
@@ -723,4 +725,38 @@ func (d *Dao) SetLoginInfoDirect(username string, steamID uint64, nickname strin
 	d.credentials.RefreshToken = refreshToken
 	d.credentials.LoginCookies = loginCookies
 	d.credentials.SteamOffset = steamOffset
+}
+
+func (d *Dao) CheckAccountAvailable(steamId string) (bool, error) {
+	// 创建GET请求
+	req, err := d.NewRequest(http.MethodGet, Constants.CheckAccountAvailable, nil)
+	if err != nil {
+		return false, err
+	}
+
+	// 发送请求
+	resp, err := d.RetryRequest(1, req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	if resp.StatusCode != http.StatusOK {
+		return false, Errors.ResponseError(resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	fmt.Println(string(body))
+	if strings.Contains(string(body), "You are able to use the Community Market") {
+		fmt.Println("市场可用")
+	} else {
+		fmt.Println("市场不可用")
+	}
+
+	return true, nil
 }

@@ -72,5 +72,27 @@ var (
 	CreateOrder         string = Scheme + Domain.Community + "/market/createbuyorder" // 创建订单
 
 	// 游戏更新
-	GetGameUpdateInofs string = Scheme + Domain.Store + "/news/app" // 获取游戏更新信息
+	GetGameUpdateInofs    string = Scheme + Domain.Store + "/news/app" // 获取游戏更新信息
+	CheckAccountAvailable string = Scheme + Domain.Community + "/market/eligibilitycheck/"
+
+	// 好友相关API端点
+	AddFriendByLink  string = Scheme + Domain.Community + "/invites/ajaxredeem/"      // 通过链接添加好友
+	AddFriendAjax    string = Scheme + Domain.Community + "/actions/AddFriendAjax"    // 通过好友码添加好友
+	RemoveFriendAjax string = Scheme + Domain.Community + "/actions/RemoveFriendAjax" // 通过好友码删除好友
+	Ajaxresolveusers string = Scheme + Domain.Community + "/actions/ajaxresolveusers" // 查看好友信息
+
+	// 购物车相关API端点
+	ClearCart      string = Scheme + Domain.Api + "/IAccountCartService/DeleteCart/v1" // 清空购物车
+	CartIndex      string = Scheme + Domain.Store + "/cart/"
+	AddItemsToCart string = Scheme + Domain.Api + "/IAccountCartService/AddItemsToCart/v1"
+
+	// 订单相关 API 端点
+	InitTransaction     string = Scheme + Domain.CheckOut + "/checkout/inittransaction/"
+	CancelCartTrans     string = Scheme + Domain.CheckOut + "/checkout/canceltransaction/"
+	Finalizetransaction string = Scheme + Domain.CheckOut + "/checkout/finalizetransaction/"
+	Getfinalprice       string = Scheme + Domain.CheckOut + "/checkout/getfinalprice/"
+
+	// 礼物相关 API
+	UnsendGiftSubmit  string = Scheme + Domain.CheckOut + "/checkout/unsendgiftsubmit/"
+	TransactionStatus string = Scheme + Domain.CheckOut + "/checkout/transactionstatus/"
 )
