@@ -61,12 +61,12 @@ func main() {
 	// TestGetCart(11)
 	// TestAddItemToCart(1)
 	// TestInitTransaction(1)
-	// TestAddItemToCartAndInitTransaction(11)
+	TestAddItemToCartAndInitTransaction(11)
 	// TestValidateCart(1)
 	// TestCancelTransaction(1)
 	// TestGetFinalPrice(1)
 	// TestAddFriendByLink(11)
-	TestCheckIsFriend(11)
+	// TestCheckIsFriend(11)
 	// TestCheckFriendStatus(11)
 	// TestAddFriendByFriendCode(7)
 	// TestRemoveFriend(1)
@@ -186,8 +186,8 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 
 	addCartItems := make([][]Model.AddCartItem, 0)
 	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 827941, AccountidGiftee: 352956450, Message: "Apewar"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 605518, AccountidGiftee: 352956450, Message: "Funny Truck"}})
@@ -211,11 +211,12 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 		}
 		Logger.Info("初始化交易成功: ", transID)
 
-		if err := client.GetFinalPrice(transID); err != nil {
+		total, err := client.GetFinalPrice(transID)
+		if err != nil {
 			Logger.Error(err)
 			return
 		}
-		Logger.Info("获取最终价格成功")
+		Logger.Info("获取最终价格成功: ", total)
 
 		err = client.AccessCheckoutURL(transID)
 		if err != nil {

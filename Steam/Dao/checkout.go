@@ -273,7 +273,12 @@ func (d *Dao) CancelTransaction(transactionID string) error {
 	return nil
 }
 
-func (d *Dao) GetFinalPrice(transactionID string) error {
+type GetFinalPriceResponse struct {
+	Success int `json:"success"`
+	Total   int `json:"total"`
+}
+
+func (d *Dao) GetFinalPrice(transactionID string) (int, error) {
 	Logger.Infof("[%s]获取最终价格", d.GetUsername())
 
 	params := Param.Params{}
@@ -286,24 +291,35 @@ func (d *Dao) GetFinalPrice(transactionID string) error {
 
 	req, err := d.Request(http.MethodGet, Constants.Getfinalprice+"?"+params.ToUrl(), nil)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	fmt.Println(resp.StatusCode)
-	fmt.Println(string(body))
+	if resp.StatusCode != 200 {
+		return 0, fmt.Errorf("获取最终价格失败,返回状态码: %d", resp.StatusCode)
+	}
 
-	return nil
+	var response GetFinalPriceResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return 0, fmt.Errorf("解析最终价格响应失败: %w", err)
+	}
+
+	if response.Success != 1 {
+		return 0, fmt.Errorf("获取最终价格失败,返回Success: %d", response.Success)
+	}
+
+	return response.Total, nil
 }
 
 func (d *Dao) AccessCheckoutURL(transactionID string) error {

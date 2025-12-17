@@ -469,7 +469,7 @@ func (c *Client) CancelTransaction(transactionID string) error {
 	return c.dao.CancelTransaction(transactionID)
 }
 
-func (c *Client) GetFinalPrice(transactionID string) error {
+func (c *Client) GetFinalPrice(transactionID string) (int, error) {
 	return c.dao.GetFinalPrice(transactionID)
 }
 
