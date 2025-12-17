@@ -300,6 +300,10 @@ func (c *Client) GetInventory(gameID int, categoryId int) ([]Model.Item, error) 
 	return c.dao.GetInventory(gameID, categoryId)
 }
 
+func (c *Client) GetSteamGift(gameID int, categoryId int) ([]Model.Item, error) {
+	return c.dao.GetSteamGift(gameID, categoryId)
+}
+
 func (c *Client) PutList(gameid int, contextId int, assetID string, price float64, currency int, maFileContent string) (Model.MyListingReponse, error) {
 	return c.dao.PutList(gameid, contextId, assetID, price, currency, maFileContent)
 }

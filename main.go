@@ -52,7 +52,8 @@ var config *Steam.Config = Steam.NewConfig("")
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	TestLogin(11)
+	TestLogin(1)
+	TestGetSteamGift(1)
 	// TestTransactionStatus(4)
 	// TestUnsendGift(1)
 	// TestGetTokenCode(3)
@@ -61,11 +62,11 @@ func main() {
 	// TestGetCart(11)
 	// TestAddItemToCart(1)
 	// TestInitTransaction(1)
-	TestAddItemToCartAndInitTransaction(11)
+	// TestAddItemToCartAndInitTransaction(11)
 	// TestValidateCart(1)
 	// TestCancelTransaction(1)
 	// TestGetFinalPrice(1)
-	TestAddFriendByLink(11)
+	// TestAddFriendByLink(11)
 	// TestCheckIsFriend(11)
 	// TestCheckFriendStatus(11)
 	// TestAddFriendByFriendCode(7)
@@ -467,6 +468,23 @@ func TestGetInventory(accountIndex int) {
 	}
 
 	items, err := client.GetInventory(Constants.Steam, Constants.SteamCategory)
+	if err != nil {
+		Logger.Error("获取库存失败: ", err)
+	}
+
+	for _, item := range items {
+		Logger.Infof("物品ID: %s, 名称: %s, 市场名称: %s, 价格: %f, 货币: %d, 是否可交易: %t, 是否可在市场交易: %t", item.AssetID, item.Name, item.MarketName, item.Price, item.Currency, item.Tradable, item.Marketable)
+	}
+}
+
+func TestGetSteamGift(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	items, err := client.GetSteamGift(Constants.Steam, Constants.SteamCategory)
 	if err != nil {
 		Logger.Error("获取库存失败: ", err)
 	}

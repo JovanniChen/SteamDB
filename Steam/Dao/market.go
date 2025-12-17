@@ -467,6 +467,60 @@ func (d *Dao) CreateOrder(marketHashName string, price float64, quantity int64, 
 }
 
 // GetInventory 获取用户库存
+func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
+
+	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
+	req, err := d.NewRequest(http.MethodGet, inventoryUrl, nil)
+	if err != nil {
+		return nil, fmt.Errorf("创建库存请求失败: %w", err)
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return nil, fmt.Errorf("执行库存请求失败: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取库存响应失败: %w", err)
+	}
+
+	// 检查是否为GZIP压缩数据
+	if len(body) > 2 && body[0] == 0x1f && body[1] == 0x8b {
+		// 解压GZIP数据
+		reader, _ := gzip.NewReader(bytes.NewReader(body))
+		defer reader.Close()
+		body, _ = io.ReadAll(reader)
+	}
+
+	Logger.Infof("库存响应状态码: %d", resp.StatusCode)
+	Logger.Infof("库存响应: %s", string(body))
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("获取库存失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	var inventoryResponse Model.InventoryResponse
+	if err := json.Unmarshal(body, &inventoryResponse); err != nil {
+		return nil, fmt.Errorf("解析库存响应失败: %w", err)
+	}
+
+	if inventoryResponse.Success != 1 {
+		return nil, fmt.Errorf("库存API返回失败，success=%d", inventoryResponse.Success)
+	}
+
+	var steamGiftResponse []Model.Item
+	for _, asset := range inventoryResponse.Assets {
+		steamGiftResponse = append(steamGiftResponse, Model.Item{
+			AssetID: asset.AssetID,
+		})
+	}
+
+	return steamGiftResponse, nil
+}
+
+// GetInventory 获取用户库存
 func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 	username := d.GetUsername()
 	Logger.Infof("开始获取用户 [%s] 的库存，游戏ID: %d, 分类ID: %d", username, gameId, categoryId)
