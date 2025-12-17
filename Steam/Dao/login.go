@@ -135,6 +135,10 @@ func (d *Dao) GetCountryCode() string {
 	return d.credentials.CountryCode
 }
 
+func (d *Dao) GetLanguage() string {
+	return d.credentials.Language
+}
+
 // GetBalance 获取用户余额
 // 返回值：余额
 func (d *Dao) GetBalance() int {
@@ -716,7 +720,7 @@ func (d *Dao) SetLoginInfo(username, password, accessToken, countryCode string, 
 }
 
 // SetLoginInfoDirect 直接设置登录信息（用于恢复会话）
-func (d *Dao) SetLoginInfoDirect(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*LoginCookie, steamOffset int64) {
+func (d *Dao) SetLoginInfoDirect(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*LoginCookie, steamOffset int64, steamLanguage string) {
 	d.credentials.Username = username
 	d.credentials.SteamID = steamID
 	d.credentials.Nickname = nickname
@@ -725,6 +729,7 @@ func (d *Dao) SetLoginInfoDirect(username string, steamID uint64, nickname strin
 	d.credentials.RefreshToken = refreshToken
 	d.credentials.LoginCookies = loginCookies
 	d.credentials.SteamOffset = steamOffset
+	d.credentials.Language = steamLanguage
 }
 
 func (d *Dao) CheckAccountAvailable(steamId string) (bool, error) {

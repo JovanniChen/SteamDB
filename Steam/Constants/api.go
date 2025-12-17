@@ -85,12 +85,14 @@ var (
 	ClearCart      string = Scheme + Domain.Api + "/IAccountCartService/DeleteCart/v1" // 清空购物车
 	CartIndex      string = Scheme + Domain.Store + "/cart/"
 	AddItemsToCart string = Scheme + Domain.Api + "/IAccountCartService/AddItemsToCart/v1"
+	ValidateCart   string = Scheme + Domain.Api + "/ICheckoutService/ValidateCart/v1"
 
 	// 订单相关 API 端点
 	InitTransaction     string = Scheme + Domain.CheckOut + "/checkout/inittransaction/"
 	CancelCartTrans     string = Scheme + Domain.CheckOut + "/checkout/canceltransaction/"
 	Finalizetransaction string = Scheme + Domain.CheckOut + "/checkout/finalizetransaction/"
 	Getfinalprice       string = Scheme + Domain.CheckOut + "/checkout/getfinalprice/"
+	ExternallLink       string = Scheme + Domain.CheckOut + "/checkout/externallink/"
 
 	// 礼物相关 API
 	UnsendGiftSubmit  string = Scheme + Domain.CheckOut + "/checkout/unsendgiftsubmit/"

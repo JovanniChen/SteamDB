@@ -3,7 +3,6 @@
 package Dao
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -195,47 +194,41 @@ func (d *Dao) GetUserCookies() ([]byte, error) {
 // 参数：language - 语言代码(如"schinese"表示简体中文)
 // 返回值：设置成功返回nil，失败返回错误
 func (d *Dao) SetLanguage(language string) error {
-	languageUrl := Constants.Language
-
-	// 检查是否已登录
-	if d.CheckLogin(languageUrl) {
-		// 获取当前域名的Cookie信息
-		lg := d.GetCookiesString(languageUrl)
-
-		// 构建POST请求参数
-		params := Param.Params{}
-		params.SetString("language", language)
-		params.SetString("sessionid", lg.SessionId) // 需要会话ID验证
-
-		// 创建POST请求
-		req, err := d.Request("POST", languageUrl, strings.NewReader(params.Encode()))
-		if err != nil {
-			return err
-		}
-
-		// 发送请求
-		resp, err := d.RetryRequest(Constants.Tries, req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		// 检查响应状态
-		if resp.StatusCode != 200 {
-			return Errors.ResponseError(resp.StatusCode)
-		}
-
-		// 读取响应内容
-		buf := new(bytes.Buffer)
-		if _, err = buf.ReadFrom(resp.Body); err != nil {
-			return err
-		}
-
-		// 检查设置是否成功(Steam返回"true"表示成功)
-		if buf.String() != "true" {
-			return Errors.Error("语言设置失败")
-		}
+	if !d.CheckLogin(Constants.Language) {
+		return fmt.Errorf("未登录")
 	}
 
+	// 构建POST请求参数
+	params := Param.Params{}
+	params.SetString("language", language)
+	params.SetString("sessionid", d.GetCookiesString(Constants.Language).SessionId) // 需要会话ID验证
+
+	// 创建POST请求
+	req, err := d.Request("POST", Constants.Language, strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+
+	// 发送请求
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("语言设置失败: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if !strings.Contains(string(body), "true") {
+		return fmt.Errorf("语言设置失败: %s", string(body))
+	}
+	d.SetCookiesLanguage(language)
 	return nil
 }

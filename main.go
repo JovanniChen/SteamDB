@@ -13,6 +13,7 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Dao"
 	"github.com/JovanniChen/SteamDB/Steam/Logger"
+	"github.com/JovanniChen/SteamDB/Steam/Model"
 )
 
 // {Username: "za0ww9ml4xl2", Password: "HLHxGyRMm6Zi", SharedSecret: "F54xOr9Tpyd5fAxgKx+RHR7vHik="}, // [0] [xv6753] [46]
@@ -38,29 +39,35 @@ var accounts = []Account{
 	{Username: "ffotd74229", Password: "oP4M4CMHAftX", SharedSecret: "IDhBX3NM+8fZCti4C3d6oFhXI6E="}, // [7] [54]
 	{Username: "j47hoord6j", Password: "NewRP7IhC9Z", SharedSecret: "Gwgztog4anK0soQp4IgLaZIki0s="},  // [8] [57] 市场不可用
 	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="}, // [9]
-	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="},
+	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="}, // [10]
+	{Username: "fbrdz08225", Password: "NewNWnME1R6", SharedSecret: "VjYAPygKL4jxwSu69HeyzW58r3M="},  // [11]
 }
 
 // var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.241.80.163:8080")
 
 var config *Steam.Config = Steam.NewConfig("")
 
+// var config *Steam.Config = Steam.NewConfig("127.0.0.1:8888")
+
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	TestTransactionStatus(1)
+	// TestLogin(11)
+	// TestTransactionStatus(4)
 	// TestUnsendGift(1)
 	// TestGetTokenCode(3)
-	// TestLogin(1)
-	// TestClearCart(1)
-	// TestGetCart(1)
-	// TestAddItemToCart(7)
-	// TestCancelTransaction(1)
+	// TestSetLanguage(11)
+	// TestClearCart(11)
+	// TestGetCart(11)
+	// TestAddItemToCart(1)
 	// TestInitTransaction(1)
+	// TestAddItemToCartAndInitTransaction(11)
+	// TestValidateCart(1)
+	// TestCancelTransaction(1)
 	// TestGetFinalPrice(1)
-	// TestInitTransactions(7)
-	// TestAddFriendByLink(7)
-	// TestCheckFriendStatus(7)
+	// TestAddFriendByLink(11)
+	TestCheckIsFriend(11)
+	// TestCheckFriendStatus(11)
 	// TestAddFriendByFriendCode(7)
 	// TestRemoveFriend(1)
 	// TestCheckAccountAvailable(8)
@@ -74,9 +81,6 @@ func main() {
 	// TestBuyListing(8)
 	// TestPutList2(5)
 	// TestGetConfirmations(10)
-	// TestGetConfirmations(11)
-	// TestGetConfirmations(12)
-	// TestGetConfirmations(11)
 	// TestRemoveMyListings(4)
 	// TestGetBalance(0)
 	// TestGetWaitBalance(3)
@@ -85,13 +89,22 @@ func main() {
 	// TestGetGameUpdateInofs(1879330)
 }
 
+func TestValidateCart(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.ValidateCart())
+}
+
 func TestTransactionStatus(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.TransactionStatus("193220467646477559"))
+	Logger.Info(client.TransactionStatus("302434027729741667"))
 }
 
 func TestUnsendGift(accountIndex int) {
@@ -100,7 +113,7 @@ func TestUnsendGift(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.UnsendGift("193220467646470468"))
+	Logger.Info(client.UnsendGift("302434027729743323"))
 }
 
 func TestGetFinalPrice(accountIndex int) {
@@ -118,7 +131,12 @@ func TestCancelTransaction(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.CancelTransaction("193220467646174959"))
+
+	if err := client.CancelTransaction("23826125956811119"); err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info("取消交易成功")
 }
 
 func TestInitTransaction(accountIndex int) {
@@ -136,7 +154,89 @@ func TestAddItemToCart(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.AddItemToCart())
+
+	addCartItems := make([][]Model.AddCartItem, 0)
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 827941, AccountidGiftee: 352956450, Message: "Apewar"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 605518, AccountidGiftee: 352956450, Message: "Funny Truck"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 170869, AccountidGiftee: 352956450, Message: "Trivia Night"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 169006, AccountidGiftee: 352956450, Message: "Dead Drop"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 377271, AccountidGiftee: 352956450, Message: "TTV3"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1298871, AccountidGiftee: 352956450, Message: "Gladiator Fights"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
+
+	for _, addCartItem := range addCartItems {
+		if err := client.AddItemToCart(addCartItem); err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("添加购物车成功")
+	}
+}
+
+func TestAddItemToCartAndInitTransaction(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	addCartItems := make([][]Model.AddCartItem, 0)
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 827941, AccountidGiftee: 352956450, Message: "Apewar"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 605518, AccountidGiftee: 352956450, Message: "Funny Truck"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 170869, AccountidGiftee: 352956450, Message: "Trivia Night"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 169006, AccountidGiftee: 352956450, Message: "Dead Drop"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 377271, AccountidGiftee: 352956450, Message: "TTV3"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1298871, AccountidGiftee: 352956450, Message: "Gladiator Fights"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
+
+	for _, addCartItem := range addCartItems {
+		if err := client.AddItemToCart(addCartItem); err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("添加购物车成功")
+
+		transID, err := client.InitTransaction()
+		if err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("初始化交易成功: ", transID)
+
+		if err := client.GetFinalPrice(transID); err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("获取最终价格成功")
+
+		err = client.AccessCheckoutURL(transID)
+		if err != nil {
+			Logger.Error(err)
+			return
+		}
+
+		// time.Sleep(20 * time.Second)
+
+		if err := client.CancelTransaction(transID); err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("取消交易成功")
+
+		if err := client.ClearCart(); err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("清空购物车成功")
+	}
 }
 
 func TestGetCart(accountIndex int) {
@@ -187,6 +287,20 @@ func TestAddFriendByFriendCode(accountIndex int) {
 	Logger.Info("添加好友成功")
 }
 
+func TestCheckIsFriend(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	isFriend, err := client.CheckIsFriend("76561198313222178")
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info("是否是好友: ", isFriend)
+}
+
 func TestCheckFriendStatus(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
@@ -207,7 +321,7 @@ func TestAddFriendByLink(accountIndex int) {
 		return
 	}
 
-	if err = client.AddFriendByLink("https://s.team/p/chbn-qbdd/FVNCQFBM"); err != nil {
+	if err = client.AddFriendByLink("https://s.team/p/chbn-qbdd/MQJNWCQV"); err != nil {
 		Logger.Error(err)
 		return
 	}
@@ -267,6 +381,7 @@ func TestLogin(accountIndex int) {
 
 		maFile, err := os.ReadFile("mafiles/" + account.Username + ".maFile")
 		if err != nil {
+			Logger.Info("没有发现maFile文件")
 			return
 		}
 
@@ -304,16 +419,17 @@ func TestLogin(accountIndex int) {
 			loginCookies = cookies
 		}
 		session := &SteamSession{
-			AccountIndex: accountIndex,
-			Username:     account.GetUsername(),
-			SteamID:      client.GetSteamID(),
-			Nickname:     client.GetNickname(),
-			CountryCode:  client.GetCountryCode(),
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
-			LoginCookies: loginCookies,
-			LoginTime:    time.Now(),
-			SteamOffset:  steamOffset,
+			AccountIndex:  accountIndex,
+			Username:      account.GetUsername(),
+			SteamID:       client.GetSteamID(),
+			Nickname:      client.GetNickname(),
+			CountryCode:   client.GetCountryCode(),
+			AccessToken:   accessToken,
+			RefreshToken:  refreshToken,
+			LoginCookies:  loginCookies,
+			LoginTime:     time.Now(),
+			SteamOffset:   steamOffset,
+			SteamLanguage: client.GetLanguage(),
 		}
 		session.Save(accountIndex)
 	}
@@ -480,6 +596,15 @@ func TestCheckAccountAvailable(accountIndex int) {
 	Logger.Info(client.CheckAccountAvailable(strconv.FormatUint(client.GetSteamID(), 10)))
 }
 
+func TestSetLanguage(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.SetLanguage("english"))
+}
+
 func loadFromSession(accountIndex int) (*Steam.Client, error) {
 	session := &SteamSession{}
 	session.Load(accountIndex)
@@ -488,22 +613,23 @@ func loadFromSession(accountIndex int) (*Steam.Client, error) {
 		Logger.Error(err)
 		return nil, err
 	}
-	client.SetLoginInfo(session.Username, session.SteamID, session.Nickname, session.CountryCode, session.AccessToken, session.RefreshToken, session.LoginCookies, session.SteamOffset)
+	client.SetLoginInfo(session.Username, session.SteamID, session.Nickname, session.CountryCode, session.AccessToken, session.RefreshToken, session.LoginCookies, session.SteamOffset, session.SteamLanguage)
 	return client, nil
 }
 
 // SteamSession Steam会话信息
 type SteamSession struct {
-	AccountIndex int                         `json:"account_index"`
-	Username     string                      `json:"username"`
-	SteamID      uint64                      `json:"steam_id"`
-	Nickname     string                      `json:"nickname"`
-	CountryCode  string                      `json:"country_code"`
-	AccessToken  string                      `json:"access_token"`
-	RefreshToken string                      `json:"refresh_token"`
-	LoginCookies map[string]*Dao.LoginCookie `json:"login_cookies"`
-	LoginTime    time.Time                   `json:"login_time"`
-	SteamOffset  int64                       `json:"steam_offset"`
+	AccountIndex  int                         `json:"account_index"`
+	Username      string                      `json:"username"`
+	SteamID       uint64                      `json:"steam_id"`
+	Nickname      string                      `json:"nickname"`
+	CountryCode   string                      `json:"country_code"`
+	AccessToken   string                      `json:"access_token"`
+	RefreshToken  string                      `json:"refresh_token"`
+	LoginCookies  map[string]*Dao.LoginCookie `json:"login_cookies"`
+	LoginTime     time.Time                   `json:"login_time"`
+	SteamOffset   int64                       `json:"steam_offset"`
+	SteamLanguage string                      `json:"steam_language"`
 }
 
 func (s *SteamSession) Save(accountIndex int) {

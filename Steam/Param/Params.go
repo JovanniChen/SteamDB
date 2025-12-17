@@ -127,6 +127,26 @@ func (p Params) Encode() string {
 	return buf.String()
 }
 
+func (p Params) EncodeBy(param []string) string {
+	if len(p) == 0 {
+		return ""
+	}
+	var buf strings.Builder
+	for _, k := range param {
+		vs := p[k]
+		keyEscaped := p.QueryEscape(k) // 对键进行URL编码
+		// 在非第一个参数前添加&分隔符
+		if buf.Len() > 0 {
+			buf.WriteByte('&')
+		}
+		// 构建 key=value 格式
+		buf.WriteString(keyEscaped)
+		buf.WriteByte('=')
+		buf.WriteString(p.QueryEscape(vs)) // 对值进行URL编码
+	}
+	return buf.String()
+}
+
 func (p Params) CreateTimeStamp() {
 	p["timestamp"] = fmt.Sprintf("%d", time.Now().UTC().Unix())
 }

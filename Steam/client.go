@@ -288,6 +288,10 @@ func (c *Client) RemoveFriend(steamID uint64) error {
 	return c.dao.RemoveFriend(steamID)
 }
 
+func (c *Client) CheckIsFriend(steamId string) (bool, error) {
+	return c.dao.CheckIsFriend(steamId)
+}
+
 func (c *Client) CheckFriendStatus(friendLink string) error {
 	return c.dao.CheckFriendStatus(friendLink)
 }
@@ -397,6 +401,10 @@ func (c *Client) GetCountryCode() string {
 	return c.dao.GetCountryCode()
 }
 
+func (c *Client) GetLanguage() string {
+	return c.dao.GetLanguage()
+}
+
 // GetLoginCookies 获取登录Cookie信息
 func (c *Client) GetLoginCookies() map[string]*Dao.LoginCookie {
 	return c.dao.GetLoginCookies()
@@ -415,8 +423,8 @@ func (c *Client) GetBalanceAndWaitBalance() (int, int) {
 }
 
 // SetLoginInfo 设置登录信息（用于恢复会话）
-func (c *Client) SetLoginInfo(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*Dao.LoginCookie, steamOffset int64) {
-	c.dao.SetLoginInfoDirect(username, steamID, nickname, countryCode, accessToken, refreshToken, loginCookies, steamOffset)
+func (c *Client) SetLoginInfo(username string, steamID uint64, nickname string, countryCode string, accessToken string, refreshToken string, loginCookies map[string]*Dao.LoginCookie, steamOffset int64, steamLanguage string) {
+	c.dao.SetLoginInfoDirect(username, steamID, nickname, countryCode, accessToken, refreshToken, loginCookies, steamOffset, steamLanguage)
 }
 
 // SetRequestCallback 设置HTTP请求成功回调
@@ -449,11 +457,11 @@ func (c *Client) GetCart() error {
 	return c.dao.GetCart()
 }
 
-func (c *Client) AddItemToCart() error {
-	return c.dao.AddItemToCart()
+func (c *Client) AddItemToCart(addCartItems []Model.AddCartItem) error {
+	return c.dao.AddItemToCart(addCartItems)
 }
 
-func (c *Client) InitTransaction() error {
+func (c *Client) InitTransaction() (string, error) {
 	return c.dao.InitTransaction()
 }
 
@@ -465,10 +473,22 @@ func (c *Client) GetFinalPrice(transactionID string) error {
 	return c.dao.GetFinalPrice(transactionID)
 }
 
+func (c *Client) AccessCheckoutURL(transactionID string) error {
+	return c.dao.AccessCheckoutURL(transactionID)
+}
+
+func (c *Client) GetAlipayURL(transactionID string) (string, error) {
+	return c.dao.GetAlipayURL(transactionID)
+}
+
 func (c *Client) UnsendGift(giftId string) error {
 	return c.dao.UnsendGift(giftId)
 }
 
 func (c *Client) TransactionStatus(transId string) error {
 	return c.dao.TransactionStatus(transId)
+}
+
+func (c *Client) ValidateCart() error {
+	return c.dao.ValidateCart()
 }

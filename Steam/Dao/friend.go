@@ -100,6 +100,8 @@ func (d *Dao) GetFriendInfoByLink(link string) (*Model.FriendInfo, string, error
 		return friendInfo, "", err
 	}
 
+	fmt.Println(string(body))
+
 	result := d.ParseFriendLinkHTML(string(body))
 
 	if result.Status != Model.FriendLinkStatusSuccess {
@@ -114,6 +116,45 @@ func (d *Dao) GetFriendInfoByLink(link string) (*Model.FriendInfo, string, error
 		fmt.Printf("滥用ID: %s\n", result.Data.AbuseID)
 	}
 	return result.Data, inviteToken, nil
+}
+
+func (d *Dao) CheckIsFriend(steamId string) (bool, error) {
+	params := Param.Params{}
+	params.SetString("steamids", steamId)
+	req, err := d.Request(http.MethodGet, Constants.Ajaxresolveusers+"?"+params.ToUrl(), nil)
+	if err != nil {
+		return false, err
+	}
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	if resp.StatusCode != 200 {
+		return false, fmt.Errorf("检查好友状态失败: %s", string(body))
+	}
+
+	var result []map[string]any
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return false, err
+	}
+
+	if len(result) == 0 {
+		return false, fmt.Errorf("没有找到好友信息")
+	}
+
+	if result[0]["is_friend"].(bool) {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (d *Dao) CheckFriendStatus(link string) error {

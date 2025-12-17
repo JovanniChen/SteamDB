@@ -3,7 +3,6 @@ package Dao
 import (
 	"bytes"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
+	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Param"
 	"github.com/JovanniChen/SteamDB/Steam/Protoc"
 	"google.golang.org/protobuf/proto"
@@ -61,31 +61,31 @@ func (d *Dao) GetCart() error {
 	return nil
 }
 
-func (d *Dao) AddItemToCart() error {
-	fmt.Println("d.GetCountryCode() =", d.GetCountryCode())
-
-	item := &Protoc.Item{
-		Packageid: 1074193,
-		GiftInfo: &Protoc.GiftInfo{
-			AccountidGiftee: 352956450,
-			GiftMessage: &Protoc.GiftMessage{
-				Gifteename: "",
-				Message:    "test",
-				Sentiment:  "",
-				Signature:  "",
+func (d *Dao) AddItemToCart(addCartItems []Model.AddCartItem) error {
+	items := make([]*Protoc.Item, 0)
+	for _, addCartItem := range addCartItems {
+		item := &Protoc.Item{
+			Packageid: addCartItem.PackageID,
+			GiftInfo: &Protoc.GiftInfo{
+				AccountidGiftee: int32(addCartItem.AccountidGiftee),
+				GiftMessage: &Protoc.GiftMessage{
+					Gifteename: "",
+					Message:    addCartItem.Message,
+					Sentiment:  "",
+					Signature:  "",
+				},
 			},
-		},
-		Flag: &Protoc.Flag{
-			IsGift:    true,
-			IsPrivate: false,
-		},
+			Flag: &Protoc.Flag{
+				IsGift:    true,
+				IsPrivate: false,
+			},
+		}
+		items = append(items, item)
 	}
 
 	addCartSend := &Protoc.AddCartSend{
 		UserCountry: d.GetCountryCode(),
-		Items: []*Protoc.Item{
-			item,
-		},
+		Items:       items,
 	}
 
 	// 序列化为protobuf格式
@@ -113,11 +113,8 @@ func (d *Dao) AddItemToCart() error {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println(resp.StatusCode)
-
-	fmt.Println(resp.Header.Get("X-Eresult"))
 	if resp.Header.Get("X-Eresult") != "1" {
-		return errors.New("add item to cart failed")
+		return fmt.Errorf("add item to cart failed: %s", resp.Header.Get("X-Eresult"))
 	}
 
 	// 读取响应数据
@@ -134,7 +131,38 @@ func (d *Dao) AddItemToCart() error {
 		return err
 	}
 
-	fmt.Println(addCartReceive)
+	// fmt.Println("******************************************************")
+	// fmt.Println(addCartReceive)
+	// fmt.Println("******************************************************")
+	// fmt.Println(addCartReceive.Cart.Subtotal)
+	// fmt.Println("******************************************************")
+
+	return nil
+}
+
+func (d *Dao) ValidateCart() error {
+	accessToken, _ := d.AccessToken()
+	params := Param.Params{}
+	params.SetString("access_token", accessToken)
+
+	req, err := d.NewRequest(http.MethodGet, Constants.ValidateCart+"?"+params.ToUrl(), nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(resp.StatusCode)
+	fmt.Println("=====", string(body))
 
 	return nil
 }

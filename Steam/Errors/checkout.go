@@ -1,6 +1,9 @@
 package Errors
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // CheckoutError 自定义结账错误类型，包含错误码与错误消息
 type CheckoutError struct {
@@ -61,9 +64,9 @@ var errorMessages = map[int]string{
 }
 
 // GetCheckoutError 根据错误代码返回对应的 CheckoutError
-func GetCheckoutError(code int) error {
+func GetCheckoutError(code int) string {
 	if msg, ok := errorMessages[code]; ok {
-		return &CheckoutError{Code: code, Msg: msg}
+		return msg
 	}
-	return &CheckoutError{Code: code, Msg: "未知的结账错误代码"}
+	return "未知的结账错误代码: " + strconv.Itoa(code)
 }
