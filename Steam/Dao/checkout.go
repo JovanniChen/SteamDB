@@ -189,7 +189,7 @@ func (d *Dao) InitTransaction() (string, error) {
 	params.SetString("BankAccountID", "")
 	params.SetInt64("bSaveBillingAddress", 1)
 	params.SetString("gidPaymentID", "")
-	params.SetInt64("bUseRemainingSteamAccount", 0)
+	params.SetInt64("bUseRemainingSteamAccount", 1)
 	params.SetInt64("bPreAuthOnly", 0)
 
 	sessionId := d.GetLoginCookies()["checkout.steampowered.com"].SessionId
