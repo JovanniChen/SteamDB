@@ -276,7 +276,7 @@ func (c *Client) GetReactions(steamID uint64, reactionType uint32) (*Protoc.Reac
 	return c.dao.GetReacionts(steamID, int32(reactionType))
 }
 
-func (c *Client) AddFriendByLink(friendLink string) error {
+func (c *Client) AddFriendByLink(friendLink string) (string, error) {
 	return c.dao.AddFriendByLink(friendLink)
 }
 

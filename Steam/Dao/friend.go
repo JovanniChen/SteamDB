@@ -218,10 +218,10 @@ func (d *Dao) CheckFriendStatus(link string) error {
 	return nil
 }
 
-func (d *Dao) AddFriendByLink(link string) error {
+func (d *Dao) AddFriendByLink(link string) (string, error) {
 	friendInfo, inviteToken, err := d.GetFriendInfoByLink(link)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	sessionid := d.GetLoginCookies()["steamcommunity.com"].SessionId
@@ -233,36 +233,36 @@ func (d *Dao) AddFriendByLink(link string) error {
 
 	req, err := d.Request(http.MethodGet, Constants.AddFriendByLink+"?"+params.ToUrl(), nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// 发送请求，重定向会自动处理，cookie 会从 jar 中自动获取
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	// 读取响应内容
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if resp.StatusCode != 200 {
-		return Errors.ErrAddFriendFailed
+		return "", Errors.ErrAddFriendFailed
 	}
 	result := &Model.AddFriendByLinkResult{}
 	err = json.Unmarshal(body, result)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if result.Success != 1 {
-		return Errors.ErrAddFriendFailed
+		return "", Errors.ErrAddFriendFailed
 	}
 
-	return nil
+	return friendInfo.AbuseID, nil
 }
 
 func (d *Dao) AddFriendByFriendCode(friendCode uint32) error {

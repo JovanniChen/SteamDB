@@ -147,3 +147,7 @@ func FriendCodeToSteamID64(friendCode uint32) uint64 {
 	const base = uint64(76561197960265728)
 	return base + uint64(friendCode)
 }
+
+func SteamID64ToFriendCode(steamID uint64) uint32 {
+	return uint32(steamID - 76561197960265728)
+}

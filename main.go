@@ -65,7 +65,7 @@ func main() {
 	// TestValidateCart(1)
 	// TestCancelTransaction(1)
 	// TestGetFinalPrice(1)
-	// TestAddFriendByLink(11)
+	TestAddFriendByLink(11)
 	// TestCheckIsFriend(11)
 	// TestCheckFriendStatus(11)
 	// TestAddFriendByFriendCode(7)
@@ -322,12 +322,13 @@ func TestAddFriendByLink(accountIndex int) {
 		return
 	}
 
-	if err = client.AddFriendByLink("https://s.team/p/chbn-qbdd/MQJNWCQV"); err != nil {
+	steamID, err := client.AddFriendByLink("https://s.team/p/chbn-qbdd/MQJNWCQV")
+	if err != nil {
 		Logger.Error(err)
 		return
 	}
 
-	Logger.Info("添加好友成功")
+	Logger.Info("添加好友成功: ", steamID)
 }
 
 func TestGetTokenCode(accountIndex int) {
