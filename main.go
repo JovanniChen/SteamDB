@@ -52,7 +52,7 @@ var config *Steam.Config = Steam.NewConfig("")
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	// TestLogin(11)
+	TestLogin(11)
 	// TestTransactionStatus(4)
 	// TestUnsendGift(1)
 	// TestGetTokenCode(3)

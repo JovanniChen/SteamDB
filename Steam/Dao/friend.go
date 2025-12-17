@@ -140,6 +140,8 @@ func (d *Dao) CheckIsFriend(steamId string) (bool, error) {
 		return false, fmt.Errorf("检查好友状态失败: %s", string(body))
 	}
 
+	fmt.Println(string(body))
+
 	var result []map[string]any
 	err = json.Unmarshal(body, &result)
 	if err != nil {
