@@ -477,7 +477,7 @@ func (c *Client) GetFinalPrice(transactionID string) (int, error) {
 	return c.dao.GetFinalPrice(transactionID)
 }
 
-func (c *Client) AccessCheckoutURL(transactionID string) error {
+func (c *Client) AccessCheckoutURL(transactionID string) (string, error) {
 	return c.dao.AccessCheckoutURL(transactionID)
 }
 

@@ -322,30 +322,30 @@ func (d *Dao) GetFinalPrice(transactionID string) (int, error) {
 	return response.Total, nil
 }
 
-func (d *Dao) AccessCheckoutURL(transactionID string) error {
+func (d *Dao) AccessCheckoutURL(transactionID string) (string, error) {
 	params := Param.Params{}
 	params.SetString("transid", transactionID)
 
 	req, err := d.Request(http.MethodGet, Constants.ExternallLink+"?"+params.ToUrl(), nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// 解析HTML表单
 	formData, err := ParsePaymentForm(string(body))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	fmt.Println("Action URL:", formData.Action)
@@ -361,7 +361,7 @@ func (d *Dao) AccessCheckoutURL(transactionID string) error {
 	reqForPayLink, err := d.NewRequest(http.MethodPost, formData.Action, strings.NewReader(paramsForPayLink.EncodeBy(paslice)))
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// reqForPayLink.Header.Set("Upgrade-Insecure-Requests", "1")
@@ -380,7 +380,7 @@ func (d *Dao) AccessCheckoutURL(transactionID string) error {
 
 	respForPayLink, err := d.RetryRequest(Constants.Tries, reqForPayLink)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer respForPayLink.Body.Close()
 
@@ -389,7 +389,7 @@ func (d *Dao) AccessCheckoutURL(transactionID string) error {
 	if respForPayLink.Header.Get("Content-Encoding") == "gzip" {
 		gzipReader, err := gzip.NewReader(respForPayLink.Body)
 		if err != nil {
-			return err
+			return "", err
 		}
 		defer gzipReader.Close()
 		reader = gzipReader
@@ -397,20 +397,18 @@ func (d *Dao) AccessCheckoutURL(transactionID string) error {
 
 	bodyForPayLink, err := io.ReadAll(reader)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	redirectURL, err := ExtractRedirectURL(string(bodyForPayLink))
 	if err != nil {
-		return err
+		return "", err
 	}
 	if redirectURL == "" {
-		return errors.New("未找到重定向URL")
+		return "", errors.New("未找到重定向URL")
 	}
 
-	fmt.Println("重定向URL:", "https://globalep1.smart2pay.com/"+redirectURL)
-
-	return nil
+	return "https://globalep1.smart2pay.com/" + redirectURL, nil
 }
 
 // ExtractRedirectURL 从HTML中提取重定向URL

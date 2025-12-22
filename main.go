@@ -53,16 +53,16 @@ var config *Steam.Config = Steam.NewConfig("")
 // 执行Steam平台相关操作的演示流程
 func main() {
 	TestLogin(1)
-	TestGetSteamGift(1)
+	//TestGetSteamGift(1)
 	// TestTransactionStatus(4)
 	// TestUnsendGift(1)
-	// TestGetTokenCode(3)
+	TestGetTokenCode(3)
 	// TestSetLanguage(11)
 	// TestClearCart(11)
 	// TestGetCart(11)
 	// TestAddItemToCart(1)
 	// TestInitTransaction(1)
-	// TestAddItemToCartAndInitTransaction(11)
+	TestAddItemToCartAndInitTransaction(11)
 	// TestValidateCart(1)
 	// TestCancelTransaction(1)
 	// TestGetFinalPrice(1)
@@ -219,11 +219,12 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 		}
 		Logger.Info("获取最终价格成功: ", total)
 
-		err = client.AccessCheckoutURL(transID)
+		checkoutURL, err := client.AccessCheckoutURL(transID)
 		if err != nil {
 			Logger.Error(err)
 			return
 		}
+		Logger.Info("获取支付页面成功: ", checkoutURL)
 
 		// time.Sleep(20 * time.Second)
 
