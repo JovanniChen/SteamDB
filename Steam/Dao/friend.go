@@ -100,8 +100,6 @@ func (d *Dao) GetFriendInfoByLink(link string) (*Model.FriendInfo, string, error
 		return friendInfo, "", err
 	}
 
-	fmt.Println(string(body))
-
 	result := d.ParseFriendLinkHTML(string(body))
 
 	if result.Status != Model.FriendLinkStatusSuccess {
