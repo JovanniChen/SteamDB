@@ -5,6 +5,7 @@ package Steam
 import (
 	"time"
 
+	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Dao"
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Protoc"
@@ -487,6 +488,20 @@ func (c *Client) GetAlipayURL(transactionID string) (string, error) {
 
 func (c *Client) UnsendGift(giftId string) error {
 	return c.dao.UnsendGift(giftId)
+}
+
+func (c *Client) UnsendAllGift() error {
+	items, err := c.dao.GetSteamGift(Constants.Steam, Constants.SteamCategory)
+	if err != nil {
+		return err
+	}
+	for _, item := range items {
+		if err := c.dao.UnsendGift(item.AssetID); err != nil {
+			return err
+		}
+		time.Sleep(1 * time.Second)
+	}
+	return nil
 }
 
 func (c *Client) TransactionStatus(transId string) error {

@@ -52,17 +52,17 @@ var config *Steam.Config = Steam.NewConfig("")
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	TestLogin(1)
+	// TestLogin(5)
 	//TestGetSteamGift(1)
-	// TestTransactionStatus(4)
-	// TestUnsendGift(1)
-	TestGetTokenCode(3)
+	// TestTransactionStatus(5)
+	TestUnsendGift(5)
+	// TestGetTokenCode(3)
 	// TestSetLanguage(11)
 	// TestClearCart(11)
 	// TestGetCart(11)
 	// TestAddItemToCart(1)
 	// TestInitTransaction(1)
-	TestAddItemToCartAndInitTransaction(11)
+	// TestAddItemToCartAndInitTransaction(11)
 	// TestValidateCart(1)
 	// TestCancelTransaction(1)
 	// TestGetFinalPrice(1)
@@ -105,7 +105,7 @@ func TestTransactionStatus(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.TransactionStatus("302434027729741667"))
+	Logger.Info(client.TransactionStatus("263028164760433268"))
 }
 
 func TestUnsendGift(accountIndex int) {
@@ -114,7 +114,20 @@ func TestUnsendGift(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.UnsendGift("302434027729743323"))
+
+	items, err := client.GetSteamGift(Constants.Steam, Constants.SteamCategory)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	for _, item := range items {
+		if err := client.UnsendGift(item.AssetID); err != nil {
+			Logger.Errorf("撤回赠送礼物失败[%s]: %v", item.AssetID, err)
+		}
+		time.Sleep(1 * time.Second)
+		Logger.Info("撤回赠送礼物成功: ", item.AssetID)
+	}
 }
 
 func TestGetFinalPrice(accountIndex int) {
