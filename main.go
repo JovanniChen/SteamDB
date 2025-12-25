@@ -105,7 +105,7 @@ func TestTransactionStatus(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.TransactionStatus("263028164760433268"))
+	Logger.Info(client.TransactionStatus("263028164760456372"))
 }
 
 func TestUnsendGift(accountIndex int) {

@@ -3,6 +3,7 @@
 package Steam
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
@@ -491,6 +492,7 @@ func (c *Client) UnsendGift(giftId string) error {
 }
 
 func (c *Client) UnsendAllGift() error {
+	var count int
 	items, err := c.dao.GetSteamGift(Constants.Steam, Constants.SteamCategory)
 	if err != nil {
 		return err
@@ -499,7 +501,11 @@ func (c *Client) UnsendAllGift() error {
 		if err := c.dao.UnsendGift(item.AssetID); err != nil {
 			return err
 		}
+		count++
 		time.Sleep(1 * time.Second)
+	}
+	if count != len(items) {
+		return fmt.Errorf("退回全部礼物失败: 已有[%d] != 退回[%d]", count, len(items))
 	}
 	return nil
 }
