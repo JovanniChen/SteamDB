@@ -648,45 +648,41 @@ func (d *Dao) UnsendGift(giftId string) error {
 	return nil
 }
 
-func (d *Dao) TransactionStatus(transId string) error {
+func (d *Dao) TransactionStatus(transId string, count int) error {
 	var result Model.TransactionStatusResponse
 
-	for i := 0; i < 10; i++ {
-		params := Param.Params{}
-		params.SetInt64("count", int64(i+1))
-		params.SetString("transid", transId)
+	params := Param.Params{}
+	params.SetInt64("count", int64(count))
+	params.SetString("transid", transId)
 
-		req, err := d.Request(http.MethodGet, Constants.TransactionStatus+"?"+params.ToUrl(), nil)
-		if err != nil {
-			return err
-		}
-
-		resp, err := d.RetryRequest(Constants.Tries, req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		if resp.StatusCode != 200 {
-			return errors.New("获取交易状态失败,返回状态码: " + strconv.Itoa(resp.StatusCode))
-		}
-
-		err = json.Unmarshal(body, &result)
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("result = %+v\n", result)
-
-		// if result.Success == 1 {
-		// 	return nil
-		// }
-		// time.Sleep(5 * time.Second)
+	req, err := d.Request(http.MethodGet, Constants.TransactionStatus+"?"+params.ToUrl(), nil)
+	if err != nil {
+		return err
 	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return errors.New("获取交易状态失败,返回状态码: " + strconv.Itoa(resp.StatusCode))
+	}
+
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return err
+	}
+
+	if result.Success != 1 {
+		return fmt.Errorf("订单未完成,返回Success: %d", result.Success)
+	}
+
 	return nil
 }

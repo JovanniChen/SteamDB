@@ -510,8 +510,8 @@ func (c *Client) UnsendAllGift() error {
 	return nil
 }
 
-func (c *Client) TransactionStatus(transId string) error {
-	return c.dao.TransactionStatus(transId)
+func (c *Client) TransactionStatus(transId string, count int) error {
+	return c.dao.TransactionStatus(transId, count)
 }
 
 func (c *Client) ValidateCart() error {
