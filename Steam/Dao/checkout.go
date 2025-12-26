@@ -348,8 +348,6 @@ func (d *Dao) AccessCheckoutURL(transactionID string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println("Action URL:", formData.Action)
-	fmt.Println("Form Fields:")
 	paramsForPayLink := Param.Params{}
 
 	for key, value := range formData.Fields {

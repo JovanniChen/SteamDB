@@ -64,22 +64,30 @@ func (d *Dao) GetCart() error {
 func (d *Dao) AddItemToCart(addCartItems []Model.AddCartItem) error {
 	items := make([]*Protoc.Item, 0)
 	for _, addCartItem := range addCartItems {
-		item := &Protoc.Item{
-			Packageid: addCartItem.PackageID,
-			GiftInfo: &Protoc.GiftInfo{
-				AccountidGiftee: int32(addCartItem.AccountidGiftee),
-				GiftMessage: &Protoc.GiftMessage{
-					Gifteename: "",
-					Message:    addCartItem.Message,
-					Sentiment:  "",
-					Signature:  "",
-				},
-			},
-			Flag: &Protoc.Flag{
-				IsGift:    true,
-				IsPrivate: false,
+		var item *Protoc.Item
+		if addCartItem.BundleID != 0 {
+			item = &Protoc.Item{
+				Bundleid: addCartItem.BundleID,
+			}
+		} else {
+			item = &Protoc.Item{
+				Packageid: addCartItem.PackageID,
+			}
+		}
+		item.GiftInfo = &Protoc.GiftInfo{
+			AccountidGiftee: int32(addCartItem.AccountidGiftee),
+			GiftMessage: &Protoc.GiftMessage{
+				Gifteename: "",
+				Message:    addCartItem.Message,
+				Sentiment:  "",
+				Signature:  "",
 			},
 		}
+		item.Flag = &Protoc.Flag{
+			IsGift:    true,
+			IsPrivate: false,
+		}
+
 		items = append(items, item)
 	}
 

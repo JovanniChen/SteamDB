@@ -41,6 +41,7 @@ var accounts = []Account{
 	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="}, // [9]
 	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="}, // [10]
 	{Username: "fbrdz08225", Password: "NewNWnME1R6", SharedSecret: "VjYAPygKL4jxwSu69HeyzW58r3M="},  // [11]
+	{Username: "rwfio67235", Password: "JzBvNCICYfFx", SharedSecret: "0C4hU7ieyVyYFvdDPKoTII20xMc="}, // [12]
 }
 
 // var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.241.80.163:8080")
@@ -52,15 +53,16 @@ var config *Steam.Config = Steam.NewConfig("")
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	// TestLogin(5)
+	// TestGetTokenCode(12)
+	// TestLogin(12)
 	// TestGetSteamGift(5)
-	TestTransactionStatus(5)
-	// TestUnsendGift(5)
+	// TestTransactionStatus(5)
+	TestUnsendGift(12)
 	// TestGetTokenCode(3)
 	// TestSetLanguage(11)
 	// TestClearCart(5)
 	// TestGetCart(11)
-	// TestAddItemToCart(1)
+	TestAddItemToCart(1)
 	// TestInitTransaction(1)
 	// TestAddItemToCartAndInitTransaction(5)
 	// TestValidateCart(1)
@@ -122,10 +124,11 @@ func TestUnsendGift(accountIndex int) {
 	}
 
 	for _, item := range items {
+		time.Sleep(1 * time.Second)
 		if err := client.UnsendGift(item.AssetID); err != nil {
 			Logger.Errorf("撤回赠送礼物失败[%s]: %v", item.AssetID, err)
+			continue
 		}
-		time.Sleep(1 * time.Second)
 		Logger.Info("撤回赠送礼物成功: ", item.AssetID)
 	}
 }
@@ -170,17 +173,17 @@ func TestAddItemToCart(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 827941, AccountidGiftee: 352956450, Message: "Apewar"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 827941, AccountidGiftee: 352956450, Message: "Apewar"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})
 	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 605518, AccountidGiftee: 352956450, Message: "Funny Truck"}})
 	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 170869, AccountidGiftee: 352956450, Message: "Trivia Night"}})
 	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 169006, AccountidGiftee: 352956450, Message: "Dead Drop"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 377271, AccountidGiftee: 352956450, Message: "TTV3"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1298871, AccountidGiftee: 352956450, Message: "Gladiator Fights"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 377271, AccountidGiftee: 352956450, Message: "TTV3"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1298871, AccountidGiftee: 352956450, Message: "Gladiator Fights"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
 
 	for _, addCartItem := range addCartItems {
 		if err := client.AddItemToCart(addCartItem); err != nil {
@@ -210,6 +213,15 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 377271, AccountidGiftee: 352956450, Message: "TTV3"}})
 	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1298871, AccountidGiftee: 352956450, Message: "Gladiator Fights"}})
 	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 203389, AccountidGiftee: 352956450, Message: "Thief Simulator"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 8183, AccountidGiftee: 352956450, Message: "Terraria"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 379292, AccountidGiftee: 352956450, Message: "Ranch Simulator"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 121418, AccountidGiftee: 352956450, Message: "Don't Starve Together"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 240331, AccountidGiftee: 352956450, Message: "Swarmlake"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 85819, AccountidGiftee: 352956450, Message: "Plantera"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 195824, AccountidGiftee: 352956450, Message: "Polygoneer"}})
+
+	payLinks := make([]string, 0)
 
 	for _, addCartItem := range addCartItems {
 		if err := client.AddItemToCart(addCartItem); err != nil {
@@ -239,7 +251,7 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 		}
 		Logger.Info("获取支付页面成功: ", checkoutURL)
 
-		// time.Sleep(20 * time.Second)
+		payLinks = append(payLinks, checkoutURL)
 
 		if err := client.CancelTransaction(transID); err != nil {
 			Logger.Error(err)
@@ -252,6 +264,9 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 			return
 		}
 		Logger.Info("清空购物车成功")
+	}
+	for _, payLink := range payLinks {
+		Logger.Info("支付链接: ", payLink)
 	}
 }
 
