@@ -517,3 +517,7 @@ func (c *Client) TransactionStatus(transId string, count int) error {
 func (c *Client) ValidateCart() error {
 	return c.dao.ValidateCart()
 }
+
+func (c *Client) GetProductByAppUrl(url string) error {
+	return c.dao.GetProductByAppUrl(url)
+}

@@ -42,29 +42,32 @@ var accounts = []Account{
 	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="}, // [10]
 	{Username: "fbrdz08225", Password: "NewNWnME1R6", SharedSecret: "VjYAPygKL4jxwSu69HeyzW58r3M="},  // [11]
 	{Username: "rwfio67235", Password: "JzBvNCICYfFx", SharedSecret: "0C4hU7ieyVyYFvdDPKoTII20xMc="}, // [12]
+	{Username: "ejvp732231", Password: "myz2bzwCzFYQ", SharedSecret: "KHzBIonDKW8enmoCUYgLN+oYQ4M="}, // [13]
+	{Username: "is1ozf", Password: "fvamo98B", SharedSecret: "XNFDkwgxzu+mRUwpLbayKj3AX+A="},         // [14]
 }
 
 // var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.241.80.163:8080")
 
-var config *Steam.Config = Steam.NewConfig("")
+// var config *Steam.Config = Steam.NewConfig("a312911880-zone-duration-region-HK-session-W8CrCjPY-sessTime-1440:xiabin1314@e243012a5d6e4a47.abcproxy.vip:7980")
 
-// var config *Steam.Config = Steam.NewConfig("127.0.0.1:8888")
+var config *Steam.Config = Steam.NewConfig("")
 
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	// TestGetTokenCode(12)
-	// TestLogin(12)
+	TestGetTokenCode(14)
+	// TestLogin(13)
+	// TestGetProductByAppUrl(1)
 	// TestGetSteamGift(5)
 	// TestTransactionStatus(5)
-	TestUnsendGift(12)
+	// TestUnsendGift(5)
 	// TestGetTokenCode(3)
 	// TestSetLanguage(11)
 	// TestClearCart(5)
 	// TestGetCart(11)
-	TestAddItemToCart(1)
+	// TestAddItemToCart(1)
 	// TestInitTransaction(1)
-	// TestAddItemToCartAndInitTransaction(5)
+	// TestAddItemToCartAndInitTransaction(13)
 	// TestValidateCart(1)
 	// TestCancelTransaction(1)
 	// TestGetFinalPrice(1)
@@ -202,24 +205,25 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 827941, AccountidGiftee: 352956450, Message: "Apewar"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 605518, AccountidGiftee: 352956450, Message: "Funny Truck"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 170869, AccountidGiftee: 352956450, Message: "Trivia Night"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 169006, AccountidGiftee: 352956450, Message: "Dead Drop"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 377271, AccountidGiftee: 352956450, Message: "TTV3"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1298871, AccountidGiftee: 352956450, Message: "Gladiator Fights"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 203389, AccountidGiftee: 352956450, Message: "Thief Simulator"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 8183, AccountidGiftee: 352956450, Message: "Terraria"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 379292, AccountidGiftee: 352956450, Message: "Ranch Simulator"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 121418, AccountidGiftee: 352956450, Message: "Don't Starve Together"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 240331, AccountidGiftee: 352956450, Message: "Swarmlake"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 85819, AccountidGiftee: 352956450, Message: "Plantera"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 195824, AccountidGiftee: 352956450, Message: "Polygoneer"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 827941, AccountidGiftee: 352956450, Message: "Apewar"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 605518, AccountidGiftee: 352956450, Message: "Funny Truck"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 170869, AccountidGiftee: 352956450, Message: "Trivia Night"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 169006, AccountidGiftee: 352956450, Message: "Dead Drop"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 377271, AccountidGiftee: 352956450, Message: "TTV3"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1298871, AccountidGiftee: 352956450, Message: "Gladiator Fights"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 203389, AccountidGiftee: 352956450, Message: "Thief Simulator"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 8183, AccountidGiftee: 352956450, Message: "Terraria"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 379292, AccountidGiftee: 352956450, Message: "Ranch Simulator"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 121418, AccountidGiftee: 352956450, Message: "Don't Starve Together"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 240331, AccountidGiftee: 352956450, Message: "Swarmlake"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 85819, AccountidGiftee: 352956450, Message: "Plantera"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 195824, AccountidGiftee: 352956450, Message: "Polygoneer"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1150347, AccountidGiftee: 1753831820, Message: "Microsoft Flight Simulator 2024"}, {PackageID: 625300, AccountidGiftee: 1753831820, Message: "BLUE REFLECTION"}})
 
 	payLinks := make([]string, 0)
 
@@ -652,6 +656,16 @@ func TestSetLanguage(accountIndex int) {
 		return
 	}
 	Logger.Info(client.SetLanguage("english"))
+}
+
+func TestGetProductByAppUrl(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	fmt.Println(client.GetBalance())
+	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/1222140/_/"))
 }
 
 func loadFromSession(accountIndex int) (*Steam.Client, error) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
@@ -171,6 +172,40 @@ func (d *Dao) ValidateCart() error {
 
 	fmt.Println(resp.StatusCode)
 	fmt.Println("=====", string(body))
+
+	return nil
+}
+
+func (d *Dao) GetProductByAppUrl(url string) error {
+	req, err := d.Request(http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+
+	cookies := d.GetLoginCookies()["store.steampowered.com"]
+	if cookies != nil {
+		req.Header.Add("cookie", fmt.Sprintf("sessionid=%s;steamLoginSecure=%s", cookies.SessionId, cookies.SteamLoginSecure))
+	}
+
+	req.Header.Add("cookie", "birthtime=325958401;lastagecheckage=1-May-1980;wants_mature_content=1;Steam_Language=schinese")
+	req.Header.Add("cookie", "app_impressions=1222140@1_5_9__412|960990@1_5_9__412|960910@1_5_9__412|312840@1_5_9__412|1222140@1_5_9__412|960990@1_5_9__412|960910@1_5_9__412|312840@1_5_9__412|1222140@1_5_9__412|960990@1_5_9__412|960910@1_5_9__412|312840@1_5_9__412|252490@1_8_512_513_520|218620@1_8_512_513_520|252490@1_8_512_513_520|218620@1_8_512_513_520|1222140@1_5_9__412|960990@1_5_9__412|960910@1_5_9__412|312840@1_5_9__412|292030@1_5_9__300|960990@1_5_9__300|990080@1_5_9__300|960910@1_5_9__300|1222140@1_5_9__412|960990@1_5_9__412|960910@1_5_9__412|312840@1_5_9__412|292030@1_5_9__300|960990@1_5_9__300|1091500@1_5_9__300|960910@1_5_9__300|2947440@1_430_4__300|567640@1_430_4__300|2172010@1_430_4__300|3101040@1_430_4__300|1222140@1_5_9__412|960990@1_5_9__412|960910@1_5_9__412|312840@1_5_9__412|1222140@1_5_9__412|960990@1_5_9__412|960910@1_5_9__412|312840@1_5_9__412")
+	req.Header.Add("cookie", "recentapps=%7B%221222140%22%3A1766996240%7D")
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(resp.StatusCode)
+	// fmt.Println("=====", string(body))
+	// 保存这个string(body)到项目根目录
+	os.WriteFile("product.html", body, 0644)
 
 	return nil
 }

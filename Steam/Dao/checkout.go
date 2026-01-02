@@ -192,8 +192,10 @@ func (d *Dao) InitTransaction() (string, error) {
 	params.SetInt64("bUseRemainingSteamAccount", 1)
 	params.SetInt64("bPreAuthOnly", 0)
 
+	if d.GetLoginCookies()["checkout.steampowered.com"] == nil {
+		return "", errors.New("checkout.steampowered.com cookie not found")
+	}
 	sessionId := d.GetLoginCookies()["checkout.steampowered.com"].SessionId
-
 	params.SetString("sessionid", sessionId)
 
 	req, err := d.Request(http.MethodPost, Constants.InitTransaction, strings.NewReader(params.Encode()))
@@ -316,6 +318,7 @@ func (d *Dao) GetFinalPrice(transactionID string) (int, error) {
 	}
 
 	if response.Success != 1 {
+		fmt.Println(string(body))
 		return 0, fmt.Errorf("获取最终价格失败,返回Success: %d", response.Success)
 	}
 
