@@ -43,7 +43,7 @@ var accounts = []Account{
 	{Username: "fbrdz08225", Password: "NewNWnME1R6", SharedSecret: "VjYAPygKL4jxwSu69HeyzW58r3M="},  // [11]
 	{Username: "rwfio67235", Password: "JzBvNCICYfFx", SharedSecret: "0C4hU7ieyVyYFvdDPKoTII20xMc="}, // [12]
 	{Username: "ejvp732231", Password: "myz2bzwCzFYQ", SharedSecret: "KHzBIonDKW8enmoCUYgLN+oYQ4M="}, // [13]
-	{Username: "is1ozf", Password: "fvamo98B", SharedSecret: "XNFDkwgxzu+mRUwpLbayKj3AX+A="},         // [14]
+	{Username: "mcg9ipxd04nl", Password: "AAlLQXPdDy3U", SharedSecret: "zUN+RyvAQZjHnyT+5guHBPB2NOg="},
 }
 
 // var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.241.80.163:8080")

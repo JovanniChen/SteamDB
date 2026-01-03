@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -222,6 +223,10 @@ func (d *Dao) AddFriendByLink(link string) (string, error) {
 		return "", err
 	}
 
+	if d.GetLoginCookies()["steamcommunity.com"] == nil {
+		return "", errors.New("steamcommunity.com cookie not found")
+	}
+
 	sessionid := d.GetLoginCookies()["steamcommunity.com"].SessionId
 
 	params := Param.Params{}
@@ -264,6 +269,10 @@ func (d *Dao) AddFriendByLink(link string) (string, error) {
 }
 
 func (d *Dao) AddFriendByFriendCode(friendCode uint32) error {
+	if d.GetLoginCookies()["steamcommunity.com"] == nil {
+		return errors.New("steamcommunity.com cookie not found")
+	}
+
 	sessionid := d.GetLoginCookies()["steamcommunity.com"].SessionId
 
 	// 创建 multipart/form-data 请求体
@@ -336,6 +345,10 @@ func (d *Dao) AddFriendByFriendCode(friendCode uint32) error {
 }
 
 func (d *Dao) RemoveFriend(steamID uint64) error {
+	if d.GetLoginCookies()["steamcommunity.com"] == nil {
+		return errors.New("steamcommunity.com cookie not found")
+	}
+
 	sessionid := d.GetLoginCookies()["steamcommunity.com"].SessionId
 
 	params := Param.Params{}

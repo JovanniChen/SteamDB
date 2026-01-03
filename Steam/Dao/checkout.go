@@ -610,6 +610,9 @@ type UnsendGiftResponse struct {
 }
 
 func (d *Dao) UnsendGift(giftId string) error {
+	if d.GetLoginCookies()["checkout.steampowered.com"] == nil {
+		return errors.New("checkout.steampowered.com cookie not found")
+	}
 	sessionId := d.GetLoginCookies()["checkout.steampowered.com"].SessionId
 
 	params := Param.Params{}
