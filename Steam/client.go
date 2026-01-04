@@ -286,6 +286,10 @@ func (c *Client) AddFriendByFriendCode(friendCode uint32) error {
 	return c.dao.AddFriendByFriendCode(friendCode)
 }
 
+func (c *Client) GetFriendInfoByLink(link string) (*Model.FriendInfo, string, error) {
+	return c.dao.GetFriendInfoByLink(link)
+}
+
 func (c *Client) RemoveFriend(steamID uint64) error {
 	return c.dao.RemoveFriend(steamID)
 }

@@ -29,21 +29,21 @@ import (
 // 	{Username: "xqkea03549", Password: "wuwQJ5WFdZp1", SharedSecret: "59z0KMWJFdgfWrSgYYADD/LBPyU="},   // [10] [6ck2bcax] [53]
 
 var accounts = []Account{
-	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="}, // [0] [45]
-	{Username: "gbmqnl7210", Password: "i80sMCigz1rw", SharedSecret: "Uinb4sxNpcP8KQBcYgdAZ2eiJDg="}, // [1] [46]
-	{Username: "zdckla1506", Password: "d3c9InY7Epwi", SharedSecret: "rQJ4b42FyGsvGcp6XYx+SEYylyo="}, // [2] [47]
-	{Username: "uvtjrm4501", Password: "u9NIlsVugLH5", SharedSecret: "y77Jk5v4rxrck/149zDMB+b3s/U="}, // [3] [48]
-	{Username: "ddndd12412", Password: "New0KJYVv16", SharedSecret: "VoSY5VrnD+CJooEVrlADofTGTok="},  // [4] [51]
-	{Username: "ttmsq72777", Password: "yoRD7x6LQvgu", SharedSecret: "5boHTiGFhQoszGcpFDLB7H7thng="}, // [5] [52]
-	{Username: "xqkea03549", Password: "wuwQJ5WFdZp1", SharedSecret: "59z0KMWJFdgfWrSgYYADD/LBPyU="}, // [6] [53]
-	{Username: "ffotd74229", Password: "oP4M4CMHAftX", SharedSecret: "IDhBX3NM+8fZCti4C3d6oFhXI6E="}, // [7] [54]
-	{Username: "j47hoord6j", Password: "NewRP7IhC9Z", SharedSecret: "Gwgztog4anK0soQp4IgLaZIki0s="},  // [8] [57] 市场不可用
-	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="}, // [9]
-	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="}, // [10]
-	{Username: "fbrdz08225", Password: "NewNWnME1R6", SharedSecret: "VjYAPygKL4jxwSu69HeyzW58r3M="},  // [11]
-	{Username: "rwfio67235", Password: "JzBvNCICYfFx", SharedSecret: "0C4hU7ieyVyYFvdDPKoTII20xMc="}, // [12]
-	{Username: "ejvp732231", Password: "myz2bzwCzFYQ", SharedSecret: "KHzBIonDKW8enmoCUYgLN+oYQ4M="}, // [13]
-	{Username: "mcg9ipxd04nl", Password: "AAlLQXPdDy3U", SharedSecret: "zUN+RyvAQZjHnyT+5guHBPB2NOg="},
+	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="},   // [0] [45]
+	{Username: "gbmqnl7210", Password: "i80sMCigz1rw", SharedSecret: "Uinb4sxNpcP8KQBcYgdAZ2eiJDg="},   // [1] [46]
+	{Username: "zdckla1506", Password: "d3c9InY7Epwi", SharedSecret: "rQJ4b42FyGsvGcp6XYx+SEYylyo="},   // [2] [47]
+	{Username: "uvtjrm4501", Password: "u9NIlsVugLH5", SharedSecret: "y77Jk5v4rxrck/149zDMB+b3s/U="},   // [3] [48]
+	{Username: "ddndd12412", Password: "New0KJYVv16", SharedSecret: "VoSY5VrnD+CJooEVrlADofTGTok="},    // [4] [51]
+	{Username: "ttmsq72777", Password: "yoRD7x6LQvgu", SharedSecret: "5boHTiGFhQoszGcpFDLB7H7thng="},   // [5] [52]
+	{Username: "xqkea03549", Password: "wuwQJ5WFdZp1", SharedSecret: "59z0KMWJFdgfWrSgYYADD/LBPyU="},   // [6] [53]
+	{Username: "ffotd74229", Password: "oP4M4CMHAftX", SharedSecret: "IDhBX3NM+8fZCti4C3d6oFhXI6E="},   // [7] [54]
+	{Username: "j47hoord6j", Password: "NewRP7IhC9Z", SharedSecret: "Gwgztog4anK0soQp4IgLaZIki0s="},    // [8] [57] 市场不可用
+	{Username: "naotqp7801", Password: "ja9C5LZelku0", SharedSecret: "g+kIH7JuL98R5O00j87379CkFus="},   // [9]
+	{Username: "zszvlv6362", Password: "ejuj7Rnof1BB", SharedSecret: "mQI147JxRz78GWjDdQEBoL7aaBc="},   // [10]
+	{Username: "fbrdz08225", Password: "NewNWnME1R6", SharedSecret: "VjYAPygKL4jxwSu69HeyzW58r3M="},    // [11]
+	{Username: "rwfio67235", Password: "JzBvNCICYfFx", SharedSecret: "0C4hU7ieyVyYFvdDPKoTII20xMc="},   // [12]
+	{Username: "ejvp732231", Password: "myz2bzwCzFYQ", SharedSecret: "KHzBIonDKW8enmoCUYgLN+oYQ4M="},   // [13]
+	{Username: "mcg9ipxd04nl", Password: "AAlLQXPdDy3U", SharedSecret: "zUN+RyvAQZjHnyT+5guHBPB2NOg="}, // [14]
 }
 
 // var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.241.80.163:8080")
@@ -55,8 +55,9 @@ var config *Steam.Config = Steam.NewConfig("")
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	TestGetTokenCode(14)
-	// TestLogin(13)
+	TestLogin(5)
+	// TestGetTokenCode(11)
+	TestGetFriendInfoByLink(5)
 	// TestGetProductByAppUrl(1)
 	// TestGetSteamGift(5)
 	// TestTransactionStatus(5)
@@ -363,6 +364,21 @@ func TestAddFriendByLink(accountIndex int) {
 	}
 
 	Logger.Info("添加好友成功: ", steamID)
+}
+
+func TestGetFriendInfoByLink(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	friendInfo, inviteToken, err := client.GetFriendInfoByLink("https://s.team/p/chbn-qbdd/GGTKKWRG")
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(friendInfo)
+	Logger.Info(inviteToken)
 }
 
 func TestGetTokenCode(accountIndex int) {
