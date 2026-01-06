@@ -217,6 +217,52 @@ func (d *Dao) CheckFriendStatus(link string) error {
 	return nil
 }
 
+func (d *Dao) AddFriendByInviteTokenAndSteamID(inviteToken string, steamID string) (string, error) {
+	if d.GetLoginCookies()["steamcommunity.com"] == nil {
+		return "", errors.New("steamcommunity.com cookie not found")
+	}
+
+	sessionid := d.GetLoginCookies()["steamcommunity.com"].SessionId
+
+	params := Param.Params{}
+	params.SetString("invite_token", inviteToken)
+	params.SetString("sessionid", sessionid)
+	params.SetString("steamid_user", steamID)
+
+	req, err := d.Request(http.MethodGet, Constants.AddFriendByLink+"?"+params.ToUrl(), nil)
+	if err != nil {
+		return "", err
+	}
+
+	// 发送请求，重定向会自动处理，cookie 会从 jar 中自动获取
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// 读取响应内容
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != 200 {
+		return "", Errors.ErrAddFriendFailed
+	}
+	result := &Model.AddFriendByLinkResult{}
+	err = json.Unmarshal(body, result)
+	if err != nil {
+		return "", err
+	}
+
+	if result.Success != 1 {
+		return "", Errors.ErrAddFriendFailed
+	}
+
+	return steamID, nil
+}
+
 func (d *Dao) AddFriendByLink(link string) (string, error) {
 	friendInfo, inviteToken, err := d.GetFriendInfoByLink(link)
 	if err != nil {
@@ -337,7 +383,7 @@ func (d *Dao) AddFriendByFriendCode(friendCode uint32) error {
 	}
 
 	// 检查添加好友是否成功
-	if !result.Success {
+	if result.Success != 1 {
 		return fmt.Errorf("添加好友失败: %s", result.ErrorText)
 	}
 

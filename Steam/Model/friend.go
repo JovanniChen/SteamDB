@@ -35,7 +35,7 @@ type AddFriendByLinkResult struct {
 
 // AddFriendByCodeResult 通过好友代码添加好友的响应结构
 type AddFriendByCodeResult struct {
-	Success      bool   `json:"success"`       // 是否成功
+	Success      int    `json:"success"`       // 是否成功
 	ErrorText    string `json:"error_text"`    // 错误信息
 	Failed       int    `json:"failed"`        // 失败状态码
 	PlayerName   string `json:"player_name"`   // 玩家名称

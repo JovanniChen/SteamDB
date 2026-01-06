@@ -55,9 +55,10 @@ var config *Steam.Config = Steam.NewConfig("")
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	TestLogin(5)
-	// TestGetTokenCode(11)
-	TestGetFriendInfoByLink(5)
+	// TestLogin(14)
+	// TestGetTokenCode(14)
+	// TestGetFriendInfoByLink(14)
+	TestGetFriendInfoByLinkAndAddFriend(14)
 	// TestGetProductByAppUrl(1)
 	// TestGetSteamGift(5)
 	// TestTransactionStatus(5)
@@ -78,7 +79,7 @@ func main() {
 	// TestAddFriendByFriendCode(7)
 	// TestRemoveFriend(1)
 	// TestCheckAccountAvailable(8)
-	// TestGetSummary(7)
+	// TestGetSummary(5)
 	// TestGetInventory(1)
 	// TestGetMyListings(7)
 	// TestGetMyListings(17)
@@ -372,8 +373,9 @@ func TestGetFriendInfoByLink(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	friendInfo, inviteToken, err := client.GetFriendInfoByLink("https://s.team/p/chbn-qbdd/GGTKKWRG")
+	friendInfo, inviteToken, err := client.GetFriendInfoByLink("https://s.team/p/chbn-qbdd/JCWCVMPQ")
 	if err != nil {
+		Logger.Info(friendInfo)
 		Logger.Error(err)
 		return
 	}
@@ -484,6 +486,7 @@ func TestLogin(accountIndex int) {
 			SteamLanguage: client.GetLanguage(),
 		}
 		session.Save(accountIndex)
+
 	}
 
 }
@@ -496,6 +499,25 @@ func TestGetSummary(accountIndex int) {
 	}
 	summary, err := client.GetPointsSummary(client.GetSteamID())
 	Logger.Info("GetSummary -> ", summary)
+
+	// 提取登录Cookies
+	loginCookies := make(map[string]*Dao.LoginCookie)
+	if cookies := client.GetLoginCookies(); cookies != nil {
+		loginCookies = cookies
+	}
+
+	if loginCookies["checkout.steampowered.com"] != nil {
+		fmt.Println(loginCookies["checkout.steampowered.com"])
+	}
+	fmt.Println(loginCookies["checkout.steampowered.com"])
+
+	if loginCookies["steamcommunity.com"] != nil {
+		fmt.Println(loginCookies["steamcommunity.com"])
+	}
+
+	if loginCookies["store.steampowered.com"] != nil {
+		fmt.Println(loginCookies["store.steampowered.com"])
+	}
 }
 
 func TestGetMyListings(accountIndex int) {
@@ -682,6 +704,27 @@ func TestGetProductByAppUrl(accountIndex int) {
 	}
 	fmt.Println(client.GetBalance())
 	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/1222140/_/"))
+}
+
+func TestGetFriendInfoByLinkAndAddFriend(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	friendInfo, inviteToken, err := client.GetFriendInfoByLink("https://s.team/p/chbn-qbdd/QVRQMRJK")
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	_, err = client.AddFriendByInviteTokenAndSteamID(inviteToken, friendInfo.AbuseID)
+	if err != nil {
+		Logger.Error("通过邀请token和steamID添加好友失败,错误:", err)
+		return
+	}
+
+	Logger.Info("通过邀请token和steamID添加好友成功")
 }
 
 func loadFromSession(accountIndex int) (*Steam.Client, error) {

@@ -282,6 +282,10 @@ func (c *Client) AddFriendByLink(friendLink string) (string, error) {
 	return c.dao.AddFriendByLink(friendLink)
 }
 
+func (c *Client) AddFriendByInviteTokenAndSteamID(inviteToken string, steamID string) (string, error) {
+	return c.dao.AddFriendByInviteTokenAndSteamID(inviteToken, steamID)
+}
+
 func (c *Client) AddFriendByFriendCode(friendCode uint32) error {
 	return c.dao.AddFriendByFriendCode(friendCode)
 }
