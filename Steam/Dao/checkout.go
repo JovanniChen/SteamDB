@@ -325,6 +325,77 @@ func (d *Dao) GetFinalPrice(transactionID string) (int, error) {
 	return response.Total, nil
 }
 
+func (d *Dao) TestGetPayLinkAgain() (string, error) {
+	paramsForPayLink := Param.Params{}
+	// 	  Amount: 141
+	//   Currency: CNY
+	//   MethodID: 24
+	//   Description: Steam Purchase
+	//   SkinID: 101
+	//   MerchantID: 1102
+	//   ReturnURL: https://checkout.steampowered.com/paypal/smart2pay/56990384110504959/
+	//   Country: CN
+	//   CustomerEmail: MauriceDonovan8084@outlook.com
+	//   CustomerName: dih9u8nad
+	//   SkipHPP: 1
+	//   Articles: Name=Lossless Scaling, DYNASTY WARRIORS ORIGINS Visions of Four Heroes with Pre-purchase Bonus, PRAGMATA Deluxe Edition&Quantity=1
+	//   Hash: 3a1aec77155182fbe2bcf021ec9af8d504d1c7c6f6ca4bc0841fe2c4dcd7419f
+	//   MerchantTransactionID: 56990384110504959
+	paramsForPayLink.SetString("Amount", "141")
+	paramsForPayLink.SetString("Currency", "CNY")
+	paramsForPayLink.SetString("MethodID", "24")
+	paramsForPayLink.SetString("Description", "Steam Purchase")
+	paramsForPayLink.SetString("SkinID", "101")
+	paramsForPayLink.SetString("MerchantID", "1102")
+	paramsForPayLink.SetString("ReturnURL", "https://checkout.steampowered.com/paypal/smart2pay/56990384110504959/")
+	paramsForPayLink.SetString("Country", "CN")
+	paramsForPayLink.SetString("CustomerEmail", "MauriceDonovan8084@outlook.com")
+	paramsForPayLink.SetString("CustomerName", "dih9u8nad")
+	paramsForPayLink.SetString("SkipHPP", "1")
+	paramsForPayLink.SetString("Articles", "Name=Lossless Scaling, DYNASTY WARRIORS ORIGINS Visions of Four Heroes with Pre-purchase Bonus, PRAGMATA Deluxe Edition&Quantity=1")
+	paramsForPayLink.SetString("Hash", "3a1aec77155182fbe2bcf021ec9af8d504d1c7c6f6ca4bc0841fe2c4dcd7419f")
+	paramsForPayLink.SetString("MerchantTransactionID", "56990384110504959")
+
+	paslice := []string{"MerchantID", "MerchantTransactionID", "Amount", "Currency", "ReturnURL", "MethodID", "Country", "CustomerEmail", "CustomerName", "SkipHPP", "Articles", "Description", "SkinID", "Hash"}
+	reqForPayLink, err := d.NewRequest(http.MethodPost, "https://globalapi.smart2pay.com", strings.NewReader(paramsForPayLink.EncodeBy(paslice)))
+
+	if err != nil {
+		return "", err
+	}
+
+	respForPayLink, err := d.RetryRequest(Constants.Tries, reqForPayLink)
+	if err != nil {
+		return "", err
+	}
+	defer respForPayLink.Body.Close()
+
+	// 检查响应是否被 gzip 压缩
+	var reader io.Reader = respForPayLink.Body
+	if respForPayLink.Header.Get("Content-Encoding") == "gzip" {
+		gzipReader, err := gzip.NewReader(respForPayLink.Body)
+		if err != nil {
+			return "", err
+		}
+		defer gzipReader.Close()
+		reader = gzipReader
+	}
+
+	bodyForPayLink, err := io.ReadAll(reader)
+	if err != nil {
+		return "", err
+	}
+
+	redirectURL, err := ExtractRedirectURL(string(bodyForPayLink))
+	if err != nil {
+		return "", err
+	}
+	if redirectURL == "" {
+		return "", errors.New("未找到重定向URL")
+	}
+
+	return "https://globalep1.smart2pay.com/" + redirectURL, nil
+}
+
 func (d *Dao) AccessCheckoutURL(transactionID string) (string, error) {
 	params := Param.Params{}
 	params.SetString("transid", transactionID)
@@ -364,20 +435,6 @@ func (d *Dao) AccessCheckoutURL(transactionID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	// reqForPayLink.Header.Set("Upgrade-Insecure-Requests", "1")
-	// reqForPayLink.Header.Set("Origin", "https://checkout.steampowered.com")
-	// reqForPayLink.Header.Set("Referer", "https://checkout.steampowered.com/checkout/?accountcart=1")
-	// reqForPayLink.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-	// reqForPayLink.Header.Set("Sec-Fetch-Site", "cross-site")
-	// reqForPayLink.Header.Set("Sec-Fetch-Mode", "navigate")
-	// reqForPayLink.Header.Set("Sec-Fetch-Dest", "document")
-	// reqForPayLink.Header.Set("Accept-Encoding", "gzip, deflate")
-	// reqForPayLink.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
-	// reqForPayLink.Header.Set("Accept-Language", "zh-CN,zh;q=0.9")
-	// reqForPayLink.Header.Set("sec-ch-ua", "Not=A?Brand\";v=\"24\", \"Chromium\";v=\"140\"")
-	// reqForPayLink.Header.Set("sec-ch-ua-mobile", "?0")
-	// reqForPayLink.Header.Set("sec-ch-ua-platform", "Windows")
 
 	respForPayLink, err := d.RetryRequest(Constants.Tries, reqForPayLink)
 	if err != nil {

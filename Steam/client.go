@@ -491,6 +491,10 @@ func (c *Client) AccessCheckoutURL(transactionID string) (string, error) {
 	return c.dao.AccessCheckoutURL(transactionID)
 }
 
+func (c *Client) TestGetPayLinkAgain() (string, error) {
+	return c.dao.TestGetPayLinkAgain()
+}
+
 func (c *Client) GetAlipayURL(transactionID string) (string, error) {
 	return c.dao.GetAlipayURL(transactionID)
 }
@@ -526,6 +530,6 @@ func (c *Client) ValidateCart() error {
 	return c.dao.ValidateCart()
 }
 
-func (c *Client) GetProductByAppUrl(url string) error {
+func (c *Client) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error) {
 	return c.dao.GetProductByAppUrl(url)
 }

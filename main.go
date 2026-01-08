@@ -44,6 +44,10 @@ var accounts = []Account{
 	{Username: "rwfio67235", Password: "JzBvNCICYfFx", SharedSecret: "0C4hU7ieyVyYFvdDPKoTII20xMc="},   // [12]
 	{Username: "ejvp732231", Password: "myz2bzwCzFYQ", SharedSecret: "KHzBIonDKW8enmoCUYgLN+oYQ4M="},   // [13]
 	{Username: "mcg9ipxd04nl", Password: "AAlLQXPdDy3U", SharedSecret: "zUN+RyvAQZjHnyT+5guHBPB2NOg="}, // [14]
+	{Username: "pfze6stttee", Password: "P4A9ydYvzGmq", SharedSecret: "qNSLkP8OjsD/VuHG5eFGUjSupCs="},  // [15]
+	{Username: "krqk10ik5qk", Password: "vPfPgdUqVX76", SharedSecret: "1daUVnJtxNg4pB2gxV2l10jfz1U="},  // [16]
+	{Username: "bhrcrnulng5", Password: "YF8TX9fAxWsq", SharedSecret: "X1z0h/KTJmns1um4ThZdRGrrNps="},  // [17]
+	{Username: "dih9u8nad", Password: "BJdENppgNHxH", SharedSecret: "TFuheV7W4oPoH4Q2EH8EEi9vmKU="},    // [18]
 }
 
 // var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.241.80.163:8080")
@@ -55,13 +59,13 @@ var config *Steam.Config = Steam.NewConfig("")
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	// TestLogin(14)
-	// TestGetTokenCode(14)
+	// TestLogin(18)
+	// TestGetTokenCode(18)
 	// TestGetFriendInfoByLink(14)
-	TestGetFriendInfoByLinkAndAddFriend(14)
-	// TestGetProductByAppUrl(1)
+	// TestGetFriendInfoByLinkAndAddFriend(14)
+	TestGetProductByAppUrl(18)
 	// TestGetSteamGift(5)
-	// TestTransactionStatus(5)
+	// TestTransactionStatus(18)
 	// TestUnsendGift(5)
 	// TestGetTokenCode(3)
 	// TestSetLanguage(11)
@@ -70,16 +74,18 @@ func main() {
 	// TestAddItemToCart(1)
 	// TestInitTransaction(1)
 	// TestAddItemToCartAndInitTransaction(13)
+	// TestAccess(18)
 	// TestValidateCart(1)
 	// TestCancelTransaction(1)
-	// TestGetFinalPrice(1)
+	// TestGetFinalPrice(18)
+	// TestTestGetPayLinkAgain(18)
 	// TestAddFriendByLink(5)
 	// TestCheckIsFriend(11)
 	// TestCheckFriendStatus(11)
 	// TestAddFriendByFriendCode(7)
 	// TestRemoveFriend(1)
 	// TestCheckAccountAvailable(8)
-	// TestGetSummary(5)
+	// TestGetSummary(18)
 	// TestGetInventory(1)
 	// TestGetMyListings(7)
 	// TestGetMyListings(17)
@@ -90,11 +96,20 @@ func main() {
 	// TestPutList2(5)
 	// TestGetConfirmations(10)
 	// TestRemoveMyListings(4)
-	// TestGetBalance(0)
+	// TestGetBalance(18)
 	// TestGetWaitBalance(3)
 	// TestGetInventoryAndPutList(4)
 	// TestCreateOrder(14)
 	// TestGetGameUpdateInofs(1879330)
+}
+
+func TestTestGetPayLinkAgain(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.TestGetPayLinkAgain())
 }
 
 func TestValidateCart(accountIndex int) {
@@ -112,7 +127,7 @@ func TestTransactionStatus(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.TransactionStatus("263028164761008232", 10))
+	Logger.Info(client.TransactionStatus("56990384110504906", 1))
 }
 
 func TestUnsendGift(accountIndex int) {
@@ -138,13 +153,28 @@ func TestUnsendGift(accountIndex int) {
 	}
 }
 
+func TestAccess(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	checkoutURL, err := client.AccessCheckoutURL("56990384110504959")
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info("获取支付页面成功: ", checkoutURL)
+}
+
 func TestGetFinalPrice(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.GetFinalPrice("193220467646175498"))
+	Logger.Info(client.GetFinalPrice("56990384110504959"))
 }
 
 func TestCancelTransaction(accountIndex int) {
@@ -702,7 +732,6 @@ func TestGetProductByAppUrl(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	fmt.Println(client.GetBalance())
 	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/1222140/_/"))
 }
 
