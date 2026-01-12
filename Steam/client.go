@@ -505,7 +505,7 @@ func (c *Client) UnsendGift(giftId string) error {
 
 func (c *Client) UnsendAllGift() error {
 	var count int
-	items, err := c.dao.GetSteamGift(Constants.Steam, Constants.SteamCategory)
+	items, err := c.dao.GetSteamGift(Constants.Steam, Constants.SteamGiftCategory)
 	if err != nil {
 		return err
 	}
@@ -514,7 +514,7 @@ func (c *Client) UnsendAllGift() error {
 			return err
 		}
 		count++
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 	if count != len(items) {
 		return fmt.Errorf("退回全部礼物失败: 已有[%d] != 退回[%d]", count, len(items))

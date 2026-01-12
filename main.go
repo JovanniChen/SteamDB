@@ -48,23 +48,27 @@ var accounts = []Account{
 	{Username: "krqk10ik5qk", Password: "vPfPgdUqVX76", SharedSecret: "1daUVnJtxNg4pB2gxV2l10jfz1U="},  // [16]
 	{Username: "bhrcrnulng5", Password: "YF8TX9fAxWsq", SharedSecret: "X1z0h/KTJmns1um4ThZdRGrrNps="},  // [17]
 	{Username: "dih9u8nad", Password: "BJdENppgNHxH", SharedSecret: "TFuheV7W4oPoH4Q2EH8EEi9vmKU="},    // [18]
+	{Username: "tvyij7pxdasz", Password: "0DLuZvp5MSEI", SharedSecret: "YGnTkbpo/uOGFtNeFRhGlIQxrEg="}, // [19]
+
 }
 
-// var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.241.80.163:8080")
+// your_username:your_password@16.162.92.102:8080
+var config *Steam.Config = Steam.NewConfig("your_username:your_password@8.217.238.29:8080")
 
 // var config *Steam.Config = Steam.NewConfig("a312911880-zone-duration-region-HK-session-W8CrCjPY-sessTime-1440:xiabin1314@e243012a5d6e4a47.abcproxy.vip:7980")
 
-var config *Steam.Config = Steam.NewConfig("")
+// var config *Steam.Config = Steam.NewConfig("")
 
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	// TestLogin(18)
-	// TestGetTokenCode(18)
+	TestLogin(10)
+	// TestGetTokenCode(15)
 	// TestGetFriendInfoByLink(14)
 	// TestGetFriendInfoByLinkAndAddFriend(14)
-	TestGetProductByAppUrl(18)
-	// TestGetSteamGift(5)
+	// TestGetProductByAppUrl(18)
+	// TestGetSteamGift(15)
+	TestUnsendAllGift(10)
 	// TestTransactionStatus(18)
 	// TestUnsendGift(5)
 	// TestGetTokenCode(3)
@@ -137,7 +141,7 @@ func TestUnsendGift(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetSteamGift(Constants.Steam, Constants.SteamCategory)
+	items, err := client.GetSteamGift(Constants.Steam, Constants.SteamGiftCategory)
 	if err != nil {
 		Logger.Error(err)
 		return
@@ -151,6 +155,15 @@ func TestUnsendGift(accountIndex int) {
 		}
 		Logger.Info("撤回赠送礼物成功: ", item.AssetID)
 	}
+}
+
+func TestUnsendAllGift(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.UnsendAllGift())
 }
 
 func TestAccess(accountIndex int) {
@@ -585,7 +598,7 @@ func TestGetSteamGift(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetSteamGift(Constants.Steam, Constants.SteamCategory)
+	items, err := client.GetSteamGift(Constants.Steam, Constants.SteamGiftCategory)
 	if err != nil {
 		Logger.Error("获取库存失败: ", err)
 	}

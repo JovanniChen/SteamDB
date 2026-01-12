@@ -470,7 +470,7 @@ func (d *Dao) CreateOrder(marketHashName string, price float64, quantity int64, 
 func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 
 	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
-	req, err := d.NewRequest(http.MethodGet, inventoryUrl, nil)
+	req, err := d.Request(http.MethodGet, inventoryUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("创建库存请求失败: %w", err)
 	}
