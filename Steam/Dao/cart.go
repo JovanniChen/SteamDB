@@ -239,22 +239,15 @@ func (d *Dao) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error)
 	}
 
 	fmt.Printf("解析到 %d 个购买选项:\n", len(results))
-	for i, result := range results {
-		fmt.Printf("选项 %d:\n", i+1)
-		// 	IsBundle        int    `json:"isBundle"`        // 0=标准版, 1=捆绑包
-		// BundleInfoTexts string `json:"bundleInfoTexts"` // 捆绑包信息文本
-		// GameName        string `json:"gameName"`        // 游戏名称
-		// FinalPrice      string `json:"finalPrice"`      // 最终价格（数字）
-		// FinalPriceText  string `json:"finalPriceText"`  // 最终价格文本（带货币符号）
-		// CountryCode     string `json:"countryCode"`     // 国家代码
-		// AddToCartIds    string `json:"addToCartIds"`
-		fmt.Printf("  是否为捆绑包: %d\n", result.IsBundle)
-		fmt.Printf("  游戏名称: %s\n", result.GameName)
-		fmt.Printf("  价格: %s\n", result.FinalPrice)
-		fmt.Printf("  类型: %s\n", result.BundleInfoTexts)
-		fmt.Printf("  购物车ID: %s\n", result.AddToCartIds)
-		fmt.Println()
-	}
+	// for i, result := range results {
+	// 	fmt.Printf("选项 %d:\n", i+1)
+	// 	fmt.Printf("  是否为捆绑包: %d\n", result.IsBundle)
+	// 	fmt.Printf("  游戏名称: %s\n", result.GameName)
+	// 	fmt.Printf("  价格: %s\n", result.FinalPrice)
+	// 	fmt.Printf("  类型: %s\n", result.BundleInfoTexts)
+	// 	fmt.Printf("  购物车ID: %s\n", result.AddToCartIds)
+	// 	fmt.Println()
+	// }
 
 	return results, nil
 }
