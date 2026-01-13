@@ -181,6 +181,20 @@ func (d *Dao) ValidateCart() error {
 	return nil
 }
 
+func (d *Dao) GetProductByAppID(appID int) (map[string]Model.GamePurchaseAction, error) {
+	url := fmt.Sprintf("https://store.steampowered.com/app/%d", appID)
+	products, err := d.GetProductByAppUrl(url)
+	if err != nil {
+		return nil, err
+	}
+	// 转换成map[string]Model.GamePurchaseAction
+	productMap := make(map[string]Model.GamePurchaseAction)
+	for _, product := range products {
+		productMap[product.AddToCartIds] = product
+	}
+	return productMap, nil
+}
+
 func (d *Dao) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error) {
 	// ?cc=cn&l=schinese
 	req, err := d.Request(http.MethodGet, url+"?cc=cn&l=schinese", nil)

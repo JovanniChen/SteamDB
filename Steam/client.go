@@ -533,3 +533,7 @@ func (c *Client) ValidateCart() error {
 func (c *Client) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error) {
 	return c.dao.GetProductByAppUrl(url)
 }
+
+func (c *Client) GetProductByAppID(appID int) (map[string]Model.GamePurchaseAction, error) {
+	return c.dao.GetProductByAppID(appID)
+}
