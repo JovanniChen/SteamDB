@@ -745,7 +745,7 @@ func TestGetProductByAppUrl(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/1845910"))
+	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/2669320"))
 }
 
 func TestGetFriendInfoByLinkAndAddFriend(accountIndex int) {

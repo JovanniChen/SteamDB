@@ -222,7 +222,7 @@ func (d *Dao) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error)
 		return nil, err
 	}
 
-	fmt.Println(resp.StatusCode)
+	// fmt.Println(resp.StatusCode)
 	// fmt.Println("=====", string(body))
 	// 保存这个string(body)到项目根目录
 	// os.WriteFile("product.html", body, 0644)
@@ -491,6 +491,11 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 
 			finalPrice := extractFinalPrice(priceNode)
 
+			// 如果缺少标题或价格，直接跳过该 wrapper
+			if gameName == "" || finalPrice == "" {
+				continue
+			}
+
 			// 提取购物车信息
 			cartInfo := extractCartInfo(wrapper, isBundle)
 
@@ -545,6 +550,11 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 			}
 
 			finalPrice := extractFinalPrice(priceNode)
+
+			// 如果缺少标题或价格，直接跳过该 wrapper
+			if gameName == "" || finalPrice == "" {
+				continue
+			}
 
 			// 提取购物车信息
 			cartInfo := extractCartInfo(wrapper, false)
