@@ -49,7 +49,7 @@ var accounts = []Account{
 	{Username: "bhrcrnulng5", Password: "YF8TX9fAxWsq", SharedSecret: "X1z0h/KTJmns1um4ThZdRGrrNps="},  // [17]
 	{Username: "dih9u8nad", Password: "BJdENppgNHxH", SharedSecret: "TFuheV7W4oPoH4Q2EH8EEi9vmKU="},    // [18]
 	{Username: "tvyij7pxdasz", Password: "0DLuZvp5MSEI", SharedSecret: "YGnTkbpo/uOGFtNeFRhGlIQxrEg="}, // [19]
-
+	{Username: "hnysh898sg", Password: "mC43y8o8irxT", SharedSecret: "ynrDLQop7KGLFe0DfiFcW8lOy6A="},   // [20]
 }
 
 // your_username:your_password@16.162.92.102:8080
@@ -62,13 +62,13 @@ var config *Steam.Config = Steam.NewConfig("your_username:your_password@8.217.23
 // main 主函数，程序入口点
 // 执行Steam平台相关操作的演示流程
 func main() {
-	TestLogin(10)
+	TestLogin(12)
 	// TestGetTokenCode(15)
 	// TestGetFriendInfoByLink(14)
 	// TestGetFriendInfoByLinkAndAddFriend(14)
-	// TestGetProductByAppUrl(18)
+	TestGetProductByAppUrl(12)
 	// TestGetSteamGift(15)
-	TestUnsendAllGift(10)
+	// TestUnsendAllGift(10)
 	// TestTransactionStatus(18)
 	// TestUnsendGift(5)
 	// TestGetTokenCode(3)
@@ -100,7 +100,7 @@ func main() {
 	// TestPutList2(5)
 	// TestGetConfirmations(10)
 	// TestRemoveMyListings(4)
-	// TestGetBalance(18)
+	TestGetBalance(20)
 	// TestGetWaitBalance(3)
 	// TestGetInventoryAndPutList(4)
 	// TestCreateOrder(14)
@@ -745,7 +745,7 @@ func TestGetProductByAppUrl(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/1222140/_/"))
+	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/1845910"))
 }
 
 func TestGetFriendInfoByLinkAndAddFriend(accountIndex int) {

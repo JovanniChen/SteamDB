@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -226,7 +225,7 @@ func (d *Dao) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error)
 	fmt.Println(resp.StatusCode)
 	// fmt.Println("=====", string(body))
 	// 保存这个string(body)到项目根目录
-	os.WriteFile("product.html", body, 0644)
+	// os.WriteFile("product.html", body, 0644)
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("获取商品信息失败,返回状态码: %d,url: %s", resp.StatusCode, url)
 	}
@@ -239,15 +238,15 @@ func (d *Dao) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error)
 	}
 
 	fmt.Printf("解析到 %d 个购买选项:\n", len(results))
-	// for i, result := range results {
-	// 	fmt.Printf("选项 %d:\n", i+1)
-	// 	fmt.Printf("  是否为捆绑包: %d\n", result.IsBundle)
-	// 	fmt.Printf("  游戏名称: %s\n", result.GameName)
-	// 	fmt.Printf("  价格: %s\n", result.FinalPrice)
-	// 	fmt.Printf("  类型: %s\n", result.BundleInfoTexts)
-	// 	fmt.Printf("  购物车ID: %s\n", result.AddToCartIds)
-	// 	fmt.Println()
-	// }
+	for i, result := range results {
+		fmt.Printf("选项 %d:\n", i+1)
+		fmt.Printf("  是否为捆绑包: %d\n", result.IsBundle)
+		fmt.Printf("  游戏名称: %s\n", result.GameName)
+		fmt.Printf("  价格: %s\n", result.FinalPrice)
+		fmt.Printf("  类型: %s\n", result.BundleInfoTexts)
+		fmt.Printf("  购物车ID: %s\n", result.AddToCartIds)
+		fmt.Println()
+	}
 
 	return results, nil
 }
