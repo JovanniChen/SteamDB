@@ -494,9 +494,6 @@ func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 		body, _ = io.ReadAll(reader)
 	}
 
-	Logger.Infof("库存响应状态码: %d", resp.StatusCode)
-	Logger.Infof("库存响应: %s", string(body))
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("获取库存失败,返回状态码: %d", resp.StatusCode)
 	}

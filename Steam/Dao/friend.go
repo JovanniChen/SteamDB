@@ -103,10 +103,6 @@ func (d *Dao) GetFriendInfoByLink(link string) (*Model.FriendInfo, string, error
 
 	result := d.ParseFriendLinkHTML(string(body))
 
-	if result.Status != Model.FriendLinkStatusSuccess {
-		return friendInfo, "", fmt.Errorf("%s", result.Msg)
-	}
-
 	fmt.Printf("状态: %d (%s)\n", result.Status, result.Msg)
 	if result.Data != nil {
 		fmt.Printf("用户昵称: %s\n", result.Data.PersonName)
@@ -114,6 +110,11 @@ func (d *Dao) GetFriendInfoByLink(link string) (*Model.FriendInfo, string, error
 		fmt.Printf("会话ID: %s\n", result.Data.SessionID)
 		fmt.Printf("滥用ID: %s\n", result.Data.AbuseID)
 	}
+
+	if result.Status != Model.FriendLinkStatusSuccess {
+		return friendInfo, "", fmt.Errorf("%s", result.Msg)
+	}
+
 	return result.Data, inviteToken, nil
 }
 
@@ -297,6 +298,9 @@ func (d *Dao) AddFriendByLink(link string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Println(resp.StatusCode)
+	fmt.Println(string(body))
 
 	if resp.StatusCode != 200 {
 		return "", Errors.ErrAddFriendFailed

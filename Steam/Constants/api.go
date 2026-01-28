@@ -93,6 +93,7 @@ var (
 	Finalizetransaction string = Scheme + Domain.CheckOut + "/checkout/finalizetransaction/"
 	Getfinalprice       string = Scheme + Domain.CheckOut + "/checkout/getfinalprice/"
 	ExternallLink       string = Scheme + Domain.CheckOut + "/checkout/externallink/"
+	FinalizeTransaction string = Scheme + Domain.CheckOut + "/checkout/finalizetransaction/"
 
 	// 礼物相关 API
 	UnsendGiftSubmit  string = Scheme + Domain.CheckOut + "/checkout/unsendgiftsubmit/"

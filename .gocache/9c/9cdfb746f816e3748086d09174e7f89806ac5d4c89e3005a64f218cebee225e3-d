@@ -1,0 +1,7 @@
+./cart.go
+./checkout.go
+./friend.go
+./login.go
+./market.go
+./point.go
+./update.go

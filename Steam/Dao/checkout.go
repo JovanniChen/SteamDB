@@ -218,10 +218,9 @@ func (d *Dao) InitTransaction() (string, error) {
 	}
 
 	if resp.StatusCode != 200 {
+		fmt.Println(string(body))
 		return "", fmt.Errorf("初始化交易失败,返回状态码: %d", resp.StatusCode)
 	}
-
-	fmt.Println(string(body))
 
 	var response InitTransactionResponse
 	err = json.Unmarshal(body, &response)
@@ -230,10 +229,152 @@ func (d *Dao) InitTransaction() (string, error) {
 	}
 
 	if response.Success != 1 {
+		fmt.Println(string(body))
 		return "", errors.New(Errors.GetCheckoutError(response.PurchaseResultDetail))
 	}
 
 	return response.TransID, nil
+}
+
+func (d *Dao) InitConcurrentTransaction() (string, error) {
+	params := Param.Params{}
+	params.SetInt64("gidShoppingCart", -1)
+	params.SetInt64("gidReplayOfTransID", -1)
+	params.SetInt64("bUseAccountCart", 1)
+	params.SetString("PaymentMethod", "steamaccount")
+	params.SetInt64("abortPendingTransactions", 0)
+	params.SetInt64("bHasCardInfo", 0)
+	params.SetString("CardNumber", "")
+	params.SetString("CardExpirationYear", "")
+	params.SetString("CardExpirationMonth", "")
+	params.SetString("FirstName", "")
+	params.SetString("LastName", "")
+	params.SetString("Address", "")
+	params.SetString("AddressTwo", "")
+	params.SetString("Country", "CN")
+	params.SetString("City", "")
+	params.SetString("State", "")
+	params.SetString("PostalCode", "")
+	params.SetString("Phone", "")
+	params.SetString("ShippingFirstName", "")
+	params.SetString("ShippingLastName", "")
+	params.SetString("ShippingAddress", "")
+	params.SetString("ShippingAddressTwo", "")
+	params.SetString("ShippingCountry", "CN")
+	params.SetString("ShippingCity", "")
+	params.SetString("ShippingState", "")
+	params.SetString("ShippingPostalCode", "")
+	params.SetString("ShippingPhone", "")
+	params.SetInt64("bIsGift", 0)
+	params.SetInt64("GifteeAccountID", 0)
+	params.SetString("GifteeEmail", "")
+	params.SetString("GifteeName", "")
+	params.SetString("GiftMessage", "")
+	params.SetString("Sentiment", "")
+	params.SetString("Signature", "")
+	params.SetInt64("ScheduledSendOnDate", 0)
+	params.SetString("BankAccount", "")
+	params.SetString("BankCode", "")
+	params.SetString("BankIBAN", "")
+	params.SetString("BankBIC", "")
+	params.SetString("TPBankID", "")
+	params.SetString("BankAccountID", "")
+	params.SetInt64("bSaveBillingAddress", 1)
+	params.SetString("gidPaymentID", "")
+	params.SetInt64("bUseRemainingSteamAccount", 1)
+	params.SetInt64("bPreAuthOnly", 0)
+
+	if d.GetLoginCookies()["checkout.steampowered.com"] == nil {
+		return "", errors.New("checkout.steampowered.com cookie not found")
+	}
+	sessionId := d.GetLoginCookies()["checkout.steampowered.com"].SessionId
+	params.SetString("sessionid", sessionId)
+
+	req, err := d.Request(http.MethodPost, Constants.InitTransaction, strings.NewReader(params.Encode()))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("origin", "https://checkout.steampowered.com")
+	req.Header.Set("referer", "https://checkout.steampowered.com/checkout/?accountcart=1")
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != 200 {
+		fmt.Println(string(body))
+		return "", fmt.Errorf("初始化交易失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	var response InitTransactionResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return "", fmt.Errorf("解析初始化交易响应失败: %w", err)
+	}
+
+	if response.Success != 1 {
+		fmt.Println(string(body))
+		return "", errors.New(Errors.GetCheckoutError(response.PurchaseResultDetail))
+	}
+
+	return response.TransID, nil
+}
+
+func (d *Dao) FinalizeTransaction(transactionID string) error {
+	params := Param.Params{}
+	params.SetString("transid", transactionID)
+	params.SetString("CardCVV2", "")
+	params.SetString("browserInfo", `{"language":"zh-CN","javaEnabled":"false","colorDepth":24,"screenHeight":1890,"screenWidth":3360}"`)
+	req, err := d.Request(http.MethodPost, Constants.FinalizeTransaction, strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("origin", "https://checkout.steampowered.com")
+	req.Header.Set("referer", "https://checkout.steampowered.com/checkout/?accountcart=1")
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(resp.StatusCode)
+	fmt.Println(string(body))
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("完成交易失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	// {"success":22,"purchaseresultdetail":0,"bShowBRSpecificCreditCardError":false}
+	var response struct {
+		Success                       int  `json:"success"`
+		PurchaseResultDetail          int  `json:"purchaseresultdetail"`
+		ShowBRSpecificCreditCardError bool `json:"bShowBRSpecificCreditCardError"`
+	}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return fmt.Errorf("解析完成交易响应失败: %w", err)
+	}
+
+	if response.Success != 22 {
+		return fmt.Errorf("完成交易失败,返回Success: %d, PurchaseResultDetail: %d, ShowBRSpecificCreditCardError: %t", response.Success, response.PurchaseResultDetail, response.ShowBRSpecificCreditCardError)
+	}
+
+	return nil
 }
 
 type CancelTransactionResponse struct {
@@ -243,6 +384,8 @@ type CancelTransactionResponse struct {
 func (d *Dao) CancelTransaction(transactionID string) error {
 	params := Param.Params{}
 	params.SetString("transid", transactionID)
+	params.SetString("lock_transaction", "false")
+	params.SetString("cancel_reason", "老子高兴，你管得着吗？")
 	req, err := d.Request(http.MethodPost, Constants.CancelCartTrans, strings.NewReader(params.Encode()))
 	if err != nil {
 		return err

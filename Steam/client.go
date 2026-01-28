@@ -8,6 +8,7 @@ import (
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Dao"
+	"github.com/JovanniChen/SteamDB/Steam/Logger"
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Protoc"
 )
@@ -479,6 +480,14 @@ func (c *Client) InitTransaction() (string, error) {
 	return c.dao.InitTransaction()
 }
 
+func (c *Client) InitConcurrentTransaction() (string, error) {
+	return c.dao.InitConcurrentTransaction()
+}
+
+func (c *Client) FinalizeTransaction(transactionID string) error {
+	return c.dao.FinalizeTransaction(transactionID)
+}
+
 func (c *Client) CancelTransaction(transactionID string) error {
 	return c.dao.CancelTransaction(transactionID)
 }
@@ -509,12 +518,13 @@ func (c *Client) UnsendAllGift() error {
 	if err != nil {
 		return err
 	}
-	for _, item := range items {
+	for i, item := range items {
 		if err := c.dao.UnsendGift(item.AssetID); err != nil {
 			return err
 		}
+		Logger.Info("撤回赠送礼物成功: ", item.AssetID, " ", i+1, " / ", len(items))
 		count++
-		time.Sleep(5 * time.Second)
+		time.Sleep(4 * time.Second)
 	}
 	if count != len(items) {
 		return fmt.Errorf("退回全部礼物失败: 已有[%d] != 退回[%d]", count, len(items))
