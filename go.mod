@@ -16,4 +16,7 @@ require (
 
 require github.com/mattn/go-sqlite3 v1.14.32
 
-require github.com/shopspring/decimal v1.4.0 // indirect
+require (
+	github.com/petermattis/goid v0.0.0-20260113132338-7c7de50cc741 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
+)

@@ -16,7 +16,13 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
 )
 
-var globalDaos sync.Map // 全局DAO对象池
+type globalConfig struct {
+	daos        sync.Map
+	jar         *cookiejar.Jar
+	credentials *Credentials
+}
+
+var globalDaos *globalConfig // 全局DAO对象池
 
 // Dao 数据访问对象结构体
 // 封装了HTTP客户端和用户凭据，提供Steam API交互功能
@@ -24,6 +30,19 @@ type Dao struct {
 	httpCli         *http.Client // HTTP客户端，用于发送网络请求
 	credentials     *Credentials // 用户凭据信息，包含登录状态和认证信息
 	requestCallback func()       // HTTP请求成功后的回调函数，用于外部监控请求
+	proxy           string
+}
+
+func reInit() {
+	globalDaos = &globalConfig{
+		daos:        sync.Map{},
+		credentials: &Credentials{},
+	}
+	globalDaos.jar, _ = cookiejar.New(nil)
+}
+
+func init() {
+	reInit()
 }
 
 // Request 创建包含认证信息的HTTP请求
@@ -177,6 +196,10 @@ func (d *Dao) CheckLogin(ul string) bool {
 	return false
 }
 
+func (d *Dao) GetProxy() string {
+	return d.proxy
+}
+
 // GetCookiesString 获取指定URL对应的登录Cookie信息
 // 根据URL的主机名查找对应的Cookie数据
 // 参数：ul - URL地址
@@ -197,7 +220,7 @@ func (d *Dao) GetCookiesString(ul string) *LoginCookie {
 // 参数：proxy - 代理服务器地址，空字符串表示不使用代理
 // 返回值：配置完成的Dao实例
 func New(proxy string) *Dao {
-	if dao, ok := globalDaos.Load(proxy); ok {
+	if dao, ok := globalDaos.daos.Load(proxy); ok {
 		return dao.(*Dao)
 	}
 
@@ -212,11 +235,12 @@ func New(proxy string) *Dao {
 	}
 
 	// 创建Cookie存储对象，用于自动管理HTTP Cookie
-	jar, _ := cookiejar.New(nil)
+	//jar, _ := cookiejar.New(nil)
 
 	dao := &Dao{
+		proxy: proxy,
 		httpCli: &http.Client{
-			Jar: jar, // 设置Cookie存储
+			Jar: globalDaos.jar, // 设置Cookie存储
 			Transport: &http.Transport{
 				Proxy:        proxyFn,                                                                // 代理配置
 				TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper), // 禁用HTTP/2
@@ -237,8 +261,8 @@ func New(proxy string) *Dao {
 			},
 			Timeout: 10 * time.Second, // 整体请求超时时间
 		},
-		credentials: &Credentials{}, // 初始化空的用户凭据
+		credentials: globalDaos.credentials, // &Credentials{}, // 初始化空的用户凭据
 	}
-	globalDaos.Store(proxy, dao)
+	globalDaos.daos.Store(proxy, dao)
 	return dao
 }

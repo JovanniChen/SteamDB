@@ -69,13 +69,13 @@ var config *Steam.Config = Steam.NewConfig("your_username:your_password@8.217.23
 
 func main() {
 	accountIndex := 6
-	TestLogin(accountIndex)
+	// TestLogin(accountIndex)
 	// TestGetTokenCode(accountIndex)
 	// TestGetFriendInfoByLink(accountIndex)
 	// TestGetFriendInfoByLinkAndAddFriend(accountIndex)
 	// TestGetProductByAppUrl(accountIndex)
 	// TestGetSteamGift(accountIndex)
-	TestUnsendAllGift(accountIndex)
+	// TestUnsendAllGift(accountIndex)
 	// TestConcurrentPayment(accountIndex)
 	// TestTransactionStatus(accountIndex)
 	// TestUnsendGift(accountIndex)
@@ -98,7 +98,7 @@ func main() {
 	// TestRemoveFriend(accountIndex)
 	// TestCheckAccountAvailable(accountIndex)
 	// TestGetSummary(accountIndex)
-	// TestGetInventory(accountIndex)
+	TestGetInventory(accountIndex)
 	// TestGetMyListings(accountIndex)
 	// TestGetMyListings(accountIndex)
 	// TestGetConfirmations(accountIndex)

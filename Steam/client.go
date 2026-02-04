@@ -481,15 +481,27 @@ func (c *Client) AddItemToCart(addCartItems []Model.AddCartItem) error {
 }
 
 func (c *Client) InitTransaction() (string, error) {
-	return c.dao.InitTransaction()
+	result, err := c.dao.InitTransaction()
+	if err != nil {
+		err = fmt.Errorf("初始化单次付交易失败,代理: %s,错误: %w", c.dao.GetProxy(), err)
+	}
+	return result, err
 }
 
 func (c *Client) InitConcurrentTransaction() (string, error) {
-	return c.dao.InitConcurrentTransaction()
+	result, err := c.dao.InitConcurrentTransaction()
+	if err != nil {
+		err = fmt.Errorf("初始化同时付交易失败,代理: %s,错误: %w", c.dao.GetProxy(), err)
+	}
+	return result, err
 }
 
 func (c *Client) FinalizeTransaction(transactionID string) error {
-	return c.dao.FinalizeTransaction(transactionID)
+	err := c.dao.FinalizeTransaction(transactionID)
+	if err != nil {
+		err = fmt.Errorf("最终交易提交失败,代理: %s,错误: %w", c.dao.GetProxy(), err)
+	}
+	return err
 }
 
 func (c *Client) CancelTransaction(transactionID string) error {
