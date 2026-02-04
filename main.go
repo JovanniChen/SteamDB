@@ -17,7 +17,7 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 )
 
-// {Username: "za0ww9ml4xl2", Password: "HLHxGyRMm6Zi", SharedSecret: "F54xOr9Tpyd5fAxgKx+RHR7vHik="}, // [0] [xv6753] [46]
+//  {Username: "za0ww9ml4xl2", Password: "HLHxGyRMm6Zi", SharedSecret: "F54xOr9Tpyd5fAxgKx+RHR7vHik="}, // [0] [xv6753] [46]
 // 	{Username: "zytmnd2097", Password: "awtekBcEkXz9", SharedSecret: "vNVDHuqBle/rnsG7EQW2xQUqlME="},   // [1] [4wzwg]  [45]
 // 	{Username: "zwrvsq6897", Password: "5uoIBclSSBI8", SharedSecret: "kUcQLn0pJutKt9oeh8yRDG7t+o8="},   // [2] [wqrmhz] [44]
 // 	{Username: "zuzuaw8238", Password: "uYj035ynLA5N", SharedSecret: "yKuRsv/OmI584XxMt2LUWWbCM+Y="},   // [3] [kxweoq] [40]
@@ -59,56 +59,59 @@ var accounts = []Account{
 	{Username: "plzhhgt075", Password: "ESvgOZnLTjKb", SharedSecret: "WxqsqlawbHEB7Pjah0wutOpLKE0="},   // [26]
 	{Username: "iuuwhmusxdv7", Password: "STQI7NOal7l6", SharedSecret: "+xtZKqLMsIMu7T4LgP3rO6wNV2Q="}, // [27]
 	{Username: "bmlgbjot5hz", Password: "1Z5pkOTuZigf", SharedSecret: "GZKHLVfxwjYPFMBF33l7Vu3NMY4="},  // [28]
+	{Username: "aeuybz0905", Password: "f4J5Cs6cHnHP", SharedSecret: "UGDYQfigAc47yH/wPcL0E3PCHPY="},   // [29]
 }
 
-var config *Steam.Config = Steam.NewConfig("your_username:your_password@54.46.31.242:8080")
+var config *Steam.Config = Steam.NewConfig("your_username:your_password@8.217.238.29:8080")
 
 // var config *Steam.Config = Steam.NewConfig("")
+// var config *Steam.Config = Steam.DefaultConfig()
 
 func main() {
-	TestLogin(6)
-	// TestGetTokenCode(6)
-	// TestGetFriendInfoByLink(14)
-	// TestGetFriendInfoByLinkAndAddFriend(14)
-	// TestGetProductByAppUrl(12)
-	// TestGetSteamGift(15)
-	TestUnsendAllGift(6)
-	// TestConcurrentPayment(6)
-	// TestTransactionStatus(25)
-	// TestUnsendGift(5)
-	// TestGetTokenCode(3)
-	// TestSetLanguage(11)
-	// TestClearCart(5)
-	// TestGetCart(11)
-	// TestAddItemToCart(1)
-	// TestInitTransaction(1)
-	// TestAddItemToCartAndInitTransaction(6)
-	// TestAccess(18)
-	// TestValidateCart(1)
-	// TestCancelTransaction(11)
-	// TestGetFinalPrice(18)
-	// TestTestGetPayLinkAgain(18)
-	// TestAddFriendByFriendCode(22)
-	// TestAddFriendByLink(22)
-	// TestCheckIsFriend(22)
-	// TestCheckFriendStatus(11)
-	// TestRemoveFriend(1)
-	// TestCheckAccountAvailable(8)
-	// TestGetSummary(18)
-	// TestGetInventory(1)
-	// TestGetMyListings(7)
-	// TestGetMyListings(17)
-	// TestGetConfirmations(0)
-	// TestGetConfirmations(17)
-	// TestPutList(9)
-	// TestBuyListing(8)
-	// TestPutList2(5)
-	// TestGetConfirmations(10)
-	// TestRemoveMyListings(4)
-	// TestGetBalance(25)
-	// TestGetWaitBalance(3)
-	// TestGetInventoryAndPutList(4)
-	// TestCreateOrder(14)
+	accountIndex := 6
+	TestLogin(accountIndex)
+	// TestGetTokenCode(accountIndex)
+	// TestGetFriendInfoByLink(accountIndex)
+	// TestGetFriendInfoByLinkAndAddFriend(accountIndex)
+	// TestGetProductByAppUrl(accountIndex)
+	// TestGetSteamGift(accountIndex)
+	TestUnsendAllGift(accountIndex)
+	// TestConcurrentPayment(accountIndex)
+	// TestTransactionStatus(accountIndex)
+	// TestUnsendGift(accountIndex)
+	// TestGetTokenCode(accountIndex)
+	// TestSetLanguage(accountIndex)
+	// TestClearCart(accountIndex)
+	// TestGetCart(accountIndex)
+	// TestAddItemToCart(accountIndex)
+	// TestInitTransaction(accountIndex)
+	// TestAddItemToCartAndInitTransaction(accountIndex)
+	// TestAccess(accountIndex)
+	// TestValidateCart(accountIndex)
+	// TestCancelTransaction(accountIndex)
+	// TestGetFinalPrice(accountIndex)
+	// TestTestGetPayLinkAgain(accountIndex)
+	// TestAddFriendByFriendCode(accountIndex)
+	// TestAddFriendByLink(accountIndex)
+	// TestCheckIsFriend(accountIndex)
+	// TestCheckFriendStatus(accountIndex)
+	// TestRemoveFriend(accountIndex)
+	// TestCheckAccountAvailable(accountIndex)
+	// TestGetSummary(accountIndex)
+	// TestGetInventory(accountIndex)
+	// TestGetMyListings(accountIndex)
+	// TestGetMyListings(accountIndex)
+	// TestGetConfirmations(accountIndex)
+	// TestGetConfirmations(accountIndex)
+	// TestPutList(accountIndex)
+	// TestBuyListing(accountIndex)
+	// TestPutList2(accountIndex)
+	// TestGetConfirmations(accountIndex)
+	// TestRemoveMyListings(accountIndex)
+	// TestGetBalance(accountIndex)
+	// TestGetWaitBalance(accountIndex)
+	// TestGetInventoryAndPutList(accountIndex)
+	// TestCreateOrder(accountIndex)
 	// TestGetGameUpdateInofs(1879330)
 }
 
@@ -118,6 +121,7 @@ func TestTestGetPayLinkAgain(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
+	client.SetProxy("8.217.238.29:8080")
 	Logger.Info(client.TestGetPayLinkAgain())
 }
 
@@ -335,27 +339,27 @@ func TestConcurrentPayment(accountIndex int) {
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 73106, AccountidGiftee: 352956450, Message: "超级鸡马"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 198332, AccountidGiftee: 352956450, Message: "Arcadian Atlas"}})
 
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984100, AccountidGiftee: 352956450, Message: "球跳塔"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 944462, AccountidGiftee: 352956450, Message: "恐怖之眼"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984094, AccountidGiftee: 352956450, Message: "纸片大作战2"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 110604, AccountidGiftee: 352956450, Message: "Antisphere"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1033686, AccountidGiftee: 352956450, Message: "咪子不要! - 金缮之美"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1033677, AccountidGiftee: 352956450, Message: "咪子不要! - 日常小物"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 675628, AccountidGiftee: 352956450, Message: "Risen Soundtrack"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 279451, AccountidGiftee: 352956450, Message: "A Sky Full of Stars - Original Sound Track"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984063, AccountidGiftee: 352956450, Message: "黑洞大作战"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 979135, AccountidGiftee: 352956450, Message: "炮弹人冲冲冲"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1107210, AccountidGiftee: 352956450, Message: "球跳塔"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1101478, AccountidGiftee: 352956450, Message: "恐怖之眼"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984094, AccountidGiftee: 352956450, Message: "纸片大作战2"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 110604, AccountidGiftee: 352956450, Message: "Antisphere"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1033686, AccountidGiftee: 352956450, Message: "咪子不要! - 金缮之美"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1033677, AccountidGiftee: 352956450, Message: "咪子不要! - 日常小物"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 675628, AccountidGiftee: 352956450, Message: "Risen Soundtrack"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 279451, AccountidGiftee: 352956450, Message: "A Sky Full of Stars - Original Sound Track"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984063, AccountidGiftee: 352956450, Message: "黑洞大作战"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 979135, AccountidGiftee: 352956450, Message: "炮弹人冲冲冲"}})
 
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 445776, AccountidGiftee: 352956450, Message: "BIOMUTANT - Soundtrack"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984097, AccountidGiftee: 352956450, Message: "神枪手强尼"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 834807, AccountidGiftee: 352956450, Message: "奔跑吧，香肠！"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 616514, AccountidGiftee: 352956450, Message: "Farm Kitten - Puzzle Pipes"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1013759, AccountidGiftee: 352956450, Message: "来切我鸭"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 197731, AccountidGiftee: 352956450, Message: "1bitHeart Original Soundtrack"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 366861, AccountidGiftee: 352956450, Message: "Sudoku 9x16x25"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 990639, AccountidGiftee: 352956450, Message: "毒液入侵者"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1383441, AccountidGiftee: 352956450, Message: "Merlin Survivors"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 375305, AccountidGiftee: 352956450, Message: "Kakuro"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 445776, AccountidGiftee: 352956450, Message: "BIOMUTANT - Soundtrack"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984097, AccountidGiftee: 352956450, Message: "神枪手强尼"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 834807, AccountidGiftee: 352956450, Message: "奔跑吧，香肠！"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 616514, AccountidGiftee: 352956450, Message: "Farm Kitten - Puzzle Pipes"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1013759, AccountidGiftee: 352956450, Message: "来切我鸭"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 197731, AccountidGiftee: 352956450, Message: "1bitHeart Original Soundtrack"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 366861, AccountidGiftee: 352956450, Message: "Sudoku 9x16x25"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 990639, AccountidGiftee: 352956450, Message: "毒液入侵者"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1383441, AccountidGiftee: 352956450, Message: "Merlin Survivors"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 375305, AccountidGiftee: 352956450, Message: "Kakuro"}})
 
 	transIDs := make([]string, 0)
 
@@ -397,7 +401,7 @@ func TestConcurrentPayment(accountIndex int) {
 		transIDs = append(transIDs, transID)
 	}
 
-	totalDuration := 300 * time.Second
+	totalDuration := 10 * time.Second
 	startTime := time.Now()
 
 	ticker := time.NewTicker(1 * time.Second)

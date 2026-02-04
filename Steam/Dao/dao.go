@@ -9,11 +9,14 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	u "net/url"
+	"sync"
 	"time"
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
 )
+
+var globalDaos sync.Map // 全局DAO对象池
 
 // Dao 数据访问对象结构体
 // 封装了HTTP客户端和用户凭据，提供Steam API交互功能
@@ -194,6 +197,10 @@ func (d *Dao) GetCookiesString(ul string) *LoginCookie {
 // 参数：proxy - 代理服务器地址，空字符串表示不使用代理
 // 返回值：配置完成的Dao实例
 func New(proxy string) *Dao {
+	if dao, ok := globalDaos.Load(proxy); ok {
+		return dao.(*Dao)
+	}
+
 	// 代理函数配置，根据传入的proxy参数决定是否使用代理
 	proxyFn := func(_ *http.Request) (*u.URL, error) {
 		if proxy == "" {
@@ -207,24 +214,8 @@ func New(proxy string) *Dao {
 	// 创建Cookie存储对象，用于自动管理HTTP Cookie
 	jar, _ := cookiejar.New(nil)
 
-	return &Dao{
+	dao := &Dao{
 		httpCli: &http.Client{
-			// 重定向处理配置（已注释）
-			// 这部分代码可以自动处理HTTP重定向时的Cookie传递
-			//CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			//	// 获取上一次请求的响应，从中提取 Cookie
-			//	if len(via) > 0 {
-			//		resp := via[len(via)-1].Response
-			//		if resp != nil {
-			//			for _, cookie := range resp.Cookies() {
-			//				// 将 Cookie 添加到下一次请求中
-			//				req.AddCookie(cookie)
-			//			}
-			//		}
-			//	}
-			//	return nil
-			//},
-
 			Jar: jar, // 设置Cookie存储
 			Transport: &http.Transport{
 				Proxy:        proxyFn,                                                                // 代理配置
@@ -248,4 +239,6 @@ func New(proxy string) *Dao {
 		},
 		credentials: &Credentials{}, // 初始化空的用户凭据
 	}
+	globalDaos.Store(proxy, dao)
+	return dao
 }

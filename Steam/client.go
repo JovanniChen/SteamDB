@@ -19,6 +19,10 @@ type Client struct {
 	dao *Dao.Dao // 底层数据访问对象
 }
 
+func (c *Client) SetProxy(proxy string) {
+	c.dao = Dao.New(proxy)
+}
+
 // Config 客户端配置选项
 // 用于初始化Steam客户端时的配置设置
 type Config struct {
