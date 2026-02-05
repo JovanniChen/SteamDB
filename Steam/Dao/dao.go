@@ -17,9 +17,7 @@ import (
 )
 
 type globalConfig struct {
-	daos        sync.Map
-	jar         *cookiejar.Jar
-	credentials *Credentials
+	daos sync.Map
 }
 
 var globalDaos *globalConfig // 全局DAO对象池
@@ -35,10 +33,8 @@ type Dao struct {
 
 func reInit() {
 	globalDaos = &globalConfig{
-		daos:        sync.Map{},
-		credentials: &Credentials{},
+		daos: sync.Map{},
 	}
-	globalDaos.jar, _ = cookiejar.New(nil)
 }
 
 func init() {
@@ -220,49 +216,49 @@ func (d *Dao) GetCookiesString(ul string) *LoginCookie {
 // 参数：proxy - 代理服务器地址，空字符串表示不使用代理
 // 返回值：配置完成的Dao实例
 func New(proxy string) *Dao {
+	var transport *http.Transport
 	if dao, ok := globalDaos.daos.Load(proxy); ok {
-		return dao.(*Dao)
-	}
-
-	// 代理函数配置，根据传入的proxy参数决定是否使用代理
-	proxyFn := func(_ *http.Request) (*u.URL, error) {
-		if proxy == "" {
-			return nil, nil // 不使用代理
+		transport = dao.(*http.Transport)
+	} else {
+		// 代理函数配置，根据传入的proxy参数决定是否使用代理
+		proxyFn := func(_ *http.Request) (*u.URL, error) {
+			if proxy == "" {
+				return nil, nil // 不使用代理
+			}
+			// 解析代理地址并返回URL对象
+			ul, err := u.Parse("http://" + proxy) // 根据定义Proxy func(*Request) (*url.URL, error)这里要返回url.URL
+			return ul, err
 		}
-		// 解析代理地址并返回URL对象
-		ul, err := u.Parse("http://" + proxy) // 根据定义Proxy func(*Request) (*url.URL, error)这里要返回url.URL
-		return ul, err
+		transport = &http.Transport{
+			Proxy:        proxyFn,                                                                // 代理配置
+			TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper), // 禁用HTTP/2
+			Dial: (&net.Dialer{
+				Timeout:   5 * time.Second,  // 连接超时时间
+				KeepAlive: 90 * time.Second, // 保持连接时间
+			}).Dial,
+			TLSHandshakeTimeout: 5 * time.Second, // TLS握手超时时间
+
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true, // 跳过TLS证书验证（生产环境建议移除）
+			},
+			DisableCompression:  true, // 禁用压缩
+			DisableKeepAlives:   true, // 禁用长连接
+			MaxIdleConns:        100,  // 最大空闲连接数
+			MaxIdleConnsPerHost: 10,   // 每个主机最大空闲连接数
+			MaxConnsPerHost:     20,   // 每个主机最大连接数
+		}
+		globalDaos.daos.Store(proxy, transport)
 	}
 
 	// 创建Cookie存储对象，用于自动管理HTTP Cookie
-	//jar, _ := cookiejar.New(nil)
-
-	dao := &Dao{
+	jar, _ := cookiejar.New(nil)
+	return &Dao{
 		proxy: proxy,
 		httpCli: &http.Client{
-			Jar: globalDaos.jar, // 设置Cookie存储
-			Transport: &http.Transport{
-				Proxy:        proxyFn,                                                                // 代理配置
-				TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper), // 禁用HTTP/2
-				Dial: (&net.Dialer{
-					Timeout:   30 * time.Second, // 连接超时时间
-					KeepAlive: 30 * time.Second, // 保持连接时间
-				}).Dial,
-				TLSHandshakeTimeout: 30 * time.Second, // TLS握手超时时间
-
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true, // 跳过TLS证书验证（生产环境建议移除）
-				},
-				DisableCompression:  true, // 禁用压缩
-				DisableKeepAlives:   true, // 禁用长连接
-				MaxIdleConns:        100,  // 最大空闲连接数
-				MaxIdleConnsPerHost: 10,   // 每个主机最大空闲连接数
-				MaxConnsPerHost:     20,   // 每个主机最大连接数
-			},
-			Timeout: 10 * time.Second, // 整体请求超时时间
+			Jar:       jar, // 设置Cookie存储
+			Transport: transport,
+			Timeout:   10 * time.Second, // 整体请求超时时间
 		},
-		credentials: globalDaos.credentials, // &Credentials{}, // 初始化空的用户凭据
+		credentials: &Credentials{}, // 初始化空的用户凭据
 	}
-	globalDaos.daos.Store(proxy, dao)
-	return dao
 }
