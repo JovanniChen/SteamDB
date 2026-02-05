@@ -70,14 +70,14 @@ var config *Steam.Config = Steam.NewConfig("")
 
 func main() {
 	accountIndex := 6
-	// TestLogin(accountIndex)
+	TestLogin(accountIndex)
 	// TestGetInventory(accountIndex)
 	// TestGetTokenCode(accountIndex)
 	// TestGetFriendInfoByLink(accountIndex)
 	// TestGetFriendInfoByLinkAndAddFriend(accountIndex)
 	// TestGetProductByAppUrl(accountIndex)
 	// TestGetSteamGift(accountIndex)
-	TestUnsendAllGift(accountIndex)
+	// TestUnsendAllGift(accountIndex)
 	// TestConcurrentPayment(accountIndex)
 	// TestTransactionStatus(accountIndex)
 	// TestUnsendGift(accountIndex)
@@ -94,7 +94,7 @@ func main() {
 	// TestGetFinalPrice(accountIndex)
 	// TestTestGetPayLinkAgain(accountIndex)
 	// TestAddFriendByFriendCode(accountIndex)
-	// TestAddFriendByLink(accountIndex)
+	TestAddFriendByLink(accountIndex)
 	// TestCheckIsFriend(accountIndex)
 	// TestCheckFriendStatus(accountIndex)
 	// TestRemoveFriend(accountIndex)
@@ -529,13 +529,23 @@ func TestAddFriendByLink(accountIndex int) {
 		return
 	}
 
-	steamID, err := client.AddFriendByLink("https://s.team/p/chbn-qbdd/RCVBGMHJ")
-	if err != nil {
-		Logger.Error(err)
-		return
+	var links = make([]string, 0)
+	links = append(links, "https://s.team/p/jjdj-qtdp/GRTCTHTQ")
+	links = append(links, "https://s.team/p/chbn-qbdd/GBNBJCQV")
+	links = append(links, "https://s.team/p/jthv-mcmp/WFHNWPVG")
+	links = append(links, "https://s.team/p/hwnd-wwwv/RQRRVWRD")
+	links = append(links, "https://s.team/p/jjfm-dbnh/WRHCDGKW")
+
+	for i := 0; i < len(links); i++ {
+		steamID, err := client.AddFriendByLink(links[i])
+		if err != nil {
+			Logger.Error(i, err)
+		}
+
+		Logger.Info("添加好友成功: ", steamID)
+		time.Sleep(2 * time.Second)
 	}
 
-	Logger.Info("添加好友成功: ", steamID)
 }
 
 func TestGetFriendInfoByLink(accountIndex int) {
