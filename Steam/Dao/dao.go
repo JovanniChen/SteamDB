@@ -17,28 +17,19 @@ import (
 )
 
 type globalConfig struct {
-	daos sync.Map
+	transports sync.Map // 代理缓存，用于存储代理服务器地址对应的HTTP Transport
+	proxy      string   // 代理服务器地址
 }
 
-var globalDaos *globalConfig // 全局DAO对象池
+//var globalDaos *globalConfig // 全局DAO对象池
 
 // Dao 数据访问对象结构体
 // 封装了HTTP客户端和用户凭据，提供Steam API交互功能
 type Dao struct {
-	httpCli         *http.Client // HTTP客户端，用于发送网络请求
-	credentials     *Credentials // 用户凭据信息，包含登录状态和认证信息
-	requestCallback func()       // HTTP请求成功后的回调函数，用于外部监控请求
-	proxy           string
-}
-
-func reInit() {
-	globalDaos = &globalConfig{
-		daos: sync.Map{},
-	}
-}
-
-func init() {
-	reInit()
+	httpCli         *http.Client  // HTTP客户端，用于发送网络请求
+	credentials     *Credentials  // 用户凭据信息，包含登录状态和认证信息
+	global          *globalConfig // 全局配置信息
+	requestCallback func()        // HTTP请求成功后的回调函数，用于外部监控请求
 }
 
 // Request 创建包含认证信息的HTTP请求
@@ -192,8 +183,10 @@ func (d *Dao) CheckLogin(ul string) bool {
 	return false
 }
 
+// GetProxy 获取当前代理服务器地址
+// 返回值：代理服务器地址
 func (d *Dao) GetProxy() string {
-	return d.proxy
+	return d.global.proxy
 }
 
 // SetProxy 切换代理设置
@@ -201,10 +194,10 @@ func (d *Dao) GetProxy() string {
 // 参数：newProxy - 新的代理地址，空字符串表示不使用代理
 func (d *Dao) SetProxy(newProxy string) {
 	// 获取或创建对应代理的 transport
-	transport := getOrCreateTransport(newProxy)
+	transport := d.getOrCreateTransport(newProxy)
 
 	// 更新代理配置和 HTTP 客户端的 transport
-	d.proxy = newProxy
+	d.global.proxy = newProxy
 	d.httpCli.Transport = transport
 }
 
@@ -227,12 +220,22 @@ func (d *Dao) GetCookiesString(ul string) *LoginCookie {
 // 从全局缓存中查找，如果不存在则创建新的Transport并缓存
 // 参数：proxy - 代理服务器地址，空字符串表示不使用代理
 // 返回值：配置好的HTTP Transport对象
-func getOrCreateTransport(proxy string) *http.Transport {
+func (d *Dao) getOrCreateTransport(proxy string) *http.Transport {
 	// 尝试从缓存中加载已有的 transport
-	if t, ok := globalDaos.daos.Load(proxy); ok {
+	if t, ok := d.global.transports.Load(proxy); ok {
 		return t.(*http.Transport)
 	}
+	transport := getTransport(proxy)
+	// 存入缓存供后续复用
+	d.global.transports.Store(proxy, transport)
+	return transport
+}
 
+// 获取或创建指定代理的HTTP Transport
+// 从全局缓存中查找，如果不存在则创建新的Transport并缓存
+// 参数：proxy - 代理服务器地址，空字符串表示不使用代理
+// 返回值：配置好的HTTP Transport对象
+func getTransport(proxy string) *http.Transport {
 	// 缓存中不存在，创建新的 transport
 	// 代理函数配置，根据传入的proxy参数决定是否使用代理
 	proxyFn := func(_ *http.Request) (*u.URL, error) {
@@ -244,28 +247,24 @@ func getOrCreateTransport(proxy string) *http.Transport {
 		return ul, err
 	}
 
-	transport := &http.Transport{
+	return &http.Transport{
 		Proxy:        proxyFn,                                                                // 代理配置
 		TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper), // 禁用HTTP/2
 		Dial: (&net.Dialer{
-			Timeout:   5 * time.Second,  // 连接超时时间
-			KeepAlive: 90 * time.Second, // 保持连接时间
+			Timeout:   5 * time.Second,   // 连接超时时间
+			KeepAlive: 120 * time.Second, // 保持连接时间
 		}).Dial,
-		TLSHandshakeTimeout: 5 * time.Second, // TLS握手超时时间
+		TLSHandshakeTimeout: 3 * time.Second, // TLS握手超时时间
 
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true, // 跳过TLS证书验证（生产环境建议移除）
 		},
-		DisableCompression:  true, // 禁用压缩
-		DisableKeepAlives:   true, // 禁用长连接
-		MaxIdleConns:        100,  // 最大空闲连接数
-		MaxIdleConnsPerHost: 10,   // 每个主机最大空闲连接数
-		MaxConnsPerHost:     20,   // 每个主机最大连接数
+		//DisableCompression: true, // 禁用压缩
+		//DisableKeepAlives:   true, // 禁用长连接
+		MaxIdleConns:        5,  // 最大空闲连接数
+		MaxIdleConnsPerHost: 10, // 每个主机最大空闲连接数
+		MaxConnsPerHost:     60, // 每个主机最大连接数
 	}
-
-	// 存入缓存供后续复用
-	globalDaos.daos.Store(proxy, transport)
-	return transport
 }
 
 // New 创建新的Dao实例
@@ -273,18 +272,21 @@ func getOrCreateTransport(proxy string) *http.Transport {
 // 参数：proxy - 代理服务器地址，空字符串表示不使用代理
 // 返回值：配置完成的Dao实例
 func New(proxy string) *Dao {
-	// 获取或创建对应代理的 transport
-	transport := getOrCreateTransport(proxy)
-
+	transport := getTransport(proxy)
 	// 创建Cookie存储对象，用于自动管理HTTP Cookie
 	jar, _ := cookiejar.New(nil)
-	return &Dao{
-		proxy: proxy,
+	dao := &Dao{
+		global: &globalConfig{
+			transports: sync.Map{},
+			proxy:      proxy,
+		},
 		httpCli: &http.Client{
-			Jar:       jar,                 // 设置Cookie存储
-			Transport: transport,            // 使用缓存的transport
-			Timeout:   10 * time.Second,     // 整体请求超时时间
+			Jar:       jar,              // 设置Cookie存储
+			Transport: transport,        // 使用缓存的transport
+			Timeout:   10 * time.Second, // 整体请求超时时间
 		},
 		credentials: &Credentials{}, // 初始化空的用户凭据
 	}
+	dao.global.transports.Store(proxy, transport)
+	return dao
 }

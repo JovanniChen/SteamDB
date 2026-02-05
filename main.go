@@ -77,7 +77,7 @@ func main() {
 	// TestGetFriendInfoByLinkAndAddFriend(accountIndex)
 	// TestGetProductByAppUrl(accountIndex)
 	// TestGetSteamGift(accountIndex)
-	// TestUnsendAllGift(accountIndex)
+	TestUnsendAllGift(accountIndex)
 	// TestConcurrentPayment(accountIndex)
 	// TestTransactionStatus(accountIndex)
 	// TestUnsendGift(accountIndex)
@@ -94,7 +94,7 @@ func main() {
 	// TestGetFinalPrice(accountIndex)
 	// TestTestGetPayLinkAgain(accountIndex)
 	// TestAddFriendByFriendCode(accountIndex)
-	TestAddFriendByLink(accountIndex)
+	// TestAddFriendByLink(accountIndex)
 	// TestCheckIsFriend(accountIndex)
 	// TestCheckFriendStatus(accountIndex)
 	// TestRemoveFriend(accountIndex)
@@ -530,11 +530,11 @@ func TestAddFriendByLink(accountIndex int) {
 	}
 
 	var links = make([]string, 0)
-	links = append(links, "https://s.team/p/jjdj-qtdp/GRTCTHTQ")
-	links = append(links, "https://s.team/p/chbn-qbdd/GBNBJCQV")
-	links = append(links, "https://s.team/p/jthv-mcmp/WFHNWPVG")
-	links = append(links, "https://s.team/p/hwnd-wwwv/RQRRVWRD")
-	links = append(links, "https://s.team/p/jjfm-dbnh/WRHCDGKW")
+	links = append(links, "https://s.team/p/jjdj-qtdp/GVTQFBGJ")
+	links = append(links, "https://s.team/p/chbn-qbdd/QRGNHBPT")
+	links = append(links, "https://s.team/p/jthv-mcmp/JPBQTVMT")
+	links = append(links, "https://s.team/p/hwnd-wwwv/VVTNFGGT")
+	links = append(links, "https://s.team/p/jjfm-dbnh/DFQKWTDR")
 
 	for i := 0; i < len(links); i++ {
 		steamID, err := client.AddFriendByLink(links[i])
