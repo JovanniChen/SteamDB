@@ -20,7 +20,7 @@ type Client struct {
 }
 
 func (c *Client) SetProxy(proxy string) {
-	c.dao = Dao.New(proxy)
+	c.dao.SetProxy(proxy)
 }
 
 // Config 客户端配置选项
