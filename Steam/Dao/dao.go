@@ -251,7 +251,7 @@ func getTransport(proxy string) *http.Transport {
 		Proxy:        proxyFn,                                                                // 代理配置
 		TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper), // 禁用HTTP/2
 		Dial: (&net.Dialer{
-			Timeout:   5 * time.Second,   // 连接超时时间
+			Timeout:   15 * time.Second,  // 连接超时时间
 			KeepAlive: 120 * time.Second, // 保持连接时间
 		}).Dial,
 		TLSHandshakeTimeout: 3 * time.Second, // TLS握手超时时间

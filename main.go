@@ -60,6 +60,7 @@ var accounts = []Account{
 	{Username: "iuuwhmusxdv7", Password: "STQI7NOal7l6", SharedSecret: "+xtZKqLMsIMu7T4LgP3rO6wNV2Q="}, // [27]
 	{Username: "bmlgbjot5hz", Password: "1Z5pkOTuZigf", SharedSecret: "GZKHLVfxwjYPFMBF33l7Vu3NMY4="},  // [28]
 	{Username: "aeuybz0905", Password: "f4J5Cs6cHnHP", SharedSecret: "UGDYQfigAc47yH/wPcL0E3PCHPY="},   // [29]
+	{Username: "maantzmeesnw", Password: "NewQa05drZf", SharedSecret: "8dYeP5BMZ3L70vvwxSubGpHD2bo="},  // [30]
 }
 
 // var config *Steam.Config = Steam.NewConfig("your_username:your_password@47.86.103.98:8080")
@@ -69,7 +70,7 @@ var config *Steam.Config = Steam.NewConfig("")
 // var config *Steam.Config = Steam.DefaultConfig()
 
 func main() {
-	accountIndex := 6
+	accountIndex := 30
 	TestLogin(accountIndex)
 	// TestGetInventory(accountIndex)
 	// TestGetTokenCode(accountIndex)
