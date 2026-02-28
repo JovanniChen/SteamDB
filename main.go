@@ -61,16 +61,19 @@ var accounts = []Account{
 	{Username: "bmlgbjot5hz", Password: "1Z5pkOTuZigf", SharedSecret: "GZKHLVfxwjYPFMBF33l7Vu3NMY4="},  // [28]
 	{Username: "aeuybz0905", Password: "f4J5Cs6cHnHP", SharedSecret: "UGDYQfigAc47yH/wPcL0E3PCHPY="},   // [29]
 	{Username: "maantzmeesnw", Password: "NewQa05drZf", SharedSecret: "8dYeP5BMZ3L70vvwxSubGpHD2bo="},  // [30]
+	{Username: "yfsqqkd80", Password: "2J76AxYA6Pbi", SharedSecret: "xA8vLi8mw7kOvghspCYy+J124Fk="},    // [31]
+	{Username: "qdkfunqkvffp", Password: "e6UnHb9ydRGv", SharedSecret: "fv5mQVGjQ0GwrgTjwm2pGts/6RA="}, // [32]
+	{Username: "fqlyt822", Password: "sfmqjRqOpf4L", SharedSecret: "PdRJRMPqe+D02gd2YmTFtagQMkQ="},     // [33]
 }
 
 // var config *Steam.Config = Steam.NewConfig("your_username:your_password@47.86.103.98:8080")
 
-var config *Steam.Config = Steam.NewConfig("")
+// var config *Steam.Config = Steam.NewConfig("127.0.0.1:7890")
 
-// var config *Steam.Config = Steam.DefaultConfig()
+var config *Steam.Config = Steam.DefaultConfig()
 
 func main() {
-	accountIndex := 30
+	accountIndex := 33
 	TestLogin(accountIndex)
 	// TestGetInventory(accountIndex)
 	// TestGetTokenCode(accountIndex)
@@ -78,7 +81,7 @@ func main() {
 	// TestGetFriendInfoByLinkAndAddFriend(accountIndex)
 	// TestGetProductByAppUrl(accountIndex)
 	// TestGetSteamGift(accountIndex)
-	TestUnsendAllGift(accountIndex)
+	// TestUnsendAllGift(accountIndex)
 	// TestConcurrentPayment(accountIndex)
 	// TestTransactionStatus(accountIndex)
 	// TestUnsendGift(accountIndex)
@@ -95,7 +98,7 @@ func main() {
 	// TestGetFinalPrice(accountIndex)
 	// TestTestGetPayLinkAgain(accountIndex)
 	// TestAddFriendByFriendCode(accountIndex)
-	// TestAddFriendByLink(accountIndex)
+	TestAddFriendByLink(accountIndex)
 	// TestCheckIsFriend(accountIndex)
 	// TestCheckFriendStatus(accountIndex)
 	// TestRemoveFriend(accountIndex)
@@ -531,11 +534,7 @@ func TestAddFriendByLink(accountIndex int) {
 	}
 
 	var links = make([]string, 0)
-	links = append(links, "https://s.team/p/jjdj-qtdp/GVTQFBGJ")
-	links = append(links, "https://s.team/p/chbn-qbdd/QRGNHBPT")
-	links = append(links, "https://s.team/p/jthv-mcmp/JPBQTVMT")
-	links = append(links, "https://s.team/p/hwnd-wwwv/VVTNFGGT")
-	links = append(links, "https://s.team/p/jjfm-dbnh/DFQKWTDR")
+	links = append(links, "https://s.team/p/chbn-qbdd/JFKCGRJV")
 
 	for i := 0; i < len(links); i++ {
 		steamID, err := client.AddFriendByLink(links[i])

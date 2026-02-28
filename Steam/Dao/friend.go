@@ -15,6 +15,7 @@ import (
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
+	"github.com/JovanniChen/SteamDB/Steam/Logger"
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Param"
 	"github.com/JovanniChen/SteamDB/Steam/Utils"
@@ -458,6 +459,7 @@ func (d *Dao) ParseFriendLinkHTML(htmlContent string) *Model.FriendLinkParseResu
 	// XPath: //div[@class="persona_name"]/span[@class="actual_persona_name"]/text()
 	personNameNode := htmlquery.FindOne(doc, `//div[@class="persona_name"]/span[@class="actual_persona_name"]`)
 	if personNameNode == nil {
+		Logger.Info(htmlContent)
 		return &Model.FriendLinkParseResult{
 			Status: Model.FriendLinkStatusFailed,
 			Msg:    "无法找到指定的个人资料（请检查链接是否可用）",
