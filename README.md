@@ -1,330 +1,149 @@
-# SteamDB Go客户端库
+# SteamDB
 
-一个用于与Steam平台交互的Go语言第三方库，提供简单易用的API接口。
+`SteamDB` 是一个用于与 Steam 平台交互的 Go 项目，既可以作为库被其他项目引用，也包含 `main.go` 作为本地测试入口。
 
-## 主要功能
+当前代码已覆盖登录、会话恢复、好友、库存与市场、购物车与交易流程、更新事件检测等能力。
 
-- **用户认证**: 支持Steam用户名密码登录，包括Steam Guard双因素认证
-- **积分系统**: 查询用户积分余额、等级信息
-- **反应系统**: 获取反应配置，为用户添加反应（表情、奖励等）
-- **令牌生成**: 生成Steam Guard验证码
-- **会话管理**: 自动管理登录会话和Cookie
-- **错误处理**: 完善的错误处理和重试机制
+## 功能概览
+
+- 账号登录与会话管理
+- Steam Guard 令牌生成
+- 账户信息获取（昵称、余额、国家、语言）
+- 积分系统（GetSummary、反应配置、加反应）
+- 好友相关（好友码、链接、状态检查、删除）
+- 库存/礼物获取、市场上架/下架/购买/订单
+- 购物车与支付交易流程（初始化、最终支付、取消、价格查询、支付链接）
+- 游戏更新事件抓取与本地 SQLite 去重保存
+
+## 项目结构
+
+```text
+.
+├── main.go               # 测试入口（按需调用 TestXxx）
+├── Steam/
+│   ├── client.go         # 对外客户端 API
+│   ├── Dao/              # 底层 HTTP/认证/业务实现
+│   ├── Model/            # 数据结构
+│   ├── Protoc/           # protobuf 定义与生成代码
+│   ├── Constants/        # 常量与 API 端点
+│   └── Utils/            # 工具函数（如令牌生成）
+├── mafiles/              # Steam Guard maFile（本地文件）
+├── temp/                 # 会话缓存（session_*.json）
+├── steam.db              # 更新事件 SQLite（运行时生成）
+└── Makefile              # 构建与开发命令
+```
+
+## 环境要求
+
+- Go 1.24+
+- 可访问 Steam 相关域名的网络环境
+- 部分功能需要有效的 `maFile`（如市场确认相关）
 
 ## 快速开始
 
-### 安装
+### 1) 安装依赖
 
 ```bash
-go get github.com/JovanniChen/SteamDB
+go mod download
 ```
 
-### 基本使用
+### 2) 构建
+
+```bash
+make build
+```
+
+### 3) 运行测试入口
+
+```bash
+go run main.go
+```
+
+`main.go` 默认通过注释切换 `TestXxx` 方法。你可以按需要修改 `accountIndex`、代理配置和调用的方法。
+
+## 作为库使用
+
+### 基础登录
 
 ```go
 package main
 
 import (
-    "fmt"
-    "log"
-    
-    "github.com/JovanniChen/SteamDB/Steam"
+	"fmt"
+	"log"
+
+	"github.com/JovanniChen/SteamDB/Steam"
 )
 
 func main() {
-    // 创建客户端
-    client, err := Steam.NewClient(Steam.DefaultConfig())
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    // 登录
-    credentials := &Steam.LoginCredentials{
-        Username:     "your_username",
-        Password:     "your_password", 
-        SharedSecret: "your_shared_secret", // 可选，Steam Guard共享密钥
-    }
-    
-    userInfo, err := client.Login(credentials)
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    fmt.Printf("登录成功！Steam ID: %d\n", userInfo.SteamID)
+	client, err := Steam.NewClient(Steam.NewConfig("127.0.0.1:7890"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	user, err := client.Login(&Steam.LoginCredentials{
+		Username:     "your_username",
+		Password:     "your_password",
+		SharedSecret: "base64_shared_secret",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("登录成功: %s (%d)\n", user.Nickname, user.SteamID)
 }
 ```
 
-## API 参考
-
-### 客户端配置
-
-#### Steam.Config
-
-客户端配置结构体，用于初始化Steam客户端。
+### 会话恢复（免重复登录）
 
 ```go
-type Config struct {
-    Proxy   string        // 代理服务器地址，格式: "host:port"
-    Timeout time.Duration // 请求超时时间
-}
-```
+client, _ := Steam.NewClient(Steam.DefaultConfig())
 
-#### Steam.DefaultConfig()
+client.SetLoginInfo(
+	"username",
+	7656119xxxxxxxxxx,
+	"nickname",
+	"CN",
+	"access_token",
+	"refresh_token",
+	loginCookies,
+	steamOffset,
+	"schinese",
+)
 
-返回默认配置。
-
-```go
-config := Steam.DefaultConfig()
-// 默认配置：无代理，30秒超时
-```
-
-#### Steam.NewClient(config *Config)
-
-创建新的Steam客户端实例。
-
-```go
-client, err := Steam.NewClient(config)
-```
-
-### 用户认证
-
-#### LoginCredentials
-
-登录凭据结构体。
-
-```go
-type LoginCredentials struct {
-    Username     string // Steam用户名
-    Password     string // Steam密码
-    SharedSecret string // Steam Guard共享密钥(base64编码)，可选
-}
-```
-
-#### UserInfo
-
-用户信息结构体，包含登录成功后的用户详细信息。
-
-```go
-type UserInfo struct {
-    SteamID      uint64 // Steam ID
-    Username     string // 用户名
-    Nickname     string // 昵称
-    AccessToken  string // 访问令牌
-    RefreshToken string // 刷新令牌
-    CountryCode  string // 国家代码
-}
-```
-
-#### Client.Login(credentials *LoginCredentials)
-
-执行Steam登录。
-
-```go
-userInfo, err := client.Login(credentials)
-```
-
-### Steam Guard
-
-#### Client.GetTokenCode(sharedSecret string)
-
-生成Steam Guard验证码。
-
-```go
-code, err := client.GetTokenCode("your_shared_secret")
-fmt.Println("验证码:", code) // 输出6位数字验证码
-```
-
-### 积分系统
-
-#### PointsSummary
-
-积分摘要信息结构体。
-
-```go
-type PointsSummary struct {
-    SteamID uint64 // Steam ID
-    Points  int64  // 当前积分数量
-    Level   int32  // 用户等级
-}
-```
-
-#### Client.GetPointsSummary(steamID uint64)
-
-获取用户积分摘要。
-
-```go
-summary, err := client.GetPointsSummary(userInfo.SteamID)
-fmt.Printf("积分: %d, 等级: %d\n", summary.Points, summary.Level)
-```
-
-### 反应系统
-
-#### ReactionConfig
-
-反应配置信息结构体。
-
-```go
-type ReactionConfig struct {
-    ReactionID       uint32   // 反应ID
-    PointsCost       int64    // 消耗积分数量
-    ValidTargetTypes []uint32 // 可用的目标类型列表
-}
-```
-
-#### Client.GetReactionConfig()
-
-获取所有可用的反应配置。
-
-```go
-reactions, err := client.GetReactionConfig()
-for _, reaction := range reactions {
-    fmt.Printf("反应ID: %d, 消耗积分: %d\n", 
-        reaction.ReactionID, reaction.PointsCost)
-}
-```
-
-#### AddReactionResult
-
-添加反应结果结构体。
-
-```go
-type AddReactionResult struct {
-    Success        bool  // 操作是否成功
-    PointsConsumed int64 // 消耗的积分数量
-}
-```
-
-#### Client.AddReaction(targetSteamID uint64, reactionType uint32, reactionID uint32)
-
-为指定用户添加反应。
-
-```go
-result, err := client.AddReaction(targetSteamID, 1, 23)
+summary, err := client.GetPointsSummary(client.GetSteamID())
 if err != nil {
-    log.Printf("添加反应失败: %v", err)
-} else if result.Success {
-    fmt.Printf("成功添加反应，消耗积分: %d\n", result.PointsConsumed)
+	// handle error
 }
+_ = summary
 ```
 
-#### Client.GetReactions(steamID uint64, reactionType uint32)
+## 常用 API（按场景）
 
-获取用户的反应记录。
+- 登录与状态: `Login`, `SetLoginInfo`, `CheckLoginStatus`, `GetTokenCode`
+- 账户信息: `GetUserInfo`, `GetBalance`, `GetWaitBalance`, `GetSteamID`, `GetNickname`, `GetAccessToken`
+- 好友: `AddFriendByLink`, `AddFriendByFriendCode`, `CheckIsFriend`, `CheckFriendStatus`, `RemoveFriend`
+- 市场与库存: `GetInventory`, `GetSteamGift`, `PutList`, `BuyListing`, `CreateOrder`, `GetMyListings`, `RemoveMyListings`, `GetConfirmations`
+- 购物车与交易: `AddItemToCart`, `GetCart`, `ClearCart`, `ValidateCart`, `InitTransaction`, `InitConcurrentTransaction`, `GetFinalPrice`, `AccessCheckoutURL`, `GetAlipayURL`, `FinalizeTransaction`, `CancelTransaction`, `TransactionStatus`, `UnsendGift`, `UnsendAllGift`
+- 更新检测: `GetGameUpdateEvents`（带数据库去重判断）
 
-```go
-reactions, err := client.GetReactions(steamID, 0) // 0表示获取所有类型
+## Makefile 命令
+
+```bash
+make help         # 查看全部命令
+make build        # 构建当前平台
+make build-all    # 构建多平台产物
+make test         # 运行测试（当前仓库无 *_test.go 时会快速结束）
+make fmt          # go fmt
+make vet          # go vet
+make mod-tidy     # 整理依赖
+make run          # go run .
 ```
 
-### 辅助方法
+## 说明与注意事项
 
-#### Client.GetSteamID()
-
-获取当前登录用户的Steam ID。
-
-```go
-steamID := client.GetSteamID()
-```
-
-#### Client.GetAccessToken()
-
-获取当前有效的访问令牌。
-
-```go
-token, err := client.GetAccessToken()
-```
-
-#### Client.GetNickname()
-
-获取用户昵称。
-
-```go
-nickname := client.GetNickname()
-```
-
-#### Client.GetCountryCode()
-
-获取用户国家代码。
-
-```go
-countryCode := client.GetCountryCode()
-```
-
-## 高级用法
-
-### 使用代理
-
-```go
-config := &Steam.Config{
-    Proxy:   "127.0.0.1:8080", // SOCKS5或HTTP代理
-    Timeout: 30 * time.Second,
-}
-client, err := Steam.NewClient(config)
-```
-
-### 错误处理
-
-该库提供了详细的错误信息，建议根据不同的错误类型进行处理：
-
-```go
-userInfo, err := client.Login(credentials)
-if err != nil {
-    switch {
-    case strings.Contains(err.Error(), "密码错误"):
-        fmt.Println("用户名或密码错误")
-    case strings.Contains(err.Error(), "需要手机验证码"):
-        fmt.Println("需要Steam Guard验证")
-    case strings.Contains(err.Error(), "请求过于频繁"):
-        fmt.Println("请求过于频繁，请稍后重试")
-    default:
-        fmt.Printf("登录失败: %v\n", err)
-    }
-    return
-}
-```
-
-### Steam Guard设置
-
-要使用Steam Guard功能，你需要获取共享密钥：
-
-1. 在Steam移动应用中启用Steam Guard
-2. 提取共享密钥（通常为base64编码的字符串）
-3. 在登录时提供该密钥
-
-```go
-credentials := &Steam.LoginCredentials{
-    Username:     "your_username",
-    Password:     "your_password",
-    SharedSecret: "abcdefghijk123456789==", // base64编码的密钥
-}
-```
-
-## 注意事项
-
-1. **频率限制**: Steam对API请求有频率限制，建议在请求之间添加适当的延迟
-2. **账户安全**: 请妥善保管你的登录凭据，特别是SharedSecret
-3. **合规使用**: 请遵守Steam的使用条款，仅用于个人学习和合规目的
-4. **错误重试**: 库内置了重试机制，但仍建议在应用层面进行适当的错误处理
-
-## 项目地址
-
-- **GitHub**: https://github.com/JovanniChen/SteamDB
-- **Go Module**: `github.com/JovanniChen/SteamDB`
-
-## 许可证
-
-本项目采用MIT许可证，详见LICENSE文件。
-
-## 贡献
-
-欢迎提交Issue和Pull Request来改进这个项目。
-
-- 提交Issue: https://github.com/JovanniChen/SteamDB/issues
-- 提交Pull Request: https://github.com/JovanniChen/SteamDB/pulls
-
-## 支持
-
-如果你在使用过程中遇到问题，可以：
-
-1. 查看examples目录中的示例代码
-2. 在GitHub上提交Issue描述你的问题
-3. 查阅Steam官方API文档
+- `main.go` 是本仓库的测试入口，不代表稳定 CLI 接口。
+- 代理可通过 `Steam.NewConfig("host:port")` 或 `client.SetProxy(...)` 动态切换。
+- `Config.Timeout` 字段已定义，但当前实现中底层 HTTP 超时由 `Dao` 内固定值控制（`10s`）。
+- 游戏更新检测会在项目根目录自动创建/使用 `steam.db`。
+- 该项目依赖 Steam 非公开接口行为，接口结构变化可能导致功能失效，建议在调用侧做好重试与降级。

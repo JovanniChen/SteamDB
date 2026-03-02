@@ -118,5 +118,6 @@ dev/
 
 session_*.json
 *.maFile
+main.go
 
 SteamDB

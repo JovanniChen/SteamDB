@@ -66,17 +66,17 @@ var accounts = []Account{
 	{Username: "fqlyt822", Password: "sfmqjRqOpf4L", SharedSecret: "PdRJRMPqe+D02gd2YmTFtagQMkQ="},     // [33]
 }
 
-// var config *Steam.Config = Steam.NewConfig("your_username:your_password@47.86.103.98:8080")
+var config *Steam.Config = Steam.NewConfig("jio:chenhao@54.46.125.11:3128")
 
 // var config *Steam.Config = Steam.NewConfig("127.0.0.1:7890")
 
-var config *Steam.Config = Steam.DefaultConfig()
+// var config *Steam.Config = Steam.DefaultConfig()
 
 func main() {
-	accountIndex := 33
-	TestLogin(accountIndex)
+	accountIndex := 13
+	// TestLogin(accountIndex)
 	// TestGetInventory(accountIndex)
-	// TestGetTokenCode(accountIndex)
+	TestGetTokenCode(accountIndex)
 	// TestGetFriendInfoByLink(accountIndex)
 	// TestGetFriendInfoByLinkAndAddFriend(accountIndex)
 	// TestGetProductByAppUrl(accountIndex)
@@ -98,7 +98,7 @@ func main() {
 	// TestGetFinalPrice(accountIndex)
 	// TestTestGetPayLinkAgain(accountIndex)
 	// TestAddFriendByFriendCode(accountIndex)
-	TestAddFriendByLink(accountIndex)
+	// TestAddFriendByLink(accountIndex)
 	// TestCheckIsFriend(accountIndex)
 	// TestCheckFriendStatus(accountIndex)
 	// TestRemoveFriend(accountIndex)
