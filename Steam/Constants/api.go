@@ -86,6 +86,7 @@ var (
 	CartIndex      string = Scheme + Domain.Store + "/cart/"
 	AddItemsToCart string = Scheme + Domain.Api + "/IAccountCartService/AddItemsToCart/v1"
 	ValidateCart   string = Scheme + Domain.Api + "/ICheckoutService/ValidateCart/v1"
+	AddFundsSubmit string = Scheme + Domain.Store + "/steamaccount/addfundssubmit"
 
 	// 订单相关 API 端点
 	InitTransaction     string = Scheme + Domain.CheckOut + "/checkout/inittransaction/"

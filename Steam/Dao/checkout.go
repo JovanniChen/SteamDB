@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -236,6 +237,100 @@ func (d *Dao) InitTransaction() (string, error) {
 	return response.TransID, nil
 }
 
+func (d *Dao) InitAddFundsTransaction(gidShoppingCart, microTxn string) (string, error) {
+	params := Param.Params{}
+	params.SetString("gidShoppingCart", gidShoppingCart)
+	params.SetInt64("gidReplayOfTransID", -1)
+	params.SetInt64("bUseAccountCart", 0)
+	params.SetString("PaymentMethod", "alipay")
+	params.SetInt64("abortPendingTransactions", 0)
+	params.SetInt64("bHasCardInfo", 0)
+	params.SetString("CardNumber", "")
+	params.SetString("CardExpirationYear", "")
+	params.SetString("CardExpirationMonth", "")
+	params.SetString("FirstName", "")
+	params.SetString("LastName", "")
+	params.SetString("Address", "")
+	params.SetString("AddressTwo", "")
+	params.SetString("Country", "CN")
+	params.SetString("City", "")
+	params.SetString("State", "")
+	params.SetString("PostalCode", "")
+	params.SetString("Phone", "")
+	params.SetString("ShippingFirstName", "")
+	params.SetString("ShippingLastName", "")
+	params.SetString("ShippingAddress", "")
+	params.SetString("ShippingAddressTwo", "")
+	params.SetString("ShippingCountry", "CN")
+	params.SetString("ShippingCity", "")
+	params.SetString("ShippingState", "")
+	params.SetString("ShippingPostalCode", "")
+	params.SetString("ShippingPhone", "")
+	params.SetInt64("bIsGift", 0)
+	params.SetInt64("GifteeAccountID", 0)
+	params.SetString("GifteeEmail", "")
+	params.SetString("GifteeName", "")
+	params.SetString("GiftMessage", "")
+	params.SetString("Sentiment", "")
+	params.SetString("Signature", "")
+	params.SetInt64("ScheduledSendOnDate", 0)
+	params.SetString("BankAccount", "")
+	params.SetString("BankCode", "")
+	params.SetString("BankIBAN", "")
+	params.SetString("BankBIC", "")
+	params.SetString("TPBankID", "")
+	params.SetString("BankAccountID", "")
+	params.SetInt64("bSaveBillingAddress", 1)
+	params.SetString("gidPaymentID", "")
+	params.SetInt64("bUseRemainingSteamAccount", 0)
+	params.SetInt64("bPreAuthOnly", 0)
+
+	if d.GetLoginCookies()["checkout.steampowered.com"] == nil {
+		return "", errors.New("checkout.steampowered.com cookie not found")
+	}
+	sessionId := d.GetLoginCookies()["checkout.steampowered.com"].SessionId
+	params.SetString("sessionid", sessionId)
+
+	req, err := d.Request(http.MethodPost, Constants.InitTransaction, strings.NewReader(params.Encode()))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("origin", "https://checkout.steampowered.com")
+	req.Header.Set("referer", fmt.Sprintf("https: //checkout.steampowered.com/checkout?cart=%s&microtxn=%s", gidShoppingCart, microTxn))
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != 200 {
+		fmt.Println(string(body))
+		return "", fmt.Errorf("初始化交易失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	var response InitTransactionResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return "", fmt.Errorf("解析初始化交易响应失败: %w", err)
+	}
+
+	fmt.Println(response)
+
+	if response.Success != 1 {
+		fmt.Println(string(body))
+		return "", errors.New(Errors.GetCheckoutError(response.PurchaseResultDetail))
+	}
+
+	return response.TransID, nil
+}
+
 func (d *Dao) InitConcurrentTransaction() (string, error) {
 	params := Param.Params{}
 	params.SetInt64("gidShoppingCart", -1)
@@ -438,6 +533,53 @@ func (d *Dao) GetFinalPrice(transactionID string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	if resp.StatusCode != 200 {
+		return 0, fmt.Errorf("获取最终价格失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	var response GetFinalPriceResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return 0, fmt.Errorf("解析最终价格响应失败: %w", err)
+	}
+
+	if response.Success != 1 {
+		fmt.Println(string(body))
+		return 0, fmt.Errorf("获取最终价格失败,返回Success: %d", response.Success)
+	}
+
+	return response.Total, nil
+}
+
+func (d *Dao) GetAddFundFinalPrice(transactionID, cart, microTxn string) (int, error) {
+	Logger.Infof("[%s]获取最终价格", d.GetUsername())
+
+	params := Param.Params{}
+	params.SetInt64("count", 1)
+	params.SetString("transid", transactionID)
+	params.SetString("purchasetype", "self")
+	params.SetString("microtxnid", microTxn)
+	params.SetString("cart", cart)
+	params.SetInt64("gidReplayOfTransID", -1)
+
+	req, err := d.Request(http.MethodGet, Constants.Getfinalprice+"?"+params.ToUrl(), nil)
+	if err != nil {
+		return 0, err
+	}
+
+	req.Header.Set("referer", fmt.Sprintf("https: //checkout.steampowered.com/checkout?cart=%s&microtxn=%s", cart, microTxn))
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
@@ -889,4 +1031,77 @@ func (d *Dao) TransactionStatus(transId string, count int) error {
 	}
 
 	return nil
+}
+
+// action add_to_cart
+// currency CNY
+// amount 3001
+// sessionID 3e5bdd99e638b8ac492ed063
+// mtreturnurl
+func (d *Dao) AddFundsSubmit(amount int) (string, error) {
+	if d.GetLoginCookies()["store.steampowered.com"] == nil {
+		fmt.Println("store.steampowered.com cookie not found")
+		return "", fmt.Errorf("store.steampowered.com cookie not found")
+	}
+	sessionId := d.GetLoginCookies()["store.steampowered.com"].SessionId
+
+	params := Param.Params{}
+	params.SetString("action", "add_to_cart")
+	params.SetString("currency", "CNY")
+	params.SetInt64("amount", int64(amount))
+	params.SetString("sessionID", sessionId)
+	params.SetString("mtreturnurl", "")
+
+	req, err := d.Request(http.MethodPost, Constants.AddFundsSubmit, strings.NewReader(params.Encode()))
+	if err != nil {
+		fmt.Println("d.Request error:", err)
+		return "", fmt.Errorf("d.Request error: %w", err)
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		fmt.Println("d.RetryRequest error:", err)
+		return "", fmt.Errorf("d.RetryRequest error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("AddFundsSubmit error,返回状态码: %d", resp.StatusCode)
+	}
+
+	finalURL := resp.Request.URL
+	cart := finalURL.Query().Get("cart")
+	microtxn := finalURL.Query().Get("microtxn")
+	if cart == "" || microtxn == "" {
+		redir := finalURL.Query().Get("redir")
+		if redir != "" {
+			if redirURL, parseErr := url.Parse(redir); parseErr == nil {
+				if cart == "" {
+					cart = redirURL.Query().Get("cart")
+				}
+				if microtxn == "" {
+					microtxn = redirURL.Query().Get("microtxn")
+				}
+			}
+		}
+	}
+
+	fmt.Println("最终状态码:", resp.StatusCode)
+	fmt.Println("最终URL:", finalURL.String())
+	fmt.Println("cart:", cart)
+	fmt.Println("microtxn:", microtxn)
+
+	transId, err := d.InitAddFundsTransaction(cart, microtxn)
+	if err != nil {
+		return "", fmt.Errorf("InitAddFundsTransaction error: %w", err)
+	}
+
+	d.GetAddFundFinalPrice(transId, cart, microtxn)
+	payLink, err := d.AccessCheckoutURL(transId)
+	if err != nil {
+		return "", fmt.Errorf("AccessCheckoutURL error: %w", err)
+	}
+	fmt.Println(payLink)
+
+	return payLink, nil
 }

@@ -563,3 +563,7 @@ func (c *Client) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, err
 func (c *Client) GetProductByAppID(appID int) (map[string]Model.GamePurchaseAction, error) {
 	return c.dao.GetProductByAppID(appID)
 }
+
+func (c *Client) AddFunds(amount int) (string, error) {
+	return c.dao.AddFundsSubmit(amount)
+}
