@@ -284,6 +284,13 @@ func New(proxy string) *Dao {
 			Jar:       jar,              // 设置Cookie存储
 			Transport: transport,        // 使用缓存的transport
 			Timeout:   10 * time.Second, // 整体请求超时时间
+			// CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// 	fmt.Printf("重定向 %d: %s\n", len(via), req.URL.String())
+			// 	if len(via) >= 10 {
+			// 		return fmt.Errorf("stopped after 10 redirects")
+			// 	}
+			// 	return nil
+			// },
 		},
 		credentials: &Credentials{}, // 初始化空的用户凭据
 	}

@@ -351,6 +351,7 @@ func (d *Dao) finalizeLogin(ak_bmsc, refreshToken, sessionid string) (*Model.Fin
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("ak_bmsc:", ak_bmsc)
 	req.Header.Add("cookie", ak_bmsc)
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {

@@ -1105,3 +1105,43 @@ func (d *Dao) AddFundsSubmit(amount int) (string, error) {
 
 	return payLink, nil
 }
+
+func (d *Dao) LogoutAll() error {
+	if d.GetLoginCookies()["store.steampowered.com"] == nil {
+		fmt.Println("store.steampowered.com cookie not found")
+		return fmt.Errorf("store.steampowered.com cookie not found")
+	}
+	sessionId := d.GetLoginCookies()["store.steampowered.com"].SessionId
+
+	params := Param.Params{}
+	params.SetString("action", "deauthorize")
+	params.SetString("sessionid", sessionId)
+
+	fmt.Println(Constants.LogoutAll)
+	fmt.Println(params.Encode())
+
+	req, err := d.Request(http.MethodPost, Constants.LogoutAll, strings.NewReader(params.Encode()))
+	if err != nil {
+		fmt.Println("d.Request error:", err)
+		return fmt.Errorf("d.Request error: %w", err)
+	}
+
+	req.Header.Set("origin", "https://store.steampowered.com")
+	req.Header.Set("referer", "https://store.steampowered.com/account/authorizeddevices")
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		fmt.Println("d.RetryRequest error:", err)
+		return fmt.Errorf("d.RetryRequest error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("最终状态码:", resp.StatusCode)
+	fmt.Println("最终URL:", resp.Request.URL.String())
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("LogoutAll error,返回状态码: %d", resp.StatusCode)
+	}
+
+	return nil
+}

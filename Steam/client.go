@@ -567,3 +567,7 @@ func (c *Client) GetProductByAppID(appID int) (map[string]Model.GamePurchaseActi
 func (c *Client) AddFunds(amount int) (string, error) {
 	return c.dao.AddFundsSubmit(amount)
 }
+
+func (c *Client) LogoutAll() error {
+	return c.dao.LogoutAll()
+}

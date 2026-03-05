@@ -74,16 +74,17 @@ var config *Steam.Config = Steam.NewConfig("jio:chenhao@95.40.78.90:3128")
 // var config *Steam.Config = Steam.DefaultConfig()
 
 func main() {
-	accountIndex := 30
-	// TestLogin(accountIndex)
-	// TestAddFunds(accountIndex)
-	// TestGetInventory(accountIndex)
+	accountIndex := 12
 	// TestGetTokenCode(accountIndex)
+	TestLogin(accountIndex)
+	// TestAddFunds(accountIndex)
+	TestLogoutAll(accountIndex)
+	// TestGetInventory(accountIndex)
 	// TestGetFriendInfoByLink(accountIndex)
 	// TestGetFriendInfoByLinkAndAddFriend(accountIndex)
 	// TestGetProductByAppUrl(accountIndex)
 	// TestGetSteamGift(accountIndex)
-	TestUnsendAllGift(accountIndex)
+	// TestUnsendAllGift(accountIndex)
 	// TestConcurrentPayment(accountIndex)
 	// TestTransactionStatus(accountIndex)
 	// TestUnsendGift(accountIndex)
@@ -922,6 +923,15 @@ func TestAddFunds(accountIndex int) {
 		return
 	}
 	Logger.Info(payLink)
+}
+
+func TestLogoutAll(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.LogoutAll())
 }
 
 func loadFromSession(accountIndex int) (*Steam.Client, error) {
