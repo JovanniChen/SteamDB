@@ -512,6 +512,10 @@ func (c *Client) GetFinalPrice(transactionID string) (int, error) {
 	return c.dao.GetFinalPrice(transactionID)
 }
 
+func (c *Client) GetFinalPriceWithDetails(transactionID string) (*Dao.FinalPriceDetails, error) {
+	return c.dao.GetFinalPriceWithDetails(transactionID)
+}
+
 func (c *Client) AccessCheckoutURL(transactionID string) (string, error) {
 	return c.dao.AccessCheckoutURL(transactionID)
 }

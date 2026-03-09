@@ -514,8 +514,32 @@ func (d *Dao) CancelTransaction(transactionID string) error {
 }
 
 type GetFinalPriceResponse struct {
-	Success int `json:"success"`
-	Total   int `json:"total"`
+	Success                    int    `json:"success"`
+	Total                      int    `json:"total"`
+	FormattedSteamAccountTotal string `json:"formattedSteamAccountTotal"`
+	FormattedProviderTotal     string `json:"formattedProviderTotal"`
+}
+
+// FinalPriceDetails 包含解析后的价格详情
+type FinalPriceDetails struct {
+	SteamAccountTotal float64 // Steam账户总额（浮点数）
+	ProviderTotal     float64 // 提供商总额（浮点数）
+	Total             int     // 总金额（整数，单位：分）
+}
+
+// parsePriceString 解析价格字符串（如 "¥ 45.90"）并返回浮点数
+func parsePriceString(priceStr string) (float64, error) {
+	// 移除所有空格和货币符号
+	priceStr = strings.ReplaceAll(priceStr, "¥", "")
+	priceStr = strings.ReplaceAll(priceStr, " ", "")
+	priceStr = strings.TrimSpace(priceStr)
+
+	// 转换为浮点数
+	price, err := strconv.ParseFloat(priceStr, 64)
+	if err != nil {
+		return 0, fmt.Errorf("解析价格失败 '%s': %w", priceStr, err)
+	}
+	return price, nil
 }
 
 func (d *Dao) GetFinalPrice(transactionID string) (int, error) {
@@ -546,6 +570,7 @@ func (d *Dao) GetFinalPrice(transactionID string) (int, error) {
 	}
 
 	if resp.StatusCode != 200 {
+		fmt.Println(string(body))
 		return 0, fmt.Errorf("获取最终价格失败,返回状态码: %d", resp.StatusCode)
 	}
 
@@ -561,6 +586,71 @@ func (d *Dao) GetFinalPrice(transactionID string) (int, error) {
 	}
 
 	return response.Total, nil
+}
+
+// GetFinalPriceWithDetails 获取最终价格并返回解析后的价格详情（包含浮点数）
+func (d *Dao) GetFinalPriceWithDetails(transactionID string) (*FinalPriceDetails, error) {
+	Logger.Infof("[%s]获取最终价格详情", d.GetUsername())
+
+	params := Param.Params{}
+	params.SetInt64("count", 1)
+	params.SetString("transid", transactionID)
+	params.SetString("purchasetype", "self")
+	params.SetInt64("microtxnid", -1)
+	params.SetInt64("cart", -1)
+	params.SetInt64("gidReplayOfTransID", -1)
+
+	req, err := d.Request(http.MethodGet, Constants.Getfinalprice+"?"+params.ToUrl(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		fmt.Println(string(body))
+		return nil, fmt.Errorf("获取最终价格失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	var response GetFinalPriceResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return nil, fmt.Errorf("解析最终价格响应失败: %w", err)
+	}
+
+	// {1 9600 ¥ 45.90 ¥ 50.10}
+	fmt.Println(response)
+
+	if response.Success != 1 {
+		fmt.Println(string(body))
+		return nil, fmt.Errorf("获取最终价格失败,返回Success: %d", response.Success)
+	}
+
+	// 解析格式化的价格字符串为浮点数
+	steamAccountTotal, err := parsePriceString(response.FormattedSteamAccountTotal)
+	if err != nil {
+		return nil, fmt.Errorf("解析 SteamAccountTotal 失败: %w", err)
+	}
+
+	providerTotal, err := parsePriceString(response.FormattedProviderTotal)
+	if err != nil {
+		return nil, fmt.Errorf("解析 ProviderTotal 失败: %w", err)
+	}
+
+	return &FinalPriceDetails{
+		SteamAccountTotal: steamAccountTotal,
+		ProviderTotal:     providerTotal,
+		Total:             response.Total,
+	}, nil
 }
 
 func (d *Dao) GetAddFundFinalPrice(transactionID, cart, microTxn string) (int, error) {

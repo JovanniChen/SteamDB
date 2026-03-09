@@ -65,20 +65,22 @@ var accounts = []Account{
 	{Username: "qdkfunqkvffp", Password: "e6UnHb9ydRGv", SharedSecret: "fv5mQVGjQ0GwrgTjwm2pGts/6RA="}, // [32]
 	{Username: "fqlyt822", Password: "sfmqjRqOpf4L", SharedSecret: "PdRJRMPqe+D02gd2YmTFtagQMkQ="},     // [33]
 	{Username: "dqx1pil5mpj", Password: "F6eyXrLU0XP3", SharedSecret: "AwqrvNq2qxAyR4sNB9Gef9dIGok="},  // [34]
+	{Username: "gsmut047", Password: "1oq0aF7mL0pl", SharedSecret: "MWWC3d47Cy7yGxvJQmH+py1KI+I="},     // [35]
 }
 
-var config *Steam.Config = Steam.NewConfig("jio:chenhao@95.40.78.90:3128")
+// var config *Steam.Config = Steam.NewConfig("jio:chenhao@54.46.6.245:3128")
 
 // var config *Steam.Config = Steam.NewConfig("127.0.0.1:7890")
 
-// var config *Steam.Config = Steam.DefaultConfig()
+var config *Steam.Config = Steam.DefaultConfig()
 
 func main() {
-	accountIndex := 12
+	accountIndex := 0
 	// TestGetTokenCode(accountIndex)
 	TestLogin(accountIndex)
+	// TestGetBalance(accountIndex)
 	// TestAddFunds(accountIndex)
-	TestLogoutAll(accountIndex)
+	// TestLogoutAll(accountIndex)
 	// TestGetInventory(accountIndex)
 	// TestGetFriendInfoByLink(accountIndex)
 	// TestGetFriendInfoByLinkAndAddFriend(accountIndex)
@@ -94,7 +96,7 @@ func main() {
 	// TestGetCart(accountIndex)
 	// TestAddItemToCart(accountIndex)
 	// TestInitTransaction(accountIndex)
-	// TestAddItemToCartAndInitTransaction(accountIndex)
+	TestAddItemToCartAndInitTransaction(accountIndex)
 	// TestAccess(accountIndex)
 	// TestValidateCart(accountIndex)
 	// TestCancelTransaction(accountIndex)
@@ -116,7 +118,7 @@ func main() {
 	// TestPutList2(accountIndex)
 	// TestGetConfirmations(accountIndex)
 	// TestRemoveMyListings(accountIndex)
-	// TestGetBalance(accountIndex)
+
 	// TestGetWaitBalance(accountIndex)
 	// TestGetInventoryAndPutList(accountIndex)
 	// TestCreateOrder(accountIndex)
@@ -267,8 +269,8 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 66596, AccountidGiftee: 352956450, Message: "fifa"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 66596, AccountidGiftee: 352956450, Message: "fifa"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1274037, AccountidGiftee: 352956450, Message: "Dune: Awakening 沙丘：觉醒"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})
@@ -303,12 +305,15 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 		}
 		Logger.Info("初始化交易成功: ", transID)
 
-		total, err := client.GetFinalPrice(transID)
+		result, err := client.GetFinalPriceWithDetails(transID)
 		if err != nil {
 			Logger.Error(err)
 			return
 		}
-		Logger.Info("获取最终价格成功: ", total)
+
+		fmt.Printf("%+v\n", result)
+
+		Logger.Info("获取最终价格成功: ", result.Total)
 
 		checkoutURL, err := client.AccessCheckoutURL(transID)
 		if err != nil {
