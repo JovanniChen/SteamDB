@@ -119,6 +119,64 @@ func (d *Dao) GetFriendInfoByLink(link string) (*Model.FriendInfo, string, error
 	return result.Data, inviteToken, nil
 }
 
+func (d *Dao) AcceptFriend(steamId string) error {
+	// sessionid 8ba91825148a5197078afd86
+	// steamid 76561199668111414
+	// ajax 1
+	// action accept
+	// steamids[] 76561198313222178
+	cookies := d.GetLoginCookies()
+
+	cookie, ok := cookies["steamcommunity.com"]
+	if !ok || cookie == nil {
+		return errors.New("steamcommunity.com cookie not found")
+	}
+
+	sessionId := cookie.SessionId
+	params := Param.Params{}
+	params.SetString("sessionid", sessionId)
+	params.SetString("steamids", steamId)
+	params.SetString("ajax", "1")
+	params.SetString("action", "accept")
+	params.SetString("steamids[]", steamId)
+
+	url := fmt.Sprintf(Constants.AcceptFriend, strconv.FormatUint(d.GetSteamID(), 10))
+	fmt.Println(url)
+	req, err := d.Request(http.MethodPost, url, strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(resp.StatusCode)
+	fmt.Println(string(body))
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("接受好友请求失败: 返回状态码[%d]", resp.StatusCode)
+	}
+
+	var result struct {
+		Success int `json:"success"`
+	}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return err
+	}
+	if result.Success != 1 {
+		return fmt.Errorf("接受好友请求失败: 返回内容[%s]", string(body))
+	}
+	return nil
+}
+
 func (d *Dao) CheckIsFriend(steamId string) (bool, error) {
 	params := Param.Params{}
 	params.SetString("steamids", steamId)

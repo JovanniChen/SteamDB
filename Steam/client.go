@@ -299,6 +299,10 @@ func (c *Client) GetFriendInfoByLink(link string) (*Model.FriendInfo, string, er
 	return c.dao.GetFriendInfoByLink(link)
 }
 
+func (c *Client) AcceptFriend(steamId string) error {
+	return c.dao.AcceptFriend(steamId)
+}
+
 func (c *Client) RemoveFriend(steamID uint64) error {
 	return c.dao.RemoveFriend(steamID)
 }
