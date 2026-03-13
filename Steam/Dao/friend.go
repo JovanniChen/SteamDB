@@ -132,15 +132,17 @@ func (d *Dao) AcceptFriend(steamId string) error {
 		return errors.New("steamcommunity.com cookie not found")
 	}
 
+	mySteamId := strconv.FormatUint(d.GetSteamID(), 10)
+
 	sessionId := cookie.SessionId
 	params := Param.Params{}
 	params.SetString("sessionid", sessionId)
-	params.SetString("steamids", steamId)
+	params.SetString("steamids", mySteamId)
 	params.SetString("ajax", "1")
 	params.SetString("action", "accept")
 	params.SetString("steamids[]", steamId)
 
-	url := fmt.Sprintf(Constants.AcceptFriend, strconv.FormatUint(d.GetSteamID(), 10))
+	url := fmt.Sprintf(Constants.AcceptFriend, mySteamId)
 	fmt.Println(url)
 	req, err := d.Request(http.MethodPost, url, strings.NewReader(params.Encode()))
 	if err != nil {
