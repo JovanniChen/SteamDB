@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -437,6 +438,19 @@ func convertToBundleInfo(cartType string) string {
 // ParseGamePurchaseActions 解析游戏购买操作信息
 func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseAction, error) {
 	results := make([]Model.GamePurchaseAction, 0)
+	seenCartIDs := make(map[string]struct{})
+	appendResult := func(item Model.GamePurchaseAction) {
+		if item.AddToCartIds == "" {
+			return
+		}
+		if _, ok := seenCartIDs[item.AddToCartIds]; ok {
+			return
+		}
+		seenCartIDs[item.AddToCartIds] = struct{}{}
+		results = append(results, item)
+	}
+
+	os.WriteFile("product.html", []byte(htmlContent), 0644)
 
 	// 解析HTML
 	doc, err := htmlquery.Parse(strings.NewReader(htmlContent))
@@ -500,7 +514,7 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 			cartInfo := extractCartInfo(wrapper, isBundle)
 
 			if cartInfo != nil && cartInfo.ID != "" && finalPrice != "" {
-				results = append(results, Model.GamePurchaseAction{
+				appendResult(Model.GamePurchaseAction{
 					IsBundle: func() int {
 						if isBundle {
 							return 1
@@ -524,6 +538,74 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 			} else {
 				fmt.Printf("解析失败 - gameName:%s, cartInfo:%+v, finalPrice:%s, url: %s\n", gameName, cartInfo, finalPrice, url)
 			}
+		}
+
+		// 额外解析DLC区块（game_area_dlc_row）
+		dlcRows := htmlquery.Find(doc, "//*[contains(@class, 'game_area_dlc_row')]")
+		for _, row := range dlcRows {
+			cartID := strings.TrimSpace(htmlquery.SelectAttr(row, "data-ds-packageid"))
+			if cartID == "" {
+				// 大多数DLC行使用隐藏的 subid[] 作为可加购ID
+				subidNode := htmlquery.FindOne(row, ".//input[contains(@name, 'subid')]")
+				if subidNode != nil {
+					cartID = strings.TrimSpace(htmlquery.SelectAttr(subidNode, "value"))
+				}
+			}
+			if cartID == "" {
+				// 兼容从 href 提取 javascript:addToCart(123)
+				href := htmlquery.SelectAttr(row, "href")
+				if href != "" {
+					re := regexp.MustCompile(`javascript:(?:addToCart|addBundleToCart)\s*\(\s*(\d+)\s*\)`)
+					matches := re.FindStringSubmatch(href)
+					if len(matches) > 1 {
+						cartID = strings.TrimSpace(matches[1])
+					}
+				}
+			}
+			if cartID == "" {
+				continue
+			}
+
+			nameNode := htmlquery.FindOne(row, ".//*[contains(@class, 'game_area_dlc_name')]")
+			gameName := ""
+			if nameNode != nil {
+				rawName := strings.TrimSpace(htmlquery.InnerText(nameNode))
+				// 去掉DLC标签文本（例如“全新”），只保留正式名称
+				tagNode := htmlquery.FindOne(nameNode, ".//*[contains(@class, 'dlc_highlight_reason')]")
+				if tagNode != nil {
+					tagText := strings.TrimSpace(htmlquery.InnerText(tagNode))
+					if tagText != "" {
+						rawName = strings.TrimSpace(strings.Replace(rawName, tagText, "", 1))
+					}
+				}
+				// 归一化空白，避免多行缩进导致的显示问题
+				gameName = strings.Join(strings.Fields(rawName), " ")
+			}
+			if gameName == "" {
+				continue
+			}
+
+			priceNode := htmlquery.FindOne(row, ".//*[contains(@class, 'game_area_dlc_price')]")
+			finalPrice := extractFinalPrice(priceNode)
+			if finalPrice == "" && priceNode != nil {
+				priceText := strings.ToLower(strings.TrimSpace(htmlquery.InnerText(priceNode)))
+				if strings.Contains(priceText, "免费") || strings.Contains(priceText, "free") {
+					finalPrice = "0.00"
+				}
+			}
+			if finalPrice == "" {
+				continue
+			}
+
+			appendResult(Model.GamePurchaseAction{
+				IsBundle:        0,
+				BundleInfoTexts: convertToBundleInfo("addtocart"),
+				GameName:        gameName,
+				FinalPrice:      finalPrice,
+				FinalPriceText:  moneyFlag + " " + finalPrice,
+				CountryCode:     countryCode,
+				AddToCartIds:    cartID,
+			})
 		}
 	} else {
 		// 处理其他类型的URL（如 /sub/ 或 /bundle/）
@@ -561,7 +643,7 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 
 			if cartInfo != nil && cartInfo.ID != "" && finalPrice != "" {
 				isBundle := cartInfo.Type == "addbundletocart"
-				results = append(results, Model.GamePurchaseAction{
+				appendResult(Model.GamePurchaseAction{
 					IsBundle: func() int {
 						if isBundle {
 							return 1
