@@ -73,5 +73,7 @@ func TestGetProductByAppUrl(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
-	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/2669320"))
+	// Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/2479810"))
+	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/3159330"))
+
 }

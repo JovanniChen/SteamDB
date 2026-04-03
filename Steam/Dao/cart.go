@@ -243,6 +243,7 @@ func (d *Dao) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error)
 		fmt.Printf("选项 %d:\n", i+1)
 		fmt.Printf("  是否为捆绑包: %d\n", result.IsBundle)
 		fmt.Printf("  游戏名称: %s\n", result.GameName)
+		fmt.Printf("  原价: %s\n", result.OriginalPrice)
 		fmt.Printf("  价格: %s\n", result.FinalPrice)
 		fmt.Printf("  类型: %s\n", result.BundleInfoTexts)
 		fmt.Printf("  购物车ID: %s\n", result.AddToCartIds)
@@ -299,21 +300,35 @@ func extractFinalPrice(priceNode *html.Node) string {
 	priceText := strings.TrimSpace(htmlquery.InnerText(priceNode))
 	if priceText != "" {
 		// 使用正则表达式提取价格数字
-		priceRegex := regexp.MustCompile(`(?i)(?:[￥$]|CNY|HKD|USD)\s*(\d+\.?\d*)`)
+		// 支持千分位，例如: ¥ 2,458.80
+		priceRegex := regexp.MustCompile(`(?i)(?:[￥$]|CNY|HKD|USD)\s*([0-9][0-9,]*(?:\.[0-9]+)?)`)
 		matches := priceRegex.FindStringSubmatch(priceText)
 		if len(matches) > 1 {
-			return matches[1]
+			return strings.ReplaceAll(matches[1], ",", "")
 		}
 
 		// 如果没有找到带货币符号的价格，尝试只匹配数字
-		numberRegex := regexp.MustCompile(`(\d+\.?\d*)`)
+		numberRegex := regexp.MustCompile(`([0-9][0-9,]*(?:\.[0-9]+)?)`)
 		matches = numberRegex.FindStringSubmatch(priceText)
 		if len(matches) > 1 {
-			return matches[1]
+			return strings.ReplaceAll(matches[1], ",", "")
 		}
 	}
 
 	return ""
+}
+
+// extractOriginalPrice 提取原价，若不存在则回退为现价
+func extractOriginalPrice(wrapper *html.Node, finalPrice string) string {
+	if wrapper != nil {
+		originalNode := htmlquery.FindOne(wrapper, ".//div[contains(@class, 'discount_original_price')]")
+		if originalNode != nil {
+			if original := extractFinalPrice(originalNode); original != "" {
+				return original
+			}
+		}
+	}
+	return finalPrice
 }
 
 // CartInfo 购物车信息结构
@@ -504,6 +519,7 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 			}
 
 			finalPrice := extractFinalPrice(priceNode)
+			originalPrice := extractOriginalPrice(wrapper, finalPrice)
 
 			// 如果缺少标题或价格，直接跳过该 wrapper
 			if gameName == "" || finalPrice == "" {
@@ -530,6 +546,7 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 						}
 					}()),
 					GameName:       gameName,
+					OriginalPrice:  originalPrice,
 					FinalPrice:     finalPrice,
 					FinalPriceText: moneyFlag + " " + finalPrice,
 					CountryCode:    countryCode,
@@ -593,6 +610,7 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 					finalPrice = "0.00"
 				}
 			}
+			originalPrice := extractOriginalPrice(row, finalPrice)
 			if finalPrice == "" {
 				continue
 			}
@@ -601,6 +619,7 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 				IsBundle:        0,
 				BundleInfoTexts: convertToBundleInfo("addtocart"),
 				GameName:        gameName,
+				OriginalPrice:   originalPrice,
 				FinalPrice:      finalPrice,
 				FinalPriceText:  moneyFlag + " " + finalPrice,
 				CountryCode:     countryCode,
@@ -632,6 +651,7 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 			}
 
 			finalPrice := extractFinalPrice(priceNode)
+			originalPrice := extractOriginalPrice(wrapper, finalPrice)
 
 			// 如果缺少标题或价格，直接跳过该 wrapper
 			if gameName == "" || finalPrice == "" {
@@ -653,6 +673,7 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 					}(),
 					BundleInfoTexts: convertToBundleInfo(cartInfo.Type),
 					GameName:        gameName,
+					OriginalPrice:   originalPrice,
 					FinalPrice:      finalPrice,
 					FinalPriceText:  moneyFlag + " " + finalPrice,
 					CountryCode:     countryCode,
