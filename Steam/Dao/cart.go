@@ -299,19 +299,25 @@ func extractFinalPrice(priceNode *html.Node) string {
 	// 如果没有 data-price-final，从文本内容提取
 	priceText := strings.TrimSpace(htmlquery.InnerText(priceNode))
 	if priceText != "" {
-		// 使用正则表达式提取价格数字
+		// 使用正则表达式提取价格数字（折扣场景下同一段里可能有原价+现价，取最后一个金额作为现价）
 		// 支持千分位，例如: ¥ 2,458.80
 		priceRegex := regexp.MustCompile(`(?i)(?:[￥$]|CNY|HKD|USD)\s*([0-9][0-9,]*(?:\.[0-9]+)?)`)
-		matches := priceRegex.FindStringSubmatch(priceText)
-		if len(matches) > 1 {
-			return strings.ReplaceAll(matches[1], ",", "")
+		matches := priceRegex.FindAllStringSubmatch(priceText, -1)
+		if len(matches) > 0 {
+			last := matches[len(matches)-1]
+			if len(last) > 1 {
+				return strings.ReplaceAll(last[1], ",", "")
+			}
 		}
 
-		// 如果没有找到带货币符号的价格，尝试只匹配数字
+		// 如果没有找到带货币符号的价格，尝试只匹配数字（同样取最后一个）
 		numberRegex := regexp.MustCompile(`([0-9][0-9,]*(?:\.[0-9]+)?)`)
-		matches = numberRegex.FindStringSubmatch(priceText)
-		if len(matches) > 1 {
-			return strings.ReplaceAll(matches[1], ",", "")
+		matches = numberRegex.FindAllStringSubmatch(priceText, -1)
+		if len(matches) > 0 {
+			last := matches[len(matches)-1]
+			if len(last) > 1 {
+				return strings.ReplaceAll(last[1], ",", "")
+			}
 		}
 	}
 
@@ -602,7 +608,14 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 				continue
 			}
 
-			priceNode := htmlquery.FindOne(row, ".//*[contains(@class, 'game_area_dlc_price')]")
+			// DLC 折扣场景下同一块会同时出现原价和现价，必须优先定位最终价格节点
+			priceNode := htmlquery.FindOne(row, ".//*[contains(@class, 'discount_final_price')]")
+			if priceNode == nil {
+				priceNode = htmlquery.FindOne(row, ".//*[contains(@class, 'discount_block') and @data-price-final]")
+			}
+			if priceNode == nil {
+				priceNode = htmlquery.FindOne(row, ".//*[contains(@class, 'game_area_dlc_price')]")
+			}
 			finalPrice := extractFinalPrice(priceNode)
 			if finalPrice == "" && priceNode != nil {
 				priceText := strings.ToLower(strings.TrimSpace(htmlquery.InnerText(priceNode)))
