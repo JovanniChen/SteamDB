@@ -639,6 +639,54 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 				AddToCartIds:    cartID,
 			})
 		}
+
+		// 额外解析升级选项（Upgrade Options）下拉区块
+		// 该区块没有标准 addToCart 按钮，选项在菜单行中，通过 GamePurchaseDropdownSelectOption 传递 subid
+		upgradeRows := htmlquery.Find(doc, "//div[contains(@class, 'game_purchase_sub_dropdown')]//tr[contains(@onclick, 'GamePurchaseDropdownSelectOption')]")
+		for _, row := range upgradeRows {
+			onclick := htmlquery.SelectAttr(row, "onclick")
+			idMatches := regexp.MustCompile(`GamePurchaseDropdownSelectOption\([^,]+,\s*(\d+)\s*,`).FindStringSubmatch(onclick)
+			if len(idMatches) < 2 {
+				continue
+			}
+			cartID := strings.TrimSpace(idMatches[1])
+			if cartID == "" {
+				continue
+			}
+
+			textNode := htmlquery.FindOne(row, ".//td[contains(@class, 'game_area_purchase_game_dropdown_menu_item_text')]")
+			if textNode == nil {
+				continue
+			}
+
+			rawText := strings.Join(strings.Fields(strings.TrimSpace(htmlquery.InnerText(textNode))), " ")
+			if rawText == "" {
+				continue
+			}
+
+			finalPrice := extractFinalPrice(textNode)
+			if finalPrice == "" {
+				continue
+			}
+
+			// 菜单文本通常为 "名称 - ¥ 140.00"，从尾部去除价格片段，保留完整名称
+			gameName := regexp.MustCompile(`\s*-\s*(?:[￥$]|CNY|HKD|USD)\s*[0-9][0-9,]*(?:\.[0-9]+)?\s*$`).ReplaceAllString(rawText, "")
+			gameName = strings.TrimSpace(gameName)
+			if gameName == "" {
+				gameName = rawText
+			}
+
+			appendResult(Model.GamePurchaseAction{
+				IsBundle:        0,
+				BundleInfoTexts: "升级选项",
+				GameName:        gameName,
+				OriginalPrice:   finalPrice,
+				FinalPrice:      finalPrice,
+				FinalPriceText:  moneyFlag + " " + finalPrice,
+				CountryCode:     countryCode,
+				AddToCartIds:    cartID,
+			})
+		}
 	} else {
 		// 处理其他类型的URL（如 /sub/ 或 /bundle/）
 		wrappers := htmlquery.Find(doc, "//*[@id='game_area_purchase_top']/div")
