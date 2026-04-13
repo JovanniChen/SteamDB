@@ -115,6 +115,8 @@ func TestAddItemToCart(accountIndex int) {
 }
 
 func TestAddItemToCartAndInitTransaction(accountIndex int) {
+	fmt.Println("TestAddItemToCartAndInitTransaction")
+
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
 		Logger.Error(err)
@@ -123,7 +125,7 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 
 	addCartItems := make([][]Model.AddCartItem, 0)
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 66596, AccountidGiftee: 352956450, Message: "fifa"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1274037, AccountidGiftee: 352956450, Message: "Dune: Awakening 沙丘：觉醒"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1176092, AccountidGiftee: 352956450, Message: "红色沙漠"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})

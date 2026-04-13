@@ -532,6 +532,8 @@ func parsePriceString(priceStr string) (float64, error) {
 	// 移除所有空格和货币符号
 	priceStr = strings.ReplaceAll(priceStr, "¥", "")
 	priceStr = strings.ReplaceAll(priceStr, " ", "")
+	priceStr = strings.ReplaceAll(priceStr, ".", "")
+	priceStr = strings.ReplaceAll(priceStr, ",", "")
 	priceStr = strings.TrimSpace(priceStr)
 
 	// 转换为浮点数
@@ -616,8 +618,9 @@ func (d *Dao) GetFinalPriceWithDetails(transactionID string) (*FinalPriceDetails
 		return nil, err
 	}
 
+	fmt.Println(string(body))
+
 	if resp.StatusCode != 200 {
-		fmt.Println(string(body))
 		return nil, fmt.Errorf("获取最终价格失败,返回状态码: %d", resp.StatusCode)
 	}
 

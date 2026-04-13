@@ -38,6 +38,7 @@ var accounts = []Account{
 	{Username: "dqx1pil5mpj", Password: "F6eyXrLU0XP3", SharedSecret: "AwqrvNq2qxAyR4sNB9Gef9dIGok="},  // [34]
 	{Username: "gsmut047", Password: "1oq0aF7mL0pl", SharedSecret: "MWWC3d47Cy7yGxvJQmH+py1KI+I="},     // [35]
 	{Username: "gxruaknmby", Password: "SK8rvcMSLq8m", SharedSecret: "sbbo5c0NDKLyDvT6DlF4EbhG3rI="},   // [36]
+	{Username: "firby644", Password: "UJZS5JfysEyA", SharedSecret: "I2yFq42TsWb216JfJZUT4IbIbqg="},   // [37]
 }
 
 type Account struct {
