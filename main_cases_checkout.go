@@ -124,25 +124,8 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 66596, AccountidGiftee: 352956450, Message: "fifa"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1176092, AccountidGiftee: 352956450, Message: "红色沙漠"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1011400, AccountidGiftee: 352956450, Message: "坤坤轮盘"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 96096, AccountidGiftee: 352956450, Message: "Mind Games"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 605518, AccountidGiftee: 352956450, Message: "Funny Truck"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 170869, AccountidGiftee: 352956450, Message: "Trivia Night"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 169006, AccountidGiftee: 352956450, Message: "Dead Drop"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 377271, AccountidGiftee: 352956450, Message: "TTV3"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1298871, AccountidGiftee: 352956450, Message: "Gladiator Fights"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 203389, AccountidGiftee: 352956450, Message: "Thief Simulator"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 8183, AccountidGiftee: 352956450, Message: "Terraria"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 379292, AccountidGiftee: 352956450, Message: "Ranch Simulator"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 121418, AccountidGiftee: 352956450, Message: "Don't Starve Together"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 240331, AccountidGiftee: 352956450, Message: "Swarmlake"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 85819, AccountidGiftee: 352956450, Message: "Plantera"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 195824, AccountidGiftee: 352956450, Message: "Polygoneer"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1150347, AccountidGiftee: 1753831820, Message: "Microsoft Flight Simulator 2024"}, {PackageID: 625300, AccountidGiftee: 1753831820, Message: "BLUE REFLECTION"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 23168, AccountidGiftee: 352956450, Message: "三國志"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1176092, AccountidGiftee: 352956450, Message: "红色沙漠"}})
 
 	payLinks := make([]string, 0)
 

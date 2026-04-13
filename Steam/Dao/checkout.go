@@ -532,7 +532,6 @@ func parsePriceString(priceStr string) (float64, error) {
 	// 移除所有空格和货币符号
 	priceStr = strings.ReplaceAll(priceStr, "¥", "")
 	priceStr = strings.ReplaceAll(priceStr, " ", "")
-	priceStr = strings.ReplaceAll(priceStr, ".", "")
 	priceStr = strings.ReplaceAll(priceStr, ",", "")
 	priceStr = strings.TrimSpace(priceStr)
 
