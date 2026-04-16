@@ -108,6 +108,7 @@ go run . --case TestTransactionStatus --account 3
 go run . --case TestUnsendAllGift --account 3
 go run . --case TestUnsendGift --account 3
 go run . --case TestValidateCart --account 3
+go run . --case TestGetMarketListings --account 3
 ```
 
 ## Makefile 命令

@@ -51,6 +51,16 @@ func TestGetMyListings(accountIndex int) {
 	// Logger.Infof("已上架物品 (%d 个) -> %+v\n", len(activeListings), activeListings)
 }
 
+func TestGetMarketListings(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	client.GetMarketListings(440, "Specialized Killstreak Big Earner Kit Fabricator", 500, 100, "CN", "schinese", 23)
+}
+
 func TestGetInventory(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
@@ -92,28 +102,13 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	// items, err := client.GetInventory(Constants.PrimalCarnage, Constants.PrimalCarnageCategory)
-	// if err != nil {
-	// 	Logger.Error(err)
-	// 	return
-	// }
-
-	// if len(items) == 0 {
-	// 	Logger.Error("无可用库存")
-	// 	return
-	// }
-
-	// // 随机
-	// randomIndex := rand.Intn(len(items))
-	// randomItem := items[randomIndex]
-
 	data, err := os.ReadFile("mafiles/" + client.GetUsername() + ".maFile")
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
 
-	_, err = client.PutList(Constants.PrimalCarnage, Constants.PrimalCarnageCategory, "123123", 0.14, 23, string(data))
+	_, err = client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, "16351134542", 0.30, 23, string(data))
 	if err != nil {
 		Logger.Error(err)
 		return

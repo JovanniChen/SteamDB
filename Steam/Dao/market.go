@@ -22,13 +22,60 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Utils"
 )
 
+func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) (Model.MarketListingResponse, error) {
+	Logger.Infof("获取市场列表")
+
+	var response Model.MarketListingResponse
+
+	marketUrl := fmt.Sprintf(Constants.GetMarketListing+"%d/%s/render", gameID, gameName)
+	params := Param.Params{}
+	params.SetString("query", "")
+	params.SetString("start", strconv.Itoa(start))
+	params.SetString("count", strconv.Itoa(count))
+	params.SetString("country", country)
+	params.SetString("language", language)
+	params.SetString("currency", strconv.Itoa(currency))
+
+	req, err := d.Request(http.MethodGet, marketUrl+"?"+params.ToUrl(), nil)
+	if err != nil {
+		return response, err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return response, err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return response, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return response, err
+	}
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return response, err
+	}
+
+	if !response.Success {
+		return response, err
+	}
+
+	fmt.Println("listing 长度:", len(response.ListingInfo))
+
+	return response, nil
+}
+
 // GetMyListings 获取用户的上架列表
 // 返回两个列表：已上架的物品和等待确认的物品
 func (d *Dao) GetMyListings() (activeListings []Model.MyListingReponse, err error) {
 	Logger.Infof("获取用户 %s 的上架列表", d.GetUsername())
 	params := Param.Params{}
 	params.SetString("count", "50")
-	// params.SetString("norender", "1")
+	params.SetString("norender", "1")
 
 	req, err := d.NewRequest(http.MethodGet, Constants.GetMyListings+"?"+params.ToUrl(), nil)
 	if err != nil {
@@ -919,9 +966,9 @@ func (d *Dao) GetConfirmations(maFileContent string) error {
 		return err
 	}
 
-	req.Header.Set("User-Agent", "Dalvik/2.1.0 (Linux; U; Android 9; Valve Steam App Version/3)")
-	req.Header.Set("mobileClient", "android")
-	req.Header.Set("mobileClientVersion", "777777 3.6.4")
+	// req.Header.Set("User-Agent", "Dalvik/2.1.0 (Linux; U; Android 9; Valve Steam App Version/3)")
+	// req.Header.Set("mobileClient", "android")
+	// req.Header.Set("mobileClientVersion", "777777 3.6.4")
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {

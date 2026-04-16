@@ -70,6 +70,7 @@ var (
 	Confirmation        string = Scheme + Domain.Community + "/mobileconf/ajaxop"     // 确认上架
 	BuyListing          string = Scheme + Domain.Community + "/market/buylisting"     // 购买物品
 	CreateOrder         string = Scheme + Domain.Community + "/market/createbuyorder" // 创建订单
+	GetMarketListing    string = Scheme + Domain.Community + "/market/listings/"      // 获取市场列表
 
 	// 游戏更新
 	GetGameUpdateInofs    string = Scheme + Domain.Store + "/news/app" // 获取游戏更新信息

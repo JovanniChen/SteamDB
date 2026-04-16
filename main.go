@@ -11,7 +11,7 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam"
 )
 
-// var config *Steam.Config = Steam.NewConfig("chenhao:chenhao@13.215.172.97:8080")
+// var config *Steam.Config = Steam.NewConfig("jiochenhao:JSJ3ZAN9tc@198.64.246.6:50100")
 
 // var config *Steam.Config = Steam.NewConfig("127.0.0.1:7893")
 

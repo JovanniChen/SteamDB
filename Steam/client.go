@@ -347,6 +347,10 @@ func (c *Client) GetMyListings() (activeListings []Model.MyListingReponse, err e
 	return c.dao.GetMyListings()
 }
 
+func (c *Client) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) {
+	c.dao.GetMarketListings(gameID, gameName, start, count, country, language, currency)
+}
+
 func (c *Client) GetConfirmations(maFileContent string) error {
 	return c.dao.GetConfirmations(maFileContent)
 }
@@ -490,6 +494,10 @@ func (c *Client) InitTransaction() (string, error) {
 		err = fmt.Errorf("初始化单次付交易失败,代理: %s,错误: %w", c.dao.GetProxy(), err)
 	}
 	return result, err
+}
+
+func (c *Client) InitTransactionWithoutWrapErrorMessage() (string, error) {
+	return c.dao.InitTransaction()
 }
 
 func (c *Client) InitConcurrentTransaction() (string, error) {

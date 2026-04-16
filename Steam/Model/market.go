@@ -132,3 +132,18 @@ type MyListingReponse struct {
 	BuyerPrice         float64 // 买家支付价
 	SellerReceivePrice float64 // 卖家到账价
 }
+
+type MarketListingResponse struct {
+	Success     bool                       `json:"success"`
+	Start       int                        `json:"start"`
+	PageSize    int                        `json:"pagesize"`
+	TotalCount  int                        `json:"total_count"`
+	ListingInfo map[string]ListingInfoItem `json:"listinginfo"`
+}
+
+type ListingInfoItem struct {
+	ListingID             string `json:"listingid"`
+	ConvertedSteamFee     int    `json:"converted_steam_fee"`
+	ConvertedPublisherFee int    `json:"converted_publisher_fee"`
+	ConvertedPricePerUnit int    `json:"converted_price_per_unit"`
+}
