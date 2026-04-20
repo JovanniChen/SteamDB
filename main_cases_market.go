@@ -58,7 +58,21 @@ func TestGetMarketListings(accountIndex int) {
 		return
 	}
 
-	client.GetMarketListings(440, "Specialized Killstreak Big Earner Kit Fabricator", 500, 100, "CN", "schinese", 23)
+	response, err := client.GetMarketListings(440, "Giftapult", 500, 100, "CN", "schinese", 23)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	if !response.Success {
+		Logger.Error("获取市场列表失败")
+		return
+	}
+
+	Logger.Info("获取市场列表成功")
+	for _, listing := range response.ListingInfo {
+		Logger.Infof("ListingID: %s, ConvertedSteamFee: %d, ConvertedPublisherFee: %d, ConvertedPricePerUnit: %d", listing.ListingID, listing.ConvertedSteamFee, listing.ConvertedPublisherFee, listing.ConvertedPricePerUnit)
+	}
 }
 
 func TestGetInventory(accountIndex int) {
@@ -108,7 +122,13 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	_, err = client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, "16351134542", 0.30, 23, string(data))
+	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	_, err = client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, items[0].AssetID, 0.30, 23, string(data))
 	if err != nil {
 		Logger.Error(err)
 		return

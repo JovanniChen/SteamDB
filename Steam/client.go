@@ -347,8 +347,8 @@ func (c *Client) GetMyListings() (activeListings []Model.MyListingReponse, err e
 	return c.dao.GetMyListings()
 }
 
-func (c *Client) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) {
-	c.dao.GetMarketListings(gameID, gameName, start, count, country, language, currency)
+func (c *Client) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) (Model.MarketListingResponse, error) {
+	return c.dao.GetMarketListings(gameID, gameName, start, count, country, language, currency)
 }
 
 func (c *Client) GetConfirmations(maFileContent string) error {

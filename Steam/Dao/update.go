@@ -54,7 +54,8 @@ func (d *Dao) GetGameUpdateInofs(gameID int) (*Model.GameUpdateEvents, error) {
 	}
 
 	// 使用xpath查找目标节点
-	xpathQuery := "/html/body/div[1]/div[7]/div[6]/div[1]"
+	xpathQuery := "/html/body/div[1]/div[6]/div[6]/div[1]"
+	// xpathQuery := "/html/body/div[1]/div[7]/div[6]/div[1]"
 	node := htmlquery.FindOne(doc, xpathQuery)
 	if node == nil {
 		Logger.Warn("未找到目标节点")
