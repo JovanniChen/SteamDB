@@ -711,8 +711,8 @@ func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, u
 }
 
 // PutList 上架物品，需要二次手机令牌确认
-func (d *Dao) PutList(gameId int, contextId int, assetID string, price float64, currency int, maFileContent string) (Model.MyListingReponse, error) {
-	Logger.Infof("用户 [%d] 上架物品，AssetID: %s, 价格: %.2f", d.GetSteamID(), assetID, price)
+func (d *Dao) PutList(gameId int, contextId int, assetID string, price int, currency int, maFileContent string) (Model.MyListingReponse, error) {
+	Logger.Infof("用户 [%s] 上架物品，AssetID: %s, 价格: %d", d.GetUsername(), assetID, price)
 
 	data := url.Values{}
 	if d.GetLoginCookies()["steamcommunity.com"] != nil {
@@ -722,7 +722,7 @@ func (d *Dao) PutList(gameId int, contextId int, assetID string, price float64, 
 	data.Set("contextid", strconv.Itoa(contextId)) // 分类
 	data.Set("assetid", assetID)
 	data.Set("amount", "1")
-	data.Set("price", strconv.FormatInt(int64(price*100), 10))
+	data.Set("price", strconv.Itoa(price))
 
 	req, err := d.Request(http.MethodPost, Constants.PutList, strings.NewReader(data.Encode()))
 	if err != nil {
