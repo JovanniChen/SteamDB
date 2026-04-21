@@ -34,7 +34,8 @@ func printStack(errKey, errStr string) error {
 	message := fmt.Sprintf(errKey, errStr)
 	message += "\n" + string(buf[:n]) // 添加堆栈信息
 
-	return fmt.Errorf(errKey, message)
+	// return fmt.Errorf(errKey, message)
+	return errors.New(errKey)
 }
 
 // Error 创建通用错误
