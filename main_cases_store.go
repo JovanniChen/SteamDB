@@ -77,3 +77,12 @@ func TestGetProductByAppUrl(accountIndex int) {
 	Logger.Info(client.GetProductByAppUrl("https://store.steampowered.com/app/3958690"))
 
 }
+
+func TestGetPackageDetails(accountIndex int) {
+	client, err := Steam.NewClient(config)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.GetPackageDetails(3513600))
+}

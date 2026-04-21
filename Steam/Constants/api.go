@@ -104,4 +104,7 @@ var (
 	// 礼物相关 API
 	UnsendGiftSubmit  string = Scheme + Domain.CheckOut + "/checkout/unsendgiftsubmit/"
 	TransactionStatus string = Scheme + Domain.CheckOut + "/checkout/transactionstatus/"
+
+	// 商店相关
+	PackageDetails string = Scheme + Domain.Store + "/api/packagedetails"
 )

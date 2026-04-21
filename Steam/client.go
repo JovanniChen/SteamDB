@@ -587,3 +587,7 @@ func (c *Client) AddFunds(amount int) (string, error) {
 func (c *Client) LogoutAll() error {
 	return c.dao.LogoutAll()
 }
+
+func (c *Client) GetPackageDetails(subID int) error {
+	return c.dao.GetPackageDetails(subID)
+}

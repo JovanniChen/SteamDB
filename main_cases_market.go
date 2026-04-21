@@ -128,7 +128,7 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	_, err = client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, items[0].AssetID, 0.30, 23, string(data))
+	_, err = client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, items[0].AssetID, 1, 23, string(data))
 	if err != nil {
 		Logger.Error(err)
 		return

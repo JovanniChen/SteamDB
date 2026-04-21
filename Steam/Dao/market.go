@@ -75,7 +75,7 @@ func (d *Dao) GetMyListings() (activeListings []Model.MyListingReponse, err erro
 	Logger.Infof("获取用户 %s 的上架列表", d.GetUsername())
 	params := Param.Params{}
 	params.SetString("count", "50")
-	params.SetString("norender", "1")
+	// params.SetString("norender", "1")
 
 	req, err := d.NewRequest(http.MethodGet, Constants.GetMyListings+"?"+params.ToUrl(), nil)
 	if err != nil {
