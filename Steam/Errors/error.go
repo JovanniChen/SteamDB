@@ -34,8 +34,8 @@ func printStack(errKey, errStr string) error {
 	message := fmt.Sprintf(errKey, errStr)
 	message += "\n" + string(buf[:n]) // 添加堆栈信息
 
-	if len(message) > 20 {
-		message = message[:20]
+	if len(message) > 35 {
+		message = message[:35]
 	}
 
 	return fmt.Errorf(errKey, message)
