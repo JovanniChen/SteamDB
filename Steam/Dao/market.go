@@ -777,6 +777,7 @@ func (d *Dao) PutList(gameId int, contextId int, assetID string, price float64, 
 	if sellResp.RequiresConfirmation == 1 && sellResp.NeedsMobileConfirmation {
 		Logger.Infof("物品上架需要手机令牌确认，assetID: %s", assetID)
 		result := d.ConfirmationForPutList("allow", maFileContent)
+		Logger.Infof("确认结果: %+v", result)
 		if !result.Success {
 			return Model.MyListingReponse{}, fmt.Errorf("上架确认失败: %s", assetID)
 		} else {
@@ -863,6 +864,13 @@ func (d *Dao) ConfirmationForPutList(op string, maFileContent string) *Model.Con
 	// 初始化最终返回结果
 	finalResult := &Model.ConfirmationResult{
 		Success: false,
+		Result: Model.MyListingReponse{
+			ListingID:          confirmResp.Confirmations[0].CreatorID,
+			AssetID:            "",
+			MarketHashName:     "",
+			BuyerPrice:         0,
+			SellerReceivePrice: 0,
+		},
 	}
 
 	for i := len(confirmResp.Confirmations) - 1; i >= 0; i-- {

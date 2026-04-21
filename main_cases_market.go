@@ -128,13 +128,14 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	_, err = client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, items[0].AssetID, 1, 23, string(data))
+	response, err := client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, items[0].AssetID, 1, 23, string(data))
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
 
 	Logger.Info("上架成功")
+	Logger.Infof("上架物品: %+v", response)
 }
 
 func TestBuyListing(accountIndex int) {
