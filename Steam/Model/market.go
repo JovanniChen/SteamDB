@@ -121,22 +121,24 @@ type CreateOrderResponse struct {
 }
 
 type GetMyListingResponse struct {
-	Success bool `json:"success"`
-	// PageSize          int                  `json:"pagesize"`
-	// TotalCount        int                  `json:"total_count"`
-	// Assets            map[string]AppAssets `json:"assets"`
-	// Start             int                  `json:"start"`
-	// NumActiveListings int                  `json:"num_active_listings"`
-	// Hovers            string               `json:"hovers"`
-	ResultsHTML string `json:"results_html"`
+	Success           bool               `json:"success"`
+	PageSize          int                `json:"pagesize"`
+	TotalCount        int                `json:"total_count"`
+	Start             int                `json:"start"`
+	NumActiveListings int                `json:"num_active_listings"`
+	Listings          []MyListingReponse `json:"listings"`
+	ListingsToConfirm []MyListingReponse `json:"listings_to_confirm"`
 }
 
 type MyListingReponse struct {
-	ListingID          string  // Listing唯一ID
-	AssetID            string  // 物品资产ID
-	MarketHashName     string  // 物品市场名称
-	BuyerPrice         float64 // 买家支付价
-	SellerReceivePrice float64 // 卖家到账价
+	ListingID          string         `json:"listingid"`
+	Asset              MyListingAsset `json:"asset"`
+	SellerReceivePrice int            `json:"converted_price"` // 卖家到账价
+	Fee                int            `json:"fee"`             // 手续费
+}
+
+type MyListingAsset struct {
+	MarketHashName string `json:"market_hash_name"`
 }
 
 type MarketListingResponse struct {

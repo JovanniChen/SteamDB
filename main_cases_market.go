@@ -48,8 +48,14 @@ func TestGetMyListings(accountIndex int) {
 		return
 	}
 
-	client.GetMyListings()
-	// Logger.Infof("已上架物品 (%d 个) -> %+v\n", len(activeListings), activeListings)
+	resp, err := client.GetMyListings()
+	if err != nil {
+		Logger.Error("获取上架列表失败: ", err)
+		return
+	}
+
+	Logger.Infof("已上架物品 (%d个) -> %+v", len(resp.Listings), resp.Listings)
+	Logger.Infof("待确认上架物品 (%d个) -> %+v", len(resp.ListingsToConfirm), resp.ListingsToConfirm)
 }
 
 func TestGetMarketListings(accountIndex int) {
@@ -83,10 +89,12 @@ func TestGetInventory(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetInventory(Constants.Steam, Constants.SteamCategory)
+	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory)
 	if err != nil {
 		Logger.Error("获取库存失败: ", err)
 	}
+
+	Logger.Infof("库存物品 (%d 个)\n", len(items))
 
 	for _, item := range items {
 		Logger.Infof("物品ID: %s, 名称: %s, 市场名称: %s, 价格: %f, 货币: %d, 是否可交易: %t, 是否可在市场交易: %t", item.AssetID, item.Name, item.MarketName, item.Price, item.Currency, item.Tradable, item.Marketable)

@@ -71,15 +71,18 @@ func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, c
 
 // GetMyListings 获取用户的上架列表
 // 返回两个列表：已上架的物品和等待确认的物品
-func (d *Dao) GetMyListings() (activeListings []Model.MyListingReponse, err error) {
+func (d *Dao) GetMyListings() (Model.GetMyListingResponse, error) {
 	Logger.Infof("获取用户 %s 的上架列表", d.GetUsername())
+
+	var response Model.GetMyListingResponse
+
 	params := Param.Params{}
 	params.SetString("count", "50")
-	// params.SetString("norender", "1")
+	params.SetString("norender", "1")
 
 	req, err := d.NewRequest(http.MethodGet, Constants.GetMyListings+"?"+params.ToUrl(), nil)
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
 	// 如果有会话信息，添加Cookie
@@ -90,58 +93,59 @@ func (d *Dao) GetMyListings() (activeListings []Model.MyListingReponse, err erro
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
 	fmt.Println(string(body))
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, Errors.ResponseError(resp.StatusCode)
+		return response, Errors.ResponseError(resp.StatusCode)
 	}
 
-	var response Model.GetMyListingResponse
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		Logger.Error("JSON解析错误:", err)
-		return nil, err
+		return response, err
 	}
+
+	Logger.Infof("获取用户[%s]的上架列表: %+v", d.GetUsername(), response)
 
 	// Logger.Infof("[特殊打印	]获取用户[%s]的上架列表的html，数量: %s", d.GetUsername(), response.ResultsHTML)
 
-	activeListings, pendingListings, err := parseSteamMarketHTML(response.ResultsHTML)
-	if err != nil {
-		Logger.Error("从html中解析上架物品失败:", err)
-		return nil, err
-	}
+	// activeListings, pendingListings, err := parseSteamMarketHTML(response.ResultsHTML)
+	// if err != nil {
+	// 	Logger.Error("从html中解析上架物品失败:", err)
+	// 	return nil, err
+	// }
 
-	Logger.Infof("[特殊打印]获取用户[%s]的已上架列表，数量: %d", d.GetUsername(), len(activeListings))
-	for _, listing := range activeListings {
-		Logger.Infof("[特殊打印]已上架列表: %+v", listing)
-	}
-	Logger.Infof("[特殊打印]获取用户[%s]的待确认上架列表，数量: %d", d.GetUsername(), len(pendingListings))
-	for _, listing := range pendingListings {
-		Logger.Infof("[特殊打印]待确认上架列表: %+v", listing)
-	}
+	// Logger.Infof("[特殊打印]获取用户[%s]的已上架列表，数量: %d", d.GetUsername(), len(activeListings))
+	// for _, listing := range activeListings {
+	// 	Logger.Infof("[特殊打印]已上架列表: %+v", listing)
+	// }
+	// Logger.Infof("[特殊打印]获取用户[%s]的待确认上架列表，数量: %d", d.GetUsername(), len(pendingListings))
+	// for _, listing := range pendingListings {
+	// 	Logger.Infof("[特殊打印]待确认上架列表: %+v", listing)
+	// }
 
-	for _, listing := range pendingListings {
-		Logger.Infof("删除用户 [%s] 的等待确认物品，creatorId: %s", d.GetUsername(), listing.ListingID)
-		err := d.RemoveMyListings(listing.ListingID)
-		if err != nil {
-			Logger.Errorf("删除listing失败 [%s]: %v", listing.ListingID, err)
-			// 可以选择继续删除下一个，或者返回错误
-			continue
-		}
-		Logger.Infof("成功删除listing [%s]", listing.ListingID)
-		fmt.Printf("%+v\n", listing)
-	}
+	// for _, listing := range pendingListings {
+	// 	Logger.Infof("删除用户 [%s] 的等待确认物品，creatorId: %s", d.GetUsername(), listing.ListingID)
+	// 	err := d.RemoveMyListings(listing.ListingID)
+	// 	if err != nil {
+	// 		Logger.Errorf("删除listing失败 [%s]: %v", listing.ListingID, err)
+	// 		// 可以选择继续删除下一个，或者返回错误
+	// 		continue
+	// 	}
+	// 	Logger.Infof("成功删除listing [%s]", listing.ListingID)
+	// 	fmt.Printf("%+v\n", listing)
+	// }
 
-	return activeListings, nil
+	return response, nil
 }
 
 // Remove 删除上架物品
@@ -876,11 +880,7 @@ func (d *Dao) ConfirmationForPutList(op string, maFileContent string) *Model.Con
 	finalResult := &Model.ConfirmationResult{
 		Success: false,
 		Result: Model.MyListingReponse{
-			ListingID:          confirmResp.Confirmations[0].CreatorID,
-			AssetID:            "",
-			MarketHashName:     "",
-			BuyerPrice:         0,
-			SellerReceivePrice: 0,
+			ListingID: confirmResp.Confirmations[0].CreatorID,
 		},
 	}
 
@@ -1262,310 +1262,6 @@ func (d *Dao) AllowSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model.C
 
 func (d *Dao) CancelSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model.Confirmation, timestamp int64) error {
 	return d.processSingleConfirmation(phoneToken, conf, "cancel")
-}
-
-// 保留原有的正则表达式方法作为备用
-// 返回两个列表：已上架的物品和等待确认的物品
-func parseSteamMarketHTML(htmlContent string) (activeListings []Model.MyListingReponse, pendingListings []Model.MyListingReponse, err error) {
-	// 首先尝试XPath方法
-	// activeItems, pendingItems, err := parseSteamMarketHTMLWithXPath(htmlContent)
-	// if err == nil && len(activeItems) > 0 {
-	// 	fmt.Println("XPath方法成功，获取到", len(activeItems), "个已上架物品，", len(pendingItems), "个等待确认物品")
-	// 	return activeItems, pendingItems, nil
-	// }
-
-	// XPath方法失败时使用正则表达式方法（支持中英文）
-	return parseSteamMarketHTMLWithRegex(htmlContent)
-}
-
-// parseSteamMarketHTMLWithRegex 使用正则表达式解析（支持中英文）
-// 返回两个列表：已上架的物品和等待确认的物品
-func parseSteamMarketHTMLWithRegex(htmlContent string) (activeListings []Model.MyListingReponse, pendingListings []Model.MyListingReponse, err error) {
-	// 检测是否为中文版本
-	isChinese := strings.Contains(htmlContent, "我正在出售的物品") || strings.Contains(htmlContent, "这是买家所要支付")
-
-	// 解析已上架物品
-	activeListings = parseListingsFromSection(htmlContent, "tabContentsMyActiveMarketListingsRows", isChinese, true)
-	Logger.Infof("正则表达式方法共解析到 %d 个已上架物品", len(activeListings))
-
-	// 解析等待确认的物品
-	// 等待确认的物品通常紧跟在已上架物品后面，在同一个 table 中，但不在 tabContentsMyActiveMarketListingsRows 内
-	// 我们需要搜索包含 "My listings awaiting confirmation" 的区域
-	pendingListings = parseListingsFromHTMLByKeyword(htmlContent, "My listings awaiting confirmation", "我的等待确认的上架物品", isChinese, false)
-	Logger.Infof("正则表达式方法共解析到 %d 个等待确认物品", len(pendingListings))
-
-	return activeListings, pendingListings, nil
-}
-
-// parseListingsFromSection 从指定的section中解析物品列表
-func parseListingsFromSection(htmlContent string, sectionID string, isChinese bool, isActiveListing bool) []Model.MyListingReponse {
-	var items []Model.MyListingReponse
-
-	// 提取指定区域的HTML内容
-	// 使用字符串查找而不是正则表达式，避免嵌套 div 的问题
-	startMarker := `<div id="` + sectionID + `">`
-	startIdx := strings.Index(htmlContent, startMarker)
-	if startIdx == -1 {
-		Logger.Debugf("未找到区域开始标记 (%s)", sectionID)
-		return items
-	}
-
-	// 从开始标记后开始搜索
-	contentStart := startIdx + len(startMarker)
-
-	// 找到这个 div 的结束标签 - 搜索到下一个 section 的开始
-	endMarkers := []string{
-		`<div class="my_listing_section`, // 下一个 section
-		`</div>`,                         // 如果是最后一个 section
-	}
-
-	endIdx := len(htmlContent)
-	// 寻找最早出现的结束标记
-	for _, marker := range endMarkers {
-		if idx := strings.Index(htmlContent[contentStart:], marker); idx != -1 {
-			potentialEnd := contentStart + idx
-			if potentialEnd < endIdx {
-				endIdx = potentialEnd
-			}
-			break // 找到第一个就停止
-		}
-	}
-
-	targetHTML := htmlContent[contentStart:endIdx]
-	Logger.Debugf("成功提取%s区域，长度: %d", sectionID, len(targetHTML))
-
-	// 按行分割每个listing item（更可靠的方法）
-	// 先找到所有 mylisting_xxx 的 id 和位置，然后按区域分割
-	listingIDRegex := regexp.MustCompile(`id="mylisting_(\d+)"`)
-	listingIDMatches := listingIDRegex.FindAllStringSubmatchIndex(targetHTML, -1)
-
-	var rowMatches [][]string
-	for i, match := range listingIDMatches {
-		listingID := targetHTML[match[2]:match[3]]
-
-		// 确定这个 listing 的起始位置（回溯找到 <div 开始）
-		startPos := match[0]
-		for startPos > 0 && targetHTML[startPos-1] != '<' {
-			startPos--
-		}
-		if startPos > 0 {
-			startPos-- // 包含 '<'
-		}
-
-		// 确定这个 listing 的结束位置（找到下一个 mylisting 或区域结束）
-		endPos := len(targetHTML)
-		if i+1 < len(listingIDMatches) {
-			endPos = listingIDMatches[i+1][0]
-		}
-
-		rowHTML := targetHTML[startPos:endPos]
-		rowMatches = append(rowMatches, []string{rowHTML, listingID})
-	}
-
-	for _, rowMatch := range rowMatches {
-		if len(rowMatch) < 2 {
-			continue
-		}
-
-		listingID := rowMatch[1]
-		rowHTML := rowMatch[0] // 完整的匹配内容
-
-		// 根据 isActiveListing 参数决定是否检查 RemoveMarketListing
-		if isActiveListing {
-			// 已上架物品：只处理包含 RemoveMarketListing 的物品
-			if !strings.Contains(rowHTML, "RemoveMarketListing") {
-				Logger.Debugf("跳过非已上架物品，Listing ID: %s", listingID)
-				continue
-			}
-		} else {
-			// 等待确认物品：只处理包含 CancelMarketListingConfirmation 的物品
-			if !strings.Contains(rowHTML, "CancelMarketListingConfirmation") {
-				Logger.Debugf("跳过非等待确认物品，Listing ID: %s", listingID)
-				continue
-			}
-		}
-
-		item := Model.MyListingReponse{
-			ListingID: listingID,
-		}
-
-		// 提取Asset ID
-		var assetIDRegex *regexp.Regexp
-		if isActiveListing {
-			assetIDRegex = regexp.MustCompile(`RemoveMarketListing\('mylisting',\s*'[^']+',\s*\d+,\s*'[^']+',\s*'([^']+)'\)`)
-		} else {
-			assetIDRegex = regexp.MustCompile(`CancelMarketListingConfirmation\('mylisting',\s*'[^']+',\s*\d+,\s*'[^']+',\s*'([^']+)'\)`)
-		}
-		if assetIDMatch := assetIDRegex.FindStringSubmatch(rowHTML); len(assetIDMatch) > 1 {
-			item.AssetID = assetIDMatch[1]
-		}
-
-		// 提取物品名称（从market listings URL中获取）
-		nameRegex := regexp.MustCompile(`href="https://steamcommunity\.com/market/listings/\d+/([^"]+)"`)
-		if nameMatch := nameRegex.FindStringSubmatch(rowHTML); len(nameMatch) > 1 {
-			if decodedName, err := url.QueryUnescape(nameMatch[1]); err == nil {
-				item.MarketHashName = strings.TrimSpace(decodedName)
-			} else {
-				item.MarketHashName = strings.TrimSpace(nameMatch[1])
-			}
-		}
-
-		// 提取买家价格
-		var buyerPriceRegex *regexp.Regexp
-		if isChinese {
-			buyerPriceRegex = regexp.MustCompile(`这是买家所要支付[^>]*>\s*([^<]+)\s*<`)
-		} else {
-			buyerPriceRegex = regexp.MustCompile(`This is the price the buyer pays[^>]*>\s*([^<]+)\s*<`)
-		}
-		if priceMatch := buyerPriceRegex.FindStringSubmatch(rowHTML); len(priceMatch) > 1 {
-			priceStr := strings.ReplaceAll(priceMatch[1], "\\n", "")
-			priceStr = strings.ReplaceAll(priceStr, "\\t", "")
-			priceStr = strings.ReplaceAll(priceStr, "\n", "")
-			priceStr = strings.ReplaceAll(priceStr, "\t", "")
-			item.BuyerPrice = parsePrice(strings.TrimSpace(priceStr))
-		}
-
-		// 提取卖家到账价格
-		sellerPriceRegex := regexp.MustCompile(`\(¥\s*([^)]+)\)`)
-		if sellerMatch := sellerPriceRegex.FindStringSubmatch(rowHTML); len(sellerMatch) > 1 {
-			item.SellerReceivePrice = parsePrice(sellerMatch[1])
-		}
-
-		items = append(items, item)
-	}
-
-	return items
-}
-
-// parseListingsFromHTMLByKeyword 通过关键词在HTML中查找区域并解析物品列表
-func parseListingsFromHTMLByKeyword(htmlContent string, englishKeyword string, chineseKeyword string, isChinese bool, isActiveListing bool) []Model.MyListingReponse {
-	var items []Model.MyListingReponse
-
-	// 根据语言选择关键词
-	keyword := englishKeyword
-	if isChinese && chineseKeyword != "" {
-		keyword = chineseKeyword
-	}
-
-	// 找到关键词的位置
-	keywordIdx := strings.Index(htmlContent, keyword)
-	if keywordIdx == -1 {
-		Logger.Debugf("未找到关键词: %s", keyword)
-		return items
-	}
-
-	// 从关键词位置向后查找，找到这个区域的内容
-	// 查找从关键词开始到下一个 my_listing_section 或文档结束的内容
-	startIdx := keywordIdx
-	endIdx := len(htmlContent)
-
-	// 查找下一个section或文档结束
-	nextSectionIdx := strings.Index(htmlContent[startIdx+len(keyword):], `<div class="my_listing_section`)
-	if nextSectionIdx != -1 {
-		endIdx = startIdx + len(keyword) + nextSectionIdx
-	}
-
-	targetHTML := htmlContent[startIdx:endIdx]
-	Logger.Debugf("成功提取关键词区域 (%s)，长度: %d", keyword, len(targetHTML))
-
-	// 按行分割每个listing item
-	listingIDRegex := regexp.MustCompile(`id="mylisting_(\d+)"`)
-	listingIDMatches := listingIDRegex.FindAllStringSubmatchIndex(targetHTML, -1)
-
-	var rowMatches [][]string
-	for i, match := range listingIDMatches {
-		listingID := targetHTML[match[2]:match[3]]
-
-		// 确定这个 listing 的起始位置
-		startPos := match[0]
-		for startPos > 0 && targetHTML[startPos-1] != '<' {
-			startPos--
-		}
-		if startPos > 0 {
-			startPos--
-		}
-
-		// 确定这个 listing 的结束位置
-		endPos := len(targetHTML)
-		if i+1 < len(listingIDMatches) {
-			endPos = listingIDMatches[i+1][0]
-		}
-
-		rowHTML := targetHTML[startPos:endPos]
-		rowMatches = append(rowMatches, []string{rowHTML, listingID})
-	}
-
-	for _, rowMatch := range rowMatches {
-		if len(rowMatch) < 2 {
-			continue
-		}
-
-		listingID := rowMatch[1]
-		rowHTML := rowMatch[0]
-
-		// 根据 isActiveListing 参数决定是否检查对应的JavaScript函数
-		if isActiveListing {
-			if !strings.Contains(rowHTML, "RemoveMarketListing") {
-				Logger.Debugf("跳过非已上架物品，Listing ID: %s", listingID)
-				continue
-			}
-		} else {
-			if !strings.Contains(rowHTML, "CancelMarketListingConfirmation") {
-				Logger.Debugf("跳过非等待确认物品，Listing ID: %s", listingID)
-				continue
-			}
-		}
-
-		item := Model.MyListingReponse{
-			ListingID: listingID,
-		}
-
-		// 提取Asset ID
-		var assetIDRegex *regexp.Regexp
-		if isActiveListing {
-			assetIDRegex = regexp.MustCompile(`RemoveMarketListing\('mylisting',\s*'[^']+',\s*\d+,\s*'[^']+',\s*'([^']+)'\)`)
-		} else {
-			assetIDRegex = regexp.MustCompile(`CancelMarketListingConfirmation\('mylisting',\s*'[^']+',\s*\d+,\s*'[^']+',\s*'([^']+)'\)`)
-		}
-		if assetIDMatch := assetIDRegex.FindStringSubmatch(rowHTML); len(assetIDMatch) > 1 {
-			item.AssetID = assetIDMatch[1]
-		}
-
-		// 提取物品名称
-		nameRegex := regexp.MustCompile(`href="https://steamcommunity\.com/market/listings/\d+/([^"]+)"`)
-		if nameMatch := nameRegex.FindStringSubmatch(rowHTML); len(nameMatch) > 1 {
-			if decodedName, err := url.QueryUnescape(nameMatch[1]); err == nil {
-				item.MarketHashName = strings.TrimSpace(decodedName)
-			} else {
-				item.MarketHashName = strings.TrimSpace(nameMatch[1])
-			}
-		}
-
-		// 提取买家价格
-		var buyerPriceRegex *regexp.Regexp
-		if isChinese {
-			buyerPriceRegex = regexp.MustCompile(`这是买家所要支付[^>]*>\s*([^<]+)\s*<`)
-		} else {
-			buyerPriceRegex = regexp.MustCompile(`This is the price the buyer pays[^>]*>\s*([^<]+)\s*<`)
-		}
-		if priceMatch := buyerPriceRegex.FindStringSubmatch(rowHTML); len(priceMatch) > 1 {
-			priceStr := strings.ReplaceAll(priceMatch[1], "\\n", "")
-			priceStr = strings.ReplaceAll(priceStr, "\\t", "")
-			priceStr = strings.ReplaceAll(priceStr, "\n", "")
-			priceStr = strings.ReplaceAll(priceStr, "\t", "")
-			item.BuyerPrice = parsePrice(strings.TrimSpace(priceStr))
-		}
-
-		// 提取卖家到账价格
-		sellerPriceRegex := regexp.MustCompile(`\(¥\s*([^)]+)\)`)
-		if sellerMatch := sellerPriceRegex.FindStringSubmatch(rowHTML); len(sellerMatch) > 1 {
-			item.SellerReceivePrice = parsePrice(sellerMatch[1])
-		}
-
-		items = append(items, item)
-	}
-
-	return items
 }
 
 // parsePrice 从价格字符串中提取数字部分并转换为float64

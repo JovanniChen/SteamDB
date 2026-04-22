@@ -343,7 +343,7 @@ func (c *Client) RemoveAllMyListings() error {
 	return c.dao.RemoveAllMyListings()
 }
 
-func (c *Client) GetMyListings() (activeListings []Model.MyListingReponse, err error) {
+func (c *Client) GetMyListings() (Model.GetMyListingResponse, error) {
 	return c.dao.GetMyListings()
 }
 
