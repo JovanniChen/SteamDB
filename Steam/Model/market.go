@@ -58,12 +58,18 @@ type ConfirmationsResponse struct {
 
 // Confirmation 待确认项目
 type Confirmation struct {
-	Type      int      `json:"type"`
-	ID        string   `json:"id"`
-	Nonce     string   `json:"nonce"`
-	CreatorID string   `json:"creator_id"`
-	Headline  string   `json:"headline"`
-	Summary   []string `json:"summary"`
+	Type         int      `json:"type"`
+	TypeName     string   `json:"type_name"`
+	ID           string   `json:"id"`
+	CreatorID    string   `json:"creator_id"`
+	Nonce        string   `json:"nonce"`
+	CreationTime int64    `json:"creation_time"`
+	Cancel       string   `json:"cancel"`
+	Accept       string   `json:"accept"`
+	Icon         string   `json:"icon"`
+	Multi        bool     `json:"multi"`
+	Headline     string   `json:"headline"`
+	Summary      []string `json:"summary"`
 }
 
 // ProcessConfirmationResponse 处理确认请求响应

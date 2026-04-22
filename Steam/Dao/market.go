@@ -248,6 +248,14 @@ func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerR
 			error:            Errors.ErrRetryRequest,
 		}
 	}
+	if resp == nil || resp.Body == nil {
+		return buyResult{
+			success:          false,
+			needConfirmation: false,
+			confirmationId:   "",
+			error:            fmt.Errorf("购买失败: 空响应"),
+		}
+	}
 	defer resp.Body.Close()
 
 	var reader io.Reader = resp.Body
@@ -281,8 +289,8 @@ func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerR
 
 	Logger.Debugf("[BuyListing][%s]HTTP响应状态码: %d，响应内容: %s", creatorId, resp.StatusCode, string(body))
 
-	// 检测429状态码（访问频繁）
-	if resp.StatusCode == 429 {
+	switch resp.StatusCode {
+	case http.StatusTooManyRequests:
 		Logger.Warnf("用户 [%s] 购买物品遇到速率限制 (429)", d.GetUsername())
 		return buyResult{
 			success:          false,
@@ -290,7 +298,7 @@ func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerR
 			confirmationId:   "",
 			error:            fmt.Errorf("购买失败: %w", Errors.ErrRateLimited),
 		}
-	} else if resp.StatusCode == 502 {
+	case http.StatusBadGateway:
 		Logger.Warnf("用户 [%s] 购买物品遇到服务器错误 (502)", d.GetUsername())
 		var buyListingFailedResp Model.BuyListingFailedResponse
 		if err := json.Unmarshal(body, &buyListingFailedResp); err != nil {
@@ -309,15 +317,14 @@ func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerR
 				confirmationId:   "",
 				error:            fmt.Errorf("购买失败: %w", Errors.ErrAccountBan),
 			}
-		} else {
-			return buyResult{
-				success:          false,
-				needConfirmation: false,
-				confirmationId:   "",
-				error:            fmt.Errorf("%w", Errors.ErrServerError),
-			}
 		}
-	} else if resp.StatusCode == 406 {
+		return buyResult{
+			success:          false,
+			needConfirmation: false,
+			confirmationId:   "",
+			error:            fmt.Errorf("%w", Errors.ErrServerError),
+		}
+	case http.StatusNotAcceptable:
 		var buyListingResp Model.BuyListingNeedConfirmationResponse
 		if err := json.Unmarshal(body, &buyListingResp); err != nil {
 			return buyResult{
@@ -327,14 +334,25 @@ func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerR
 				error:            err,
 			}
 		}
+		confirmationId := ""
+		if buyListingResp.Confirmation != nil {
+			confirmationId = buyListingResp.Confirmation["confirmation_id"]
+		}
+		if buyListingResp.NeedConfirmation && confirmationId == "" {
+			return buyResult{
+				success:          false,
+				needConfirmation: true,
+				confirmationId:   "",
+				error:            fmt.Errorf("购买失败: 缺少 confirmation_id"),
+			}
+		}
 		return buyResult{
 			success:          buyListingResp.Success == 22,
 			needConfirmation: buyListingResp.NeedConfirmation,
-			confirmationId:   buyListingResp.Confirmation["confirmation_id"],
+			confirmationId:   confirmationId,
 			error:            nil,
 		}
-
-	} else if resp.StatusCode == 200 {
+	case http.StatusOK:
 		Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']", d.GetUsername(), creatorId, confirmation)
 		var buyListingResp Model.BuyListingResponse
 		if err := json.Unmarshal(body, &buyListingResp); err != nil {
@@ -354,23 +372,22 @@ func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerR
 				confirmationId:   "",
 				error:            nil,
 			}
-		} else {
-			Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']失败", d.GetUsername(), creatorId, confirmation)
-			return buyResult{
-				success:          false,
-				needConfirmation: false,
-				confirmationId:   "",
-				error:            fmt.Errorf("购买失败，错误码: %d", buyListingResp.WalletInfo.Success),
-			}
 		}
-	} else if resp.StatusCode == 400 {
+		Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']失败", d.GetUsername(), creatorId, confirmation)
+		return buyResult{
+			success:          false,
+			needConfirmation: false,
+			confirmationId:   "",
+			error:            fmt.Errorf("购买失败，错误码: %d", buyListingResp.WalletInfo.Success),
+		}
+	case http.StatusBadRequest:
 		return buyResult{
 			success:          false,
 			needConfirmation: false,
 			confirmationId:   "",
 			error:            fmt.Errorf("购买失败，错误码: %d，错误信息: %s", resp.StatusCode, "返回为空"),
 		}
-	} else {
+	default:
 		var buyListingFailedResp Model.BuyListingFailedResponse
 		if err := json.Unmarshal(body, &buyListingFailedResp); err != nil {
 			return buyResult{
@@ -599,9 +616,6 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 		body, _ = io.ReadAll(reader)
 	}
 
-	Logger.Infof("库存响应状态码: %d", resp.StatusCode)
-	Logger.Infof("库存响应: %s", string(body))
-
 	switch resp.StatusCode {
 	case 429:
 		Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)
@@ -609,10 +623,6 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 	case 401, 403:
 		Logger.Warnf("用户 [%s] 获取库存遇到授权失败 (401/403)", username)
 		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrAuthorizationFailed)
-	}
-
-	if resp.StatusCode == 403 {
-		return nil, fmt.Errorf("获取库存失败，错误码: %d", resp.StatusCode)
 	}
 
 	var inventoryResponse Model.InventoryResponse
@@ -772,7 +782,6 @@ func (d *Dao) PutList(gameId int, contextId int, assetID string, price int, curr
 		default:
 			return Model.MyListingReponse{}, fmt.Errorf("%s", sellResp.Message)
 		}
-
 	}
 
 	// 如果需要手机令牌确认
@@ -951,6 +960,9 @@ func (d *Dao) ConfirmationForPutList(op string, maFileContent string) *Model.Con
 
 func (d *Dao) GetConfirmations(maFileContent string) error {
 	Logger.Infof("开始获取用户 [%s] 的待确认请求", d.GetUsername())
+
+	var response Model.ConfirmationsResponse
+
 	username := d.GetUsername()
 	pt, err := Utils.LoadMaFile(maFileContent)
 	if err != nil {
@@ -993,11 +1005,32 @@ func (d *Dao) GetConfirmations(maFileContent string) error {
 		return err
 	}
 
-	Logger.Infof("获取到的确认列表: %s", string(body))
+	if err := json.Unmarshal(body, &response); err != nil {
+		Logger.Errorf("解析待确认响应失败，用户: [%s], 错误: %v", username, err)
+		return fmt.Errorf("解析待确认响应失败: %v", err)
+	}
+
+	if !response.Success {
+		Logger.Errorf("待确认API返回失败，用户: [%s], success字段: %t, 返回码：%d", username, response.Success, resp.StatusCode)
+		return fmt.Errorf("待确认API返回失败")
+	}
+
+	for _, conf := range response.Confirmations {
+		Logger.Infof("待确认列表: %+v", conf)
+	}
 
 	// d.ConfirmationForPutList("allow", maFileContent)
 	// d.ConfirmationForBuyListAndOrder("allow", maFileContent)
 
+	for i := len(response.Confirmations) - 1; i >= 0; i-- {
+		Logger.Infof("正在处理第 %d 个待确认", i+1)
+		conf := response.Confirmations[i]
+		err := d.AllowSingleConfirmation(pt, conf, steamTime)
+		if err != nil {
+			Logger.Errorf("处理待确认失败，用户: [%s], 错误: %v", username, err)
+		}
+		Logger.Errorf("处理待确认成功，用户: [%s]", username)
+	}
 	return nil
 }
 

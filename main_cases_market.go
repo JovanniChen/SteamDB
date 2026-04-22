@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"os"
 	"time"
 
@@ -128,14 +129,16 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	response, err := client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, items[0].AssetID, 1, 23, string(data))
+	// 随机选择一个饰品
+	randomIndex := rand.Intn(len(items))
+
+	response, err := client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, items[randomIndex].AssetID, 100, 23, string(data))
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
 
-	Logger.Info("上架成功")
-	Logger.Infof("上架物品: %+v", response)
+	Logger.Infof("饰品上架成功: %+v", response)
 }
 
 func TestBuyListing(accountIndex int) {
@@ -152,7 +155,7 @@ func TestBuyListing(accountIndex int) {
 
 	maFileContent := string(data)
 
-	if err := client.BuyListing(440, "631208307256406320", "", 21, 7, maFileContent); err != nil {
+	if err := client.BuyListing(440, "545639912147013506", "", 1, 16, maFileContent); err != nil {
 		Logger.Error(err)
 		return
 	}
