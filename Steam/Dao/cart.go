@@ -487,11 +487,20 @@ func ParseGamePurchaseActions(htmlContent, url string) ([]Model.GamePurchaseActi
 
 	// 确定货币标志
 	moneyFlag := "￥"
-	if countryCode == "CN" {
+	switch countryCode {
+	case "CN":
 		moneyFlag = "￥"
-	} else if countryCode == "HK" {
+	case "HK":
 		moneyFlag = "HK$"
+	default:
+		moneyFlag = "￥"
 	}
+
+	// if countryCode == "CN" {
+	// 	moneyFlag = "￥"
+	// } else if countryCode == "HK" {
+	// 	moneyFlag = "HK$"
+	// }
 
 	// 判断URL类型
 	isAppURL := regexp.MustCompile(`/app/`).MatchString(url)

@@ -151,7 +151,12 @@ func TestBuyListing(accountIndex int) {
 	}
 
 	maFileContent := string(data)
-	Logger.Info(client.BuyListing("321360", "9079938361156157936", "", 0.16, 0.14, maFileContent).Error())
+
+	if err := client.BuyListing(440, "631208307256406320", "", 21, 7, maFileContent); err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info("购买成功")
 }
 
 func TestRemoveMyListings(accountIndex int) {

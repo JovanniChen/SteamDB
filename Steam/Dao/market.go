@@ -198,24 +198,26 @@ type buyResult struct {
 	error            error
 }
 
-func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string) buyResult {
-	Logger.Infof("[%s]购买[%s][%s][%.02f][%.02f][%s]", d.GetUsername(), creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
+func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerReceivePrice int, confirmation string) buyResult {
+	Logger.Infof("[%s]购买[%s][%s][%d][%d][%s]", d.GetUsername(), creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 
-	buyerPriceStr := strconv.FormatFloat(buyerPrice*100, 'f', 0, 64)
-	sellerReceivePriceStr := strconv.FormatFloat(sellerReceivePrice*100, 'f', 0, 64)
-	feeStr := strconv.FormatFloat(buyerPrice*100-sellerReceivePrice*100, 'f', 0, 64)
+	fee := buyerPrice - sellerReceivePrice
 
 	params := Param.Params{}
 	if d.GetLoginCookies()["steamcommunity.com"] != nil {
 		params.SetString("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
 	}
 	params.SetString("currency", "23")
-	params.SetString("subtotal", sellerReceivePriceStr)
-	params.SetString("fee", feeStr)
-	params.SetString("total", buyerPriceStr)
+	params.SetInt64("subtotal", int64(sellerReceivePrice))
+	params.SetInt64("fee", int64(fee))
+	params.SetInt64("total", int64(buyerPrice))
 	params.SetString("quantity", "1")
-	params.SetString("confirmation", confirmation)
+	params.SetString("billing_state", "")
+	params.SetInt64("tradefee_tax", 0)
 	params.SetInt64("save_my_address", 0)
+	params.SetString("confirmation", confirmation)
+
+	fmt.Println(params.Encode())
 
 	req, err := d.NewRequest(http.MethodPost, Constants.BuyListing+"/"+creatorId, strings.NewReader(params.Encode()))
 	if err != nil {
@@ -234,7 +236,8 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 	}
 
 	req.Header.Add("origin", Constants.CommunityOrigin)
-	req.Header.Set("referer", fmt.Sprintf("%s/market/listings/%s/%s", gameId, Constants.CommunityOrigin, name))
+	// https: //steamcommunity.com/market/listings/440/Specialized%20Killstreak%20Maul%20Kit%20Fabricator
+	req.Header.Set("referer", fmt.Sprintf("%s/market/listings/%d/%s", Constants.CommunityOrigin, gameId, name))
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
@@ -279,7 +282,7 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 	Logger.Debugf("[BuyListing][%s]HTTP响应状态码: %d，响应内容: %s", creatorId, resp.StatusCode, string(body))
 
 	// 检测429状态码（访问频繁）
-	if resp.StatusCode == http.StatusTooManyRequests {
+	if resp.StatusCode == 429 {
 		Logger.Warnf("用户 [%s] 购买物品遇到速率限制 (429)", d.GetUsername())
 		return buyResult{
 			success:          false,
@@ -304,7 +307,7 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 				success:          false,
 				needConfirmation: false,
 				confirmationId:   "",
-				error:            Errors.ErrAccountBan,
+				error:            fmt.Errorf("购买失败: %w", Errors.ErrAccountBan),
 			}
 		} else {
 			return buyResult{
@@ -314,8 +317,7 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 				error:            fmt.Errorf("%w", Errors.ErrServerError),
 			}
 		}
-
-	} else if resp.StatusCode == http.StatusNotAcceptable {
+	} else if resp.StatusCode == 406 {
 		var buyListingResp Model.BuyListingNeedConfirmationResponse
 		if err := json.Unmarshal(body, &buyListingResp); err != nil {
 			return buyResult{
@@ -332,7 +334,7 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 			error:            nil,
 		}
 
-	} else if resp.StatusCode == http.StatusOK {
+	} else if resp.StatusCode == 200 {
 		Logger.Infof("用户[%s]购买物品[creatorId: %s][confirmation: '%s']", d.GetUsername(), creatorId, confirmation)
 		var buyListingResp Model.BuyListingResponse
 		if err := json.Unmarshal(body, &buyListingResp); err != nil {
@@ -361,7 +363,7 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 				error:            fmt.Errorf("购买失败，错误码: %d", buyListingResp.WalletInfo.Success),
 			}
 		}
-	} else if resp.StatusCode == http.StatusBadRequest {
+	} else if resp.StatusCode == 400 {
 		return buyResult{
 			success:          false,
 			needConfirmation: false,
@@ -388,7 +390,7 @@ func (d *Dao) buy(gameId string, creatorId string, name string, buyerPrice float
 }
 
 // BuyListing 购买物品
-func (d *Dao) BuyListing(gameId, creatorId string, name string, buyerPrice float64, sellerReceivePrice float64, confirmation string, maFileContent string) error {
+func (d *Dao) BuyListing(gameId int, creatorId string, name string, buyerPrice, sellerReceivePrice int, confirmation string, maFileContent string) error {
 	br := d.buy(gameId, creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 	if br.success && br.needConfirmation {
 		if err := d.ConfirmationForBuyList("allow", maFileContent); err != nil {
