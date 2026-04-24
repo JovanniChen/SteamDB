@@ -65,21 +65,17 @@ func TestGetMarketListings(accountIndex int) {
 		return
 	}
 
-	response, err := client.GetMarketListings(440, "Giftapult", 500, 100, "CN", "schinese", 23)
+	response, err := client.GetMarketListings(440, "Giftapult", 0, 100, "CN", "schinese", 23)
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
 
-	if !response.Success {
-		Logger.Error("获取市场列表失败")
-		return
-	}
-
-	Logger.Info("获取市场列表成功")
-	for _, listing := range response.ListingInfo {
-		Logger.Infof("ListingID: %s, ConvertedSteamFee: %d, ConvertedPublisherFee: %d, ConvertedPricePerUnit: %d", listing.ListingID, listing.ConvertedSteamFee, listing.ConvertedPublisherFee, listing.ConvertedPricePerUnit)
-	}
+	Logger.Info("获取市场列表成功,数量:", len(response.Items))
+	Logger.Infof("Start: %d, PageSize: %d, TotalCount: %d", response.Start, response.PageSize, response.TotalCount)
+	// for _, listing := range response.Items {
+	// 	Logger.Infof("AssetID: %s, ListingID: %s, ConvertedSteamFee: %d, ConvertedPublisherFee: %d, ConvertedPricePerUnit: %d", listing.AssetID, listing.ListingID, listing.ConvertedSteamFee, listing.ConvertedPublisherFee, listing.ConvertedPricePerUnit)
+	// }
 }
 
 func TestGetInventory(accountIndex int) {
@@ -210,4 +206,23 @@ func TestCreateOrder(accountIndex int) {
 	maFileContent := string(data)
 
 	Logger.Info(client.CreateOrder("Giftapult", 0.12, 15, maFileContent))
+}
+
+func TestGetPartnerInventory(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	items, err := client.GetPartnerInventory("https://steamcommunity.com/tradeoffer/new/?partner=352956450&token=vKXEWKBw", 440, 2)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	Logger.Infof("伙伴库存物品 (%d 个)", len(items))
+	for _, item := range items {
+		Logger.Infof("[物品ID]: %s, [名称]: %s, [市场名称]: %s", item.ID, item.MarketName, item.MarketHashName)
+	}
 }

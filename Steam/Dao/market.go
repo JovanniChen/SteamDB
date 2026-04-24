@@ -5,11 +5,12 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -22,10 +23,8 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Utils"
 )
 
-func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) (Model.MarketListingResponse, error) {
+func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) (*Model.GetMarketListingIntegrationResponse, error) {
 	Logger.Infof("获取市场列表")
-
-	var response Model.MarketListingResponse
 
 	marketUrl := fmt.Sprintf(Constants.GetMarketListing+"%d/%s/render", gameID, gameName)
 	params := Param.Params{}
@@ -38,35 +37,51 @@ func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, c
 
 	req, err := d.Request(http.MethodGet, marketUrl+"?"+params.ToUrl(), nil)
 	if err != nil {
-		return response, err
+		return nil, err
 	}
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
-		return response, err
+		return nil, err
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return response, err
+		return nil, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return response, err
+		return nil, err
 	}
+
+	var response Model.GetMarketListingResponse
 
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return response, err
+		return nil, err
 	}
 
 	if !response.Success {
-		return response, err
+		return nil, fmt.Errorf("获取市场列表失败")
 	}
 
-	fmt.Println("listing 长度:", len(response.ListingInfo))
+	marketListingItems := make([]Model.GetMarketListingItem, 0)
+	for _, listing := range response.ListingInfo {
+		marketListingItems = append(marketListingItems, Model.GetMarketListingItem{
+			AssetID:               listing.AssetInfo.ID,
+			ListingID:             listing.ListingID,
+			ConvertedSteamFee:     listing.ConvertedSteamFee,
+			ConvertedPublisherFee: listing.ConvertedPublisherFee,
+			ConvertedPricePerUnit: listing.ConvertedPricePerUnit,
+		})
+	}
 
-	return response, nil
+	return &Model.GetMarketListingIntegrationResponse{
+		Start:      response.Start,
+		PageSize:   response.PageSize,
+		TotalCount: response.TotalCount,
+		Items:      marketListingItems,
+	}, nil
 }
 
 // GetMyListings 获取用户的上架列表
@@ -1264,17 +1279,72 @@ func (d *Dao) CancelSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model.
 	return d.processSingleConfirmation(phoneToken, conf, "cancel")
 }
 
-// parsePrice 从价格字符串中提取数字部分并转换为float64
-func parsePrice(priceStr string) float64 {
-	// 移除所有非数字和小数点的字符
-	priceStr = strings.TrimSpace(priceStr)
-	// 使用正则表达式提取数字部分（包括小数点）
-	priceRegex := regexp.MustCompile(`(\d+\.?\d*)`)
-	matches := priceRegex.FindStringSubmatch(priceStr)
-	if len(matches) > 1 {
-		if price, err := strconv.ParseFloat(matches[1], 64); err == nil {
-			return price
-		}
+func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]Model.PartnerIntegrationItem, error) {
+	partnerIntegrations := make([]Model.PartnerIntegrationItem, 0)
+
+	u, err := url.Parse(partnerUrl)
+	if err != nil {
+		return nil, err
 	}
-	return 0.0
+	partner := u.Query().Get("partner")
+	partnerID, err := strconv.ParseUint(partner, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	steamId := Utils.FriendCodeToSteamID64(uint32(partnerID))
+
+	cookies, ok := d.GetLoginCookies()["steamcommunity.com"]
+	if !ok {
+		return nil, errors.New("sessionid not found")
+	}
+	sessionid := cookies.SessionId
+
+	params := Param.Params{}
+	params.SetString("sessionid", sessionid)
+	params.SetString("partner", strconv.Itoa(int(steamId)))
+	params.SetString("appid", strconv.Itoa(gameId))
+	params.SetString("contextid", strconv.Itoa(contextId))
+
+	fmt.Println(params.ToUrl())
+
+	req, err := d.Request(http.MethodGet, Constants.GetPartnerInventory+"?"+params.ToUrl(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("referer", partnerUrl)
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// 解码 JSON
+	var partnerInventoryResp Model.PartnerInventoryResponse
+	err = json.Unmarshal(body, &partnerInventoryResp)
+	if err != nil {
+		log.Fatal("JSON 解析失败:", err)
+	}
+
+	// 输出基本信息
+	fmt.Printf("成功: %v\n", partnerInventoryResp.Success)
+	fmt.Printf("游戏: %s\n", partnerInventoryResp.RGAppInfo.Name)
+	fmt.Println(len(partnerInventoryResp.RGInventory))
+	fmt.Println(len(partnerInventoryResp.RGDescriptions))
+
+	for _, item := range partnerInventoryResp.RGInventory {
+		partnerIntegrations = append(partnerIntegrations, Model.PartnerIntegrationItem{
+			ID:             item.ID,
+			MarketName:     partnerInventoryResp.RGDescriptions[item.ClassID+"_"+item.InstanceID].MarketName,
+			MarketHashName: partnerInventoryResp.RGDescriptions[item.ClassID+"_"+item.InstanceID].MarketHashName,
+		})
+	}
+
+	return partnerIntegrations, nil
 }

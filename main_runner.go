@@ -43,4 +43,5 @@ var caseRegistry = map[string]func(int){
 	"TestUnsendGift":                      TestUnsendGift,
 	"TestValidateCart":                    TestValidateCart,
 	"TestGetPackageDetails":               TestGetPackageDetails,
+	"TestGetPartnerInventory":             TestGetPartnerInventory,
 }

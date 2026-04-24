@@ -141,7 +141,7 @@ type MyListingAsset struct {
 	MarketHashName string `json:"market_hash_name"`
 }
 
-type MarketListingResponse struct {
+type GetMarketListingResponse struct {
 	Success     bool                       `json:"success"`
 	Start       int                        `json:"start"`
 	PageSize    int                        `json:"pagesize"`
@@ -149,9 +149,82 @@ type MarketListingResponse struct {
 	ListingInfo map[string]ListingInfoItem `json:"listinginfo"`
 }
 
+type AssetInfo struct {
+	ID string `json:"id"`
+}
+
 type ListingInfoItem struct {
+	ListingID             string    `json:"listingid"`
+	ConvertedSteamFee     int       `json:"converted_steam_fee"`
+	ConvertedPublisherFee int       `json:"converted_publisher_fee"`
+	ConvertedPricePerUnit int       `json:"converted_price_per_unit"`
+	AssetInfo             AssetInfo `json:"asset"`
+}
+
+type GetMarketListingItem struct {
+	AssetID               string `json:"assetid"`
 	ListingID             string `json:"listingid"`
 	ConvertedSteamFee     int    `json:"converted_steam_fee"`
 	ConvertedPublisherFee int    `json:"converted_publisher_fee"`
 	ConvertedPricePerUnit int    `json:"converted_price_per_unit"`
+}
+
+type GetMarketListingIntegrationResponse struct {
+	Start      int                    `json:"start"`
+	PageSize   int                    `json:"pagesize"`
+	TotalCount int                    `json:"total_count"`
+	Items      []GetMarketListingItem `json:"items"`
+}
+
+type PartnerIntegrationItem struct {
+	ID             string `json:"id"`
+	MarketName     string `json:"market_name"`
+	MarketHashName string `json:"market_hash_name"`
+}
+
+type PartnerInventoryItem struct {
+	ID          string `json:"id"`
+	ClassID     string `json:"classid"`
+	InstanceID  string `json:"instanceid"`
+	Amount      string `json:"amount"`
+	HideInChina int    `json:"hide_in_china"`
+	Pos         int    `json:"pos"`
+}
+
+// 对应 JSON 中的 rgDescriptions 内的单个描述
+type PartnerInventoryDescription struct {
+	AppID           string `json:"appid"`
+	ClassID         string `json:"classid"`
+	InstanceID      string `json:"instanceid"`
+	IconURL         string `json:"icon_url"`
+	IconURLLarge    string `json:"icon_url_large"`
+	IconDragURL     string `json:"icon_drag_url"`
+	Name            string `json:"name"`
+	MarketHashName  string `json:"market_hash_name"`
+	MarketName      string `json:"market_name"`
+	NameColor       string `json:"name_color"`
+	BackgroundColor string `json:"background_color"`
+	Type            string `json:"type"`
+	Tradable        int    `json:"tradable"`
+	Marketable      int    `json:"marketable"`
+	Commodity       int    `json:"commodity"`
+	// 根据需要可以继续添加其他字段，如 descriptions, actions, tags, app_data 等
+	// 为了简洁，这里只列出主要字段，实际可按需定义完整结构
+}
+
+// 对应整个 JSON 的根结构
+type PartnerInventoryResponse struct {
+	Success           bool                                   `json:"success"`
+	RGInventory       map[string]PartnerInventoryItem        `json:"rgInventory"`
+	RGCurrency        []interface{}                          `json:"rgCurrency"`
+	RGDescriptions    map[string]PartnerInventoryDescription `json:"rgDescriptions"`
+	RGAssetProperties []interface{}                          `json:"rgAssetProperties"`
+	RGAppInfo         struct {
+		AppID int    `json:"appid"`
+		Name  string `json:"name"`
+		Icon  string `json:"icon"`
+		Link  string `json:"link"`
+	} `json:"rgAppInfo"`
+	More      bool `json:"more"`
+	MoreStart bool `json:"more_start"`
 }

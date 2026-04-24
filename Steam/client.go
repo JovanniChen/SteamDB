@@ -347,7 +347,7 @@ func (c *Client) GetMyListings() (Model.GetMyListingResponse, error) {
 	return c.dao.GetMyListings()
 }
 
-func (c *Client) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) (Model.MarketListingResponse, error) {
+func (c *Client) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) (*Model.GetMarketListingIntegrationResponse, error) {
 	return c.dao.GetMarketListings(gameID, gameName, start, count, country, language, currency)
 }
 
@@ -590,4 +590,8 @@ func (c *Client) LogoutAll() error {
 
 func (c *Client) GetPackageDetails(subID int) error {
 	return c.dao.GetPackageDetails(subID)
+}
+
+func (c *Client) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]Model.PartnerIntegrationItem, error) {
+	return c.dao.GetPartnerInventory(partnerUrl, gameId, contextId)
 }
