@@ -113,7 +113,7 @@ func (d *Dao) GetFriendInfoByLink(link string) (*Model.FriendInfo, string, error
 	}
 
 	if result.Status != Model.FriendLinkStatusSuccess {
-		return friendInfo, "", fmt.Errorf("%s", result.Msg)
+		return result.Data, "", fmt.Errorf("%s", result.Msg)
 	}
 
 	return result.Data, inviteToken, nil
