@@ -635,6 +635,9 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 		body, _ = io.ReadAll(reader)
 	}
 
+	fmt.Println("获取库存状态码:", resp.StatusCode)
+	fmt.Println("获取库存状态码:", string(body))
+
 	switch resp.StatusCode {
 	case 429:
 		Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)

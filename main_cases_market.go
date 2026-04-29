@@ -85,7 +85,7 @@ func TestGetInventory(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetInventory(Constants.Steam, Constants.SteamCategory)
+	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory)
 	if err != nil {
 		Logger.Error("获取库存失败: ", err)
 	}
