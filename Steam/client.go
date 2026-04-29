@@ -323,6 +323,10 @@ func (c *Client) GetSteamGift(gameID int, categoryId int) ([]Model.Item, error) 
 	return c.dao.GetSteamGift(gameID, categoryId)
 }
 
+func (c *Client) IsAccountBanned() bool {
+	return c.dao.IsAccountBanned()
+}
+
 func (c *Client) PutList(gameid int, contextId int, assetID string, price int, currency int, maFileContent string) (Model.MyListingReponse, error) {
 	return c.dao.PutList(gameid, contextId, assetID, price, currency, maFileContent)
 }

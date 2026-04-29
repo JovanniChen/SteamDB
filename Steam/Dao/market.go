@@ -602,6 +602,29 @@ func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 	return steamGiftResponse, nil
 }
 
+func (d *Dao) IsAccountBanned() bool {
+	req, err := d.Request(http.MethodGet, Constants.Market, nil)
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false
+	}
+
+	// 您的帐户目前已被锁定
+	// Your account is currently locked
+
+	if strings.Contains(string(body), "您的帐户目前已被锁定") || strings.Contains(string(body), "Your account is currently locked") {
+		return true
+	}
+	return false
+}
+
 // GetInventory 获取用户库存
 func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 	username := d.GetUsername()

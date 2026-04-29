@@ -9,6 +9,18 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Logger"
 )
 
+func TestGetMarket(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	banned := client.IsAccountBanned()
+
+	Logger.Info("账号是否红信:", banned)
+}
+
 func TestUnsendGift(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
