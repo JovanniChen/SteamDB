@@ -682,11 +682,15 @@ func (d *Dao) Login(username, password, sharedSecret string) error {
 		return err
 	}
 
+	Logger.Infof("获取RSA公钥用于密码加密成功")
+
 	// 2. 使用RSA公钥加密密码
 	encryptedPassword, err := d.encryptPassword(password, keySendReceive)
 	if err != nil {
 		return err
 	}
+
+	Logger.Infof("使用RSA公钥加密密码成功")
 
 	// 3. 保存用户凭据信息
 	d.credentials.Username = username

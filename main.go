@@ -15,6 +15,8 @@ import (
 
 // var config *Steam.Config = Steam.NewConfig("127.0.0.1:7893")
 
+// var config *Steam.Config = Steam.NewConfig("jiochenhao:JSJ3ZAN9tc@3.112.213.97:50100")
+
 var config *Steam.Config = Steam.DefaultConfig()
 
 func main() {

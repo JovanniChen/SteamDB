@@ -174,10 +174,12 @@ func (d *Dao) UserInfo() error {
 	}
 
 	// 更新内部凭据
-	d.credentials.CountryCode = info.CountryCode
-	d.credentials.Language = info.Language
-	d.credentials.Nickname = info.PersonName
-	d.SetCookiesLanguage(info.Language)
+	if info != nil {
+		d.credentials.CountryCode = info.CountryCode
+		d.credentials.Language = info.Language
+		d.credentials.Nickname = info.PersonName
+		d.SetCookiesLanguage(info.Language)
+	}
 
 	return nil
 }
