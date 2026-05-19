@@ -72,7 +72,8 @@ var (
 	CreateOrder         string = Scheme + Domain.Community + "/market/createbuyorder"            // 创建订单
 	GetMarketListing    string = Scheme + Domain.Community + "/market/listings/"                 // 获取市场列表
 	GetPartnerInventory string = Scheme + Domain.Community + "/tradeoffer/new/partnerinventory/" // 获取合作伙伴库存
-	Market              string = Scheme + Domain.Community + "/market"
+	Market              string = Scheme + Domain.Community + "/market"                           // 市场
+	SendTradeOffer      string = Scheme + Domain.Community + "/tradeoffer/new/send"              // 发送交易报价
 
 	// 游戏更新
 	GetGameUpdateInofs    string = Scheme + Domain.Store + "/news/app" // 获取游戏更新信息

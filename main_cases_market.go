@@ -1,15 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 	"time"
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
+	"github.com/JovanniChen/SteamDB/Steam/Dao"
 	"github.com/JovanniChen/SteamDB/Steam/Logger"
 )
 
-func TestGetMarket(accountIndex int) {
+func TestIsAccountBanned(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
 		Logger.Error(err)
@@ -19,6 +21,70 @@ func TestGetMarket(accountIndex int) {
 	banned := client.IsAccountBanned()
 
 	Logger.Info("账号是否红信:", banned)
+}
+
+func TestGetSteamRate(accountIndex int) {
+	start, count := 0, 10
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	resp, err := client.GetMarketListings(440, "Specialized Killstreak L'Etranger Kit Fabricator", start, count, "CN", "schinese", 23)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	if resp == nil {
+		Logger.Info("未获取到市场列表")
+		return
+	}
+
+	total := resp.TotalCount
+	pages := total / count
+	if total%count == 0 {
+		pages--
+	}
+	start = pages * count
+
+	type ratio struct {
+		code  string
+		ratio string
+	}
+
+	ratios := make([]ratio, 0, len(Constants.Countries))
+
+	for _, v := range Constants.Countries {
+		countryCode := v.Code
+		countryName := v.Name
+		steamCurrencyID := v.SteamCurrencyID
+		resp, err = client.GetMarketListings(440, "Specialized Killstreak L'Etranger Kit Fabricator", start, count, countryCode, "schinese", steamCurrencyID)
+		if err != nil {
+			Logger.Error(err)
+			return
+		}
+
+		if resp == nil {
+			Logger.Infof("[%s]未获取到市场列表", countryName)
+			continue
+		}
+
+		Logger.Infof("起始位置: %d, 每页大小: %d, 总数量: %d", resp.Start, resp.PageSize, resp.TotalCount)
+		for _, item := range resp.Items {
+			if item.AssetID == "16958482695" {
+				// Logger.Infof("AssetID: %s, ListingID: %s, Price: %d, Fee: %d, ConvertedPrice: %d, ConvertedFee: %d, ConvertedSteamFee: %d, ConvertedPublisherFee: %d, ConvertedPricePerUnit: %d",
+				// 	item.AssetID, item.ListingID, item.Price, item.Fee, item.ConvertedPrice, item.ConvertedFee, item.ConvertedSteamFee, item.ConvertedPublisherFee, item.ConvertedPricePerUnit)
+				ratios = append(ratios, ratio{code: countryName, ratio: fmt.Sprintf("%.08f", float64(item.Price)/float64(item.ConvertedPrice))})
+			}
+		}
+	}
+
+	for _, r := range ratios {
+		Logger.Infof("%s/人民币汇率: %s", r.code, r.ratio)
+	}
+
 }
 
 func TestUnsendGift(accountIndex int) {
@@ -77,7 +143,7 @@ func TestGetMarketListings(accountIndex int) {
 		return
 	}
 
-	response, err := client.GetMarketListings(440, "Giftapult", 0, 100, "CN", "schinese", 23)
+	response, err := client.GetMarketListings(440, "Specialized%20Killstreak%20Baby%20Face%27s%20Blaster%20Kit%20Fabricator", 0, 10, "CN", "schinese", 23)
 	if err != nil {
 		Logger.Error(err)
 		return
@@ -85,9 +151,10 @@ func TestGetMarketListings(accountIndex int) {
 
 	Logger.Info("获取市场列表成功,数量:", len(response.Items))
 	Logger.Infof("Start: %d, PageSize: %d, TotalCount: %d", response.Start, response.PageSize, response.TotalCount)
-	// for _, listing := range response.Items {
-	// 	Logger.Infof("AssetID: %s, ListingID: %s, ConvertedSteamFee: %d, ConvertedPublisherFee: %d, ConvertedPricePerUnit: %d", listing.AssetID, listing.ListingID, listing.ConvertedSteamFee, listing.ConvertedPublisherFee, listing.ConvertedPricePerUnit)
-	// }
+	for _, listing := range response.Items {
+		Logger.Infof("AssetID: %s, ListingID: %s, ConvertedSteamFee: %d, ConvertedPublisherFee: %d, ConvertedPricePerUnit: %d",
+			listing.AssetID, listing.ListingID, listing.ConvertedSteamFee, listing.ConvertedPublisherFee, listing.ConvertedPricePerUnit)
+	}
 }
 
 func TestGetInventory(accountIndex int) {
@@ -97,15 +164,17 @@ func TestGetInventory(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory)
+	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory, Dao.WithTradable(1), Dao.WithMarketable(1), Dao.WithCommodity(0))
 	if err != nil {
 		Logger.Error("获取库存失败: ", err)
+		return
 	}
 
-	Logger.Infof("库存物品 (%d 个)\n", len(items))
+	Logger.Infof("库存物品 (%d 个)", len(items))
 
 	for _, item := range items {
-		Logger.Infof("物品ID: %s, 名称: %s, 市场名称: %s, 价格: %f, 货币: %d, 是否可交易: %t, 是否可在市场交易: %t", item.AssetID, item.Name, item.MarketName, item.Price, item.Currency, item.Tradable, item.Marketable)
+		Logger.Infof("物品ID: %s, 名称: %s, 市场名称: %s, 价格: %f, 货币: %d, 是否可玩家交易: %t, 是否可在市场交易: %t, 是否标准化商品: %t",
+			item.AssetID, item.Name, item.MarketName, item.Price, item.Currency, item.Tradable, item.Marketable, item.Commodity)
 	}
 }
 
@@ -139,7 +208,7 @@ func TestPutList(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory)
+	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory, Dao.WithTradable(1), Dao.WithMarketable(1), nil)
 	if err != nil {
 		Logger.Error(err)
 		return
@@ -148,7 +217,7 @@ func TestPutList(accountIndex int) {
 	// 随机选择一个饰品
 	randomIndex := rand.Intn(len(items))
 
-	response, err := client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, items[randomIndex].AssetID, 100, 23, string(data))
+	response, err := client.PutList(Constants.TeamFortress2, Constants.TeamFortress2Catetory, items[randomIndex].AssetID, 10000, 23, string(data))
 	if err != nil {
 		Logger.Error(err)
 		return
@@ -237,4 +306,32 @@ func TestGetPartnerInventory(accountIndex int) {
 	for _, item := range items {
 		Logger.Infof("[物品ID]: %s, [名称]: %s, [市场名称]: %s", item.ID, item.MarketName, item.MarketHashName)
 	}
+}
+
+func TestSendGift(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	items, err := client.GetInventory(Constants.TeamFortress2, Constants.TeamFortress2Catetory, Dao.WithTradable(1), Dao.WithMarketable(1), Dao.WithCommodity(0))
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	if len(items) == 0 {
+		Logger.Error("没有库存物品")
+		return
+	}
+
+	data, err := os.ReadFile("mafiles/" + client.GetUsername() + ".maFile")
+	if err != nil {
+		return
+	}
+
+	maFileContent := string(data)
+
+	Logger.Info(client.SendGift("https://steamcommunity.com/tradeoffer/new/?partner=352956450&token=U4SAf1wu", items[0].AssetID, maFileContent))
 }

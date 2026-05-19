@@ -315,8 +315,8 @@ func (c *Client) CheckFriendStatus(friendLink string) error {
 	return c.dao.CheckFriendStatus(friendLink)
 }
 
-func (c *Client) GetInventory(gameID int, categoryId int) ([]Model.Item, error) {
-	return c.dao.GetInventory(gameID, categoryId)
+func (c *Client) GetInventory(gameID, categoryId int, opts ...Dao.GetInventoryOption) ([]Model.Item, error) {
+	return c.dao.GetInventory(gameID, categoryId, opts...)
 }
 
 func (c *Client) GetSteamGift(gameID int, categoryId int) ([]Model.Item, error) {
@@ -392,8 +392,8 @@ func (c *Client) SetLanguage(language string) error {
 //	error - 查询错误
 //
 // 注意: 此方法会更新内部用户信息状态，具体数据需要通过其他getter方法获取
-func (c *Client) GetUserInfo() error {
-	return c.dao.UserInfo()
+func (c *Client) GetUserInfo() (*Dao.UserInfo, error) {
+	return c.dao.GetUserInfo()
 }
 
 // 以下是一些便捷的getter方法，用于获取用户信息
@@ -598,4 +598,8 @@ func (c *Client) GetPackageDetails(subID int) error {
 
 func (c *Client) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]Model.PartnerIntegrationItem, error) {
 	return c.dao.GetPartnerInventory(partnerUrl, gameId, contextId)
+}
+
+func (c *Client) SendGift(partnerUrl, assetId, maFileContent string) error {
+	return c.dao.SendGift(partnerUrl, assetId, maFileContent)
 }

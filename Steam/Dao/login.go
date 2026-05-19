@@ -146,6 +146,7 @@ func (d *Dao) GetBalance() int {
 	if err != nil {
 		return 0
 	}
+	Logger.Infof("userInfo -> %v", userInfo)
 	return userInfo.Balance
 }
 
@@ -165,6 +166,10 @@ func (d *Dao) GetBalanceAndWaitBalance() (int, int) {
 		return 0, 0
 	}
 	return userInfo.Balance, userInfo.WaitBalance
+}
+
+func (d *Dao) GetUserInfo() (*UserInfo, error) {
+	return d.getUserInfo()
 }
 
 // GetLoginCookies 获取登录Cookie信息

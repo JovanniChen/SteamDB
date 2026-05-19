@@ -35,8 +35,9 @@ type Item struct {
 	MarketName string  `json:"market_name"` // 市场名称
 	Price      float64 `json:"price"`       // 价格
 	Currency   int     `json:"currency"`    // 货币类型
-	Tradable   bool    `json:"tradable"`    // 是否可交易
+	Tradable   bool    `json:"tradable"`    // 是否可玩家交易
 	Marketable bool    `json:"marketable"`  // 是否可在市场交易
+	Commodity  bool    `json:"commodity"`   // 是否为标准化商品
 	ListingID  string  `json:"listing_id"`  // 上架ID(如果已上架)
 }
 
@@ -155,6 +156,10 @@ type AssetInfo struct {
 
 type ListingInfoItem struct {
 	ListingID             string    `json:"listingid"`
+	Price                 int       `json:"price"`
+	Fee                   int       `json:"fee"`
+	ConvertedPrice        int       `json:"converted_price"`
+	ConvertedFee          int       `json:"converted_fee"`
 	ConvertedSteamFee     int       `json:"converted_steam_fee"`
 	ConvertedPublisherFee int       `json:"converted_publisher_fee"`
 	ConvertedPricePerUnit int       `json:"converted_price_per_unit"`
@@ -164,6 +169,10 @@ type ListingInfoItem struct {
 type GetMarketListingItem struct {
 	AssetID               string `json:"assetid"`
 	ListingID             string `json:"listingid"`
+	Price                 int    `json:"price"`
+	Fee                   int    `json:"fee"`
+	ConvertedPrice        int    `json:"converted_price"`
+	ConvertedFee          int    `json:"converted_fee"`
 	ConvertedSteamFee     int    `json:"converted_steam_fee"`
 	ConvertedPublisherFee int    `json:"converted_publisher_fee"`
 	ConvertedPricePerUnit int    `json:"converted_price_per_unit"`
@@ -227,4 +236,11 @@ type PartnerInventoryResponse struct {
 	} `json:"rgAppInfo"`
 	More      bool `json:"more"`
 	MoreStart bool `json:"more_start"`
+}
+
+type SendGiftResponse struct {
+	TradeOfferID            string `json:"tradeofferid"`
+	NeedsMobileConfirmation bool   `json:"needs_mobile_confirmation"`
+	NeedsEmailConfirmation  bool   `json:"needs_email_confirmation"`
+	EmailDomain             string `json:"email_domain"`
 }

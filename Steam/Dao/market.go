@@ -26,7 +26,12 @@ import (
 func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) (*Model.GetMarketListingIntegrationResponse, error) {
 	Logger.Infof("获取市场列表")
 
+	// if start < 0 || count > 100 {
+	// 	return nil, errors.New("start must be >= 0 and count must be <= 100")
+	// }
+
 	marketUrl := fmt.Sprintf(Constants.GetMarketListing+"%d/%s/render", gameID, gameName)
+
 	params := Param.Params{}
 	params.SetString("query", "")
 	params.SetString("start", strconv.Itoa(start))
@@ -70,6 +75,10 @@ func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, c
 		marketListingItems = append(marketListingItems, Model.GetMarketListingItem{
 			AssetID:               listing.AssetInfo.ID,
 			ListingID:             listing.ListingID,
+			Price:                 listing.Price,
+			Fee:                   listing.Fee,
+			ConvertedPrice:        listing.ConvertedPrice,
+			ConvertedFee:          listing.ConvertedFee,
 			ConvertedSteamFee:     listing.ConvertedSteamFee,
 			ConvertedPublisherFee: listing.ConvertedPublisherFee,
 			ConvertedPricePerUnit: listing.ConvertedPricePerUnit,
@@ -625,13 +634,39 @@ func (d *Dao) IsAccountBanned() bool {
 	return false
 }
 
+type GetInventoryOption func(*inventoryOptions)
+
+type inventoryOptions struct {
+	tradable   *int
+	marketable *int
+	commodity  *int
+}
+
+func WithTradable(tradable int) GetInventoryOption {
+	return func(o *inventoryOptions) {
+		o.tradable = &tradable
+	}
+}
+
+func WithMarketable(marketable int) GetInventoryOption {
+	return func(o *inventoryOptions) {
+		o.marketable = &marketable
+	}
+}
+
+func WithCommodity(commodity int) GetInventoryOption {
+	return func(o *inventoryOptions) {
+		o.commodity = &commodity
+	}
+}
+
 // GetInventory 获取用户库存
-func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
+func (d *Dao) GetInventory(gameId, categoryId int, opts ...GetInventoryOption) ([]Model.Item, error) {
 	username := d.GetUsername()
 	Logger.Infof("开始获取用户 [%s] 的库存，游戏ID: %d, 分类ID: %d", username, gameId, categoryId)
 
 	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
-	req, err := d.NewRequest(http.MethodGet, inventoryUrl, nil)
+	req, err := d.Request(http.MethodGet, inventoryUrl, nil)
 	if err != nil {
 		Logger.Errorf("创建库存请求失败，用户: [%s], 错误: %v", username, err)
 		return nil, fmt.Errorf("创建库存请求失败: %w", err)
@@ -658,21 +693,21 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 		body, _ = io.ReadAll(reader)
 	}
 
-	fmt.Println("获取库存状态码:", resp.StatusCode)
-	fmt.Println("获取库存状态码:", string(body))
-
 	switch resp.StatusCode {
 	case 429:
 		Logger.Warnf("用户 [%s] 获取库存遇到速率限制 (429)", username)
+		Logger.Warnf("响应内容: %s", string(body))
 		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrRateLimited)
 	case 401, 403:
 		Logger.Warnf("用户 [%s] 获取库存遇到授权失败 (401/403)", username)
+		Logger.Warnf("响应内容: %s", string(body))
 		return nil, fmt.Errorf("获取库存失败: %w", Errors.ErrAuthorizationFailed)
 	}
 
 	var inventoryResponse Model.InventoryResponse
 	if err := json.Unmarshal(body, &inventoryResponse); err != nil {
 		Logger.Errorf("解析库存响应失败，用户: [%s], 错误: %v", username, err)
+		Logger.Warnf("响应内容: %s", string(body))
 		return nil, fmt.Errorf("解析库存响应失败: %w", err)
 	}
 
@@ -682,7 +717,7 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 	}
 
 	// 转换为内部物品模型
-	items := d.processInventoryData(&inventoryResponse, username)
+	items := d.processInventoryData(&inventoryResponse, username, opts...)
 
 	Logger.Infof("获取用户 [%s] 的库存完成，共找到 %d 个可交易物品", username, len(items))
 
@@ -690,7 +725,7 @@ func (d *Dao) GetInventory(gameId int, categoryId int) ([]Model.Item, error) {
 }
 
 // processInventoryData 处理库存数据并返回可交易物品列表
-func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, username string) []Model.Item {
+func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, username string, opts ...GetInventoryOption) []Model.Item {
 	// 边界检查
 	if inventoryResponse == nil {
 		Logger.Warnf("用户 [%s] 库存响应为空", username)
@@ -700,6 +735,11 @@ func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, u
 	if len(inventoryResponse.Assets) == 0 {
 		Logger.Infof("用户 [%s] 的库存为空", username)
 		return []Model.Item{}
+	}
+
+	options := &inventoryOptions{}
+	for _, opt := range opts {
+		opt(options)
 	}
 
 	Logger.Debugf("开始处理用户 [%s] 的库存数据，资产数量: %d, 描述数量: %d",
@@ -729,29 +769,32 @@ func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, u
 	for _, asset := range inventoryResponse.Assets {
 		key := asset.ClassID + "_" + asset.InstanceID
 		if desc, exists := descMap[key]; exists {
-			if desc.Tradable == 1 {
-				tradableCount++
-			}
-			if desc.Marketable == 1 {
-				marketableCount++
+			if !exists {
+				missingDescCount++
+				continue
 			}
 
-			// 只包含可交易和可市场交易的物品
-			if desc.Marketable == 1 && desc.Commodity == 0 {
-				items = append(items, Model.Item{
-					AssetID:    asset.AssetID,
-					ClassID:    asset.ClassID,
-					InstanceID: asset.InstanceID,
-					Name:       desc.Name,
-					MarketName: desc.MarketName,
-					Tradable:   true,
-					Marketable: true,
-				})
-				filteredCount++
+			if options.tradable != nil && desc.Tradable != *options.tradable {
+				continue
 			}
-		} else {
-			missingDescCount++
-			Logger.Debugf("用户 [%s] 的资产 %s 缺少描述信息", username, asset.AssetID)
+			if options.marketable != nil && desc.Marketable != *options.marketable {
+				continue
+			}
+			if options.commodity != nil && desc.Commodity != *options.commodity {
+				continue
+			}
+
+			items = append(items, Model.Item{
+				AssetID:    asset.AssetID,
+				ClassID:    asset.ClassID,
+				InstanceID: asset.InstanceID,
+				Name:       desc.Name,
+				MarketName: desc.MarketName,
+				Tradable:   desc.Tradable == 1,
+				Marketable: desc.Marketable == 1,
+				Commodity:  desc.Commodity == 1,
+			})
+			filteredCount++
 		}
 	}
 
@@ -999,6 +1042,124 @@ func (d *Dao) ConfirmationForPutList(op string, maFileContent string) *Model.Con
 	return finalResult
 }
 
+func (d *Dao) ConfirmationForSendGift(op string, maFileContent string) *Model.ConfirmationResult {
+	username := d.GetUsername()
+	Logger.Infof("开始获取用户 [%s] 待确认请求", username)
+
+	pt, err := Utils.LoadMaFile(maFileContent)
+	if err != nil {
+		Logger.Errorf("加载 [%s] 令牌文件失败，错误： %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+		}
+	}
+
+	steamTime, err := d.GetSteamTimeLocal()
+	if err != nil {
+		Logger.Errorf("获取 Steam 服务器时间失败，错误： %v", err)
+		return &Model.ConfirmationResult{
+			Success: false,
+		}
+	}
+
+	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, strconv.Itoa(int(pt.MaFile.Session.SteamID)), steamTime, "conf")
+	if err != nil {
+		Logger.Errorf("构建获取待确认请求参数失败，错误： %v", err)
+		return &Model.ConfirmationResult{
+			Success: false,
+		}
+	}
+
+	req, err := d.Request(http.MethodGet, Constants.GetConfirmationList+"?"+queryParams.ToUrl(), nil)
+	if err != nil {
+		Logger.Errorf("创建待确认请求失败，用户: [%s], 错误: %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+		}
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		Logger.Errorf("执行待确认请求失败，用户: [%s], 错误: %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+		}
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		Logger.Errorf("读取待确认响应失败，用户: [%s], 错误: %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+		}
+	}
+
+	var confirmResp Model.ConfirmationsResponse
+	if err := json.Unmarshal(body, &confirmResp); err != nil {
+		Logger.Errorf("解析待确认响应失败，用户: [%s], 错误: %v", username, err)
+		return &Model.ConfirmationResult{
+			Success: false,
+		}
+	}
+
+	Logger.Debugf("获取用户 [%s] 的待确认列表响应:%+v,返回内容：%s", username, confirmResp, string(body))
+
+	if !confirmResp.Success {
+		Logger.Errorf("待确认API返回失败，用户: [%s], success字段: %t, 返回码：%d", username, confirmResp.Success, resp.StatusCode)
+		return &Model.ConfirmationResult{
+			Success: false,
+		}
+	}
+
+	Logger.Infof("获取用户 [%s] 的待确认完成，共找到 %d 个待确认请求", username, len(confirmResp.Confirmations))
+
+	// 初始化最终返回结果
+	finalResult := &Model.ConfirmationResult{
+		Success: false,
+		Result: Model.MyListingReponse{
+			ListingID: confirmResp.Confirmations[0].CreatorID,
+		},
+	}
+
+	for i := len(confirmResp.Confirmations) - 1; i >= 0; i-- {
+		Logger.Infof("处理第 %d 个确认项", i+1)
+		conf := confirmResp.Confirmations[i]
+		if conf.Type != 2 {
+			Logger.Infof("非赠送饰品确认不予处理:%+v", conf)
+			continue
+		}
+
+		if i != 0 {
+			Logger.Infof("【允许】其他赠送饰品确认")
+			sTime, _ := d.GetSteamTimeLocal()
+			err := d.AllowSingleConfirmation(pt, conf, sTime)
+			if err != nil {
+				Logger.Errorf("【允许】其他赠送饰品确认失败，用户: [%s], 错误: %v", username, err)
+			}
+			Logger.Errorf("【允许】其他赠送饰品确认成功，用户: [%s]", username)
+		} else {
+			Logger.Infof("【允许】本次赠送饰品确认")
+			for j := 0; j < Constants.Tries; j++ {
+				sTime, _ := d.GetSteamTimeLocal()
+				err = d.AllowSingleConfirmation(pt, conf, sTime)
+				if err != nil {
+					Logger.Errorf("第 %d 次【允许】待确认失败，用户: [%s], 错误: %v", j+1, username, err)
+					time.Sleep(100 * time.Millisecond)
+					continue
+				} else {
+					Logger.Infof("【允许】成功本次赠送饰品确认:%+v", conf)
+					finalResult.Success = true
+					return finalResult
+				}
+
+			}
+		}
+	}
+
+	return finalResult
+}
+
 func (d *Dao) GetConfirmations(maFileContent string) error {
 	Logger.Infof("开始获取用户 [%s] 的待确认请求", d.GetUsername())
 
@@ -1060,18 +1221,26 @@ func (d *Dao) GetConfirmations(maFileContent string) error {
 		Logger.Infof("待确认列表: %+v", conf)
 	}
 
-	// d.ConfirmationForPutList("allow", maFileContent)
-	// d.ConfirmationForBuyListAndOrder("allow", maFileContent)
-
 	for i := len(response.Confirmations) - 1; i >= 0; i-- {
-		Logger.Infof("正在处理第 %d 个待确认", i+1)
+		Logger.Infof("正在【允许】第 %d 个待确认", i+1)
 		conf := response.Confirmations[i]
 		err := d.AllowSingleConfirmation(pt, conf, steamTime)
 		if err != nil {
-			Logger.Errorf("处理待确认失败，用户: [%s], 错误: %v", username, err)
+			Logger.Errorf("【允许】待确认失败，用户: [%s], 错误: %v", username, err)
 		}
-		Logger.Errorf("处理待确认成功，用户: [%s]", username)
+		Logger.Errorf("【允许】待确认成功，用户: [%s]", username)
 	}
+
+	// for i := len(response.Confirmations) - 1; i >= 0; i-- {
+	// 	Logger.Infof("正在【拒绝】第 %d 个待确认", i+1)
+	// 	conf := response.Confirmations[i]
+	// 	err := d.CancelSingleConfirmation(pt, conf, steamTime)
+	// 	if err != nil {
+	// 		Logger.Errorf("【拒绝】待确认失败，用户: [%s], 错误: %v", username, err)
+	// 	}
+	// 	Logger.Errorf("【拒绝】待确认成功，用户: [%s]", username)
+	// }
+
 	return nil
 }
 
@@ -1373,4 +1542,90 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 	}
 
 	return partnerIntegrations, nil
+}
+
+// https://steamcommunity.com/tradeoffer/new/?partner=352956450&token=U4SAf1wu
+
+// sessionid 33f2afd25ecbf44da6443dfc
+// serverid 1
+// partner 76561199668111414
+// tradeoffermessage
+// json_tradeoffer
+// {"newversion":true,"version":2,"me":{"assets":[{"appid":440,"contextid":"2","amount":1,"assetid":"16317805093"}],"currency":[],"ready":false},"them":{"assets":[],"currency":[],"ready":false}}
+// captcha
+// trade_offer_create_params
+// {"trade_offer_access_token":"fGsR2IfZ"}
+func (d *Dao) SendGift(partnerUrl, assetId, maFileContent string) error {
+	if d.GetLoginCookies()["steamcommunity.com"] == nil {
+		return errors.New("sessionid not found")
+	}
+
+	sessionid := d.GetLoginCookies()["steamcommunity.com"].SessionId
+
+	parsedURL, err := url.Parse(partnerUrl)
+	if err != nil {
+		return err
+	}
+	partner := parsedURL.Query().Get("partner")
+	partnerID, err := strconv.ParseUint(partner, 10, 64)
+	if err != nil {
+		return err
+	}
+	steamId := Utils.FriendCodeToSteamID64(uint32(partnerID))
+
+	token := parsedURL.Query().Get("token")
+
+	jsonTradeoffer := fmt.Sprintf("{\"newversion\":true,\"version\":2,\"me\":{\"assets\":[{\"appid\":440,\"contextid\":\"2\",\"amount\":1,\"assetid\":\"%s\"}],\"currency\":[],\"ready\":false},\"them\":{\"assets\":[],\"currency\":[],\"ready\":false}}", assetId)
+
+	tradeOfferAccessToken := fmt.Sprintf("{\"trade_offer_access_token\":\"%s\"}", token)
+
+	params := Param.Params{}
+	params.SetString("sessionid", sessionid)
+	params.SetString("serverid", "1")
+	params.SetString("partner", strconv.Itoa(int(steamId)))
+	params.SetString("tradeoffermessage", "")
+	params.SetString("json_tradeoffer", jsonTradeoffer)
+	params.SetString("captcha", "")
+	params.SetString("trade_offer_create_params", tradeOfferAccessToken)
+
+	fmt.Println(params.Encode())
+
+	req, err := d.Request(http.MethodPost, Constants.SendTradeOffer, strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("origin", "https://steamcommunity.com")
+	req.Header.Set("referer", partnerUrl)
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("赠送饰品失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	fmt.Println(string(body))
+
+	var sendGiftResp Model.SendGiftResponse
+	if err := json.Unmarshal(body, &sendGiftResp); err != nil {
+		return fmt.Errorf("解析赠送饰品响应失败: %w", err)
+	}
+
+	if sendGiftResp.NeedsMobileConfirmation {
+		result := d.ConfirmationForSendGift("allow", maFileContent)
+		if !result.Success {
+			return fmt.Errorf("赠送饰品失败")
+		}
+	}
+
+	return nil
 }

@@ -124,8 +124,8 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 13013, AccountidGiftee: 352956450, Message: "怪物猎人"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1176092, AccountidGiftee: 352956450, Message: "红色沙漠"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 13013, AccountidGiftee: 352956450, Message: "怪物猎人"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 903508, AccountidGiftee: 1834606966, Message: "蒜什么建造师"}})
 
 	payLinks := make([]string, 0)
 
@@ -310,6 +310,7 @@ func TestClearCart(accountIndex int) {
 		Logger.Error(err)
 		return
 	}
+
 	if err := client.ClearCart(); err != nil {
 		Logger.Error("清空购物车失败: ", err)
 		return

@@ -125,6 +125,15 @@ func TestSetLanguage(accountIndex int) {
 	Logger.Info(client.SetLanguage("english"))
 }
 
+func TestGetCountryCode(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.GetCountryCode())
+}
+
 func TestLogoutAll(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
