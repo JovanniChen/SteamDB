@@ -45,6 +45,8 @@ func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, c
 		return nil, err
 	}
 
+	req.AddCookie(&http.Cookie{Name: "bMarketOptOut", Value: "1"})
+
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
 		return nil, err
