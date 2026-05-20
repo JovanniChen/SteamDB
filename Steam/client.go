@@ -331,8 +331,8 @@ func (c *Client) PutList(gameid int, contextId int, assetID string, price int, c
 	return c.dao.PutList(gameid, contextId, assetID, price, currency, maFileContent)
 }
 
-func (c *Client) BuyListing(gameId int, creatorId string, name string, buyerPrice, sellerReceivePrice int, maFileContent string) error {
-	return c.dao.BuyListing(gameId, creatorId, name, buyerPrice, sellerReceivePrice, "0", maFileContent)
+func (c *Client) BuyListing(gameId int, currency string, creatorId string, name string, buyerPrice, sellerReceivePrice int, maFileContent string) error {
+	return c.dao.BuyListing(gameId, currency, creatorId, name, buyerPrice, sellerReceivePrice, "0", maFileContent)
 }
 
 func (c *Client) CreateOrder(marketHashName string, price float64, quantity int64, maFileContent string) error {

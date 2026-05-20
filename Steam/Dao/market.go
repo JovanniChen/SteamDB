@@ -228,7 +228,7 @@ type buyResult struct {
 	error            error
 }
 
-func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerReceivePrice int, confirmation string) buyResult {
+func (d *Dao) buy(gameId int, currency string, creatorId string, name string, buyerPrice, sellerReceivePrice int, confirmation string) buyResult {
 	Logger.Infof("[%s]购买[%s][%s][%d][%d][%s]", d.GetUsername(), creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 
 	fee := buyerPrice - sellerReceivePrice
@@ -237,7 +237,7 @@ func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerR
 	if d.GetLoginCookies()["steamcommunity.com"] != nil {
 		params.SetString("sessionid", d.GetLoginCookies()["steamcommunity.com"].SessionId)
 	}
-	params.SetString("currency", "23")
+	params.SetString("currency", currency)
 	params.SetInt64("subtotal", int64(sellerReceivePrice))
 	params.SetInt64("fee", int64(fee))
 	params.SetInt64("total", int64(buyerPrice))
@@ -437,13 +437,13 @@ func (d *Dao) buy(gameId int, creatorId string, name string, buyerPrice, sellerR
 }
 
 // BuyListing 购买物品
-func (d *Dao) BuyListing(gameId int, creatorId string, name string, buyerPrice, sellerReceivePrice int, confirmation string, maFileContent string) error {
-	br := d.buy(gameId, creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
+func (d *Dao) BuyListing(gameId int, currency string, creatorId string, name string, buyerPrice, sellerReceivePrice int, confirmation string, maFileContent string) error {
+	br := d.buy(gameId, currency, creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 	if br.success && br.needConfirmation {
 		if err := d.ConfirmationForBuyList("allow", maFileContent); err != nil {
 			return err
 		}
-		brAgain := d.buy(gameId, creatorId, name, buyerPrice, sellerReceivePrice, br.confirmationId)
+		brAgain := d.buy(gameId, currency, creatorId, name, buyerPrice, sellerReceivePrice, br.confirmationId)
 		if brAgain.success {
 			return nil
 		} else {

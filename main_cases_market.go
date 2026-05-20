@@ -240,7 +240,7 @@ func TestBuyListing(accountIndex int) {
 
 	maFileContent := string(data)
 
-	if err := client.BuyListing(440, "545639912147013506", "", 1, 16, maFileContent); err != nil {
+	if err := client.BuyListing(440, "23", "545639912147013506", "", 1, 16, maFileContent); err != nil {
 		Logger.Error(err)
 		return
 	}
