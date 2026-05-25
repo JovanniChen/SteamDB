@@ -51,7 +51,7 @@ type Country struct {
 var Countries = map[string]Country{
 	"US": {Name: "美元", SteamCurrencyID: 1, SteamCurrencyFullID: 2001, CurrencyCode: "USD", CurrencySymbol: "$"},
 	"GB": {Name: "英镑", SteamCurrencyID: 2, SteamCurrencyFullID: 2002, CurrencyCode: "GBP", CurrencySymbol: "£"},
-	"EU": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"DE": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
 	"CH": {Name: "瑞士法郎", SteamCurrencyID: 4, SteamCurrencyFullID: 2004, CurrencyCode: "CHF", CurrencySymbol: "CHF"},
 	"RU": {Name: "俄罗斯卢布", SteamCurrencyID: 5, SteamCurrencyFullID: 2005, CurrencyCode: "RUB", CurrencySymbol: "₽"},
 	"PL": {Name: "波兰兹罗提", SteamCurrencyID: 6, SteamCurrencyFullID: 2006, CurrencyCode: "PLN", CurrencySymbol: "zł"},
