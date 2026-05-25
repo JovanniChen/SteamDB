@@ -8,7 +8,6 @@ import (
 	"math/big"
 	"os"
 	"os/exec"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -125,21 +124,44 @@ func SafeCustomString(length int, charset string) string {
 }
 
 func WalletConvert(wallet string) int {
-	// 正则表达式匹配数字（整数或小数）
-	re := regexp.MustCompile(`\d+(\.\d+)?`)
-	// 查找所有匹配的数字
-	numbers := re.FindAllString(wallet, -1)
-	// 将所有数字拼接起来
-	moneyStr := strings.Join(numbers, "")
+	s := strings.TrimSpace(wallet)
 
-	// 转换为浮点数
-	money, err := strconv.ParseFloat(moneyStr, 64)
-	if err != nil {
-		// 如果转换失败，返回0
+	var b strings.Builder
+	for _, r := range s {
+		if (r >= '0' && r <= '9') || r == ',' || r == '.' {
+			b.WriteRune(r)
+		}
+	}
+	s = b.String()
+	if s == "" {
 		return 0
 	}
 
-	// 乘以100后转换为整数（以分为单位）
+	lastComma := strings.LastIndex(s, ",")
+	lastDot := strings.LastIndex(s, ".")
+	decimalSep := ""
+	thousandsSep := ""
+
+	switch {
+	case lastComma > lastDot:
+		decimalSep = ","
+		thousandsSep = "."
+	case lastDot > lastComma:
+		decimalSep = "."
+		thousandsSep = ","
+	}
+
+	if thousandsSep != "" {
+		s = strings.ReplaceAll(s, thousandsSep, "")
+	}
+	if decimalSep == "," {
+		s = strings.ReplaceAll(s, ",", ".")
+	}
+
+	money, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0
+	}
 	return int(money * 100)
 }
 
