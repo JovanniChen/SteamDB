@@ -11,47 +11,29 @@ type Country struct {
 }
 
 // Countries Steam 社区市场支持的货币/国家，以 ISO 国家代码为键
-// 1 - USD / 美元
-// 2 - GBP / 英镑
-// 3 - EUR / 欧元
-// 4 - CHF / 瑞士法郎
-// 5 - RUB / 俄罗斯卢布
-// 6 - PLN / 波兰兹罗提
-// 7 - BRL / 巴西雷亚尔
-// 8 - JPY / 日元
-// 9 - NOK / 挪威克朗
-// 10 - IDR / 印度尼西亚卢比
-// 11 - MYR / 马来西亚林吉特
-// 12 - PHP / 菲律宾比索
-// 13 - SGD / 新加坡元
-// 14 - THB / 泰铢
-// 15 - VND / 越南盾
-// 16 - KRW / 韩元
-// 18 - UAH / 乌克兰格里夫纳
-// 19 - MXN / 墨西哥比索
-// 20 - CAD / 加拿大元
-// 21 - AUD / 澳大利亚元
-// 22 - NZD / 新西兰元
-// 23 - CNY / 人民币（元）
-// 24 - INR / 印度卢比
-// 25 - CLP / 智利比索
-// 26 - PEN / 秘鲁索尔
-// 27 - COP / 哥伦比亚比索
-// 28 - ZAR / 南非兰特
-// 29 - HKD / 港元
-// 30 - TWD / 新台币
-// 31 - SAR / 沙特里亚尔
-// 32 - AED / 阿联酋迪拉姆
-// 35 - ILS / 以色列新谢克尔
-// 37 - KZT / 哈萨克斯坦坚戈
-// 38 - KWD / 科威特第纳尔
-// 39 - QAR / 卡塔尔里亚尔
-// 40 - CRC / 哥斯达黎加科朗
-// 41 - UYU / 乌拉圭比索
 var Countries = map[string]Country{
 	"US": {Name: "美元", SteamCurrencyID: 1, SteamCurrencyFullID: 2001, CurrencyCode: "USD", CurrencySymbol: "$"},
 	"GB": {Name: "英镑", SteamCurrencyID: 2, SteamCurrencyFullID: 2002, CurrencyCode: "GBP", CurrencySymbol: "£"},
 	"DE": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"FR": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"IT": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"ES": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"NL": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"BE": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"AT": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"PT": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"IE": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"FI": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"GR": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"LU": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"SI": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"SK": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"EE": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"LV": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"LT": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"CY": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"MT": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
+	"HR": {Name: "欧元", SteamCurrencyID: 3, SteamCurrencyFullID: 2003, CurrencyCode: "EUR", CurrencySymbol: "€"},
 	"CH": {Name: "瑞士法郎", SteamCurrencyID: 4, SteamCurrencyFullID: 2004, CurrencyCode: "CHF", CurrencySymbol: "CHF"},
 	"RU": {Name: "俄罗斯卢布", SteamCurrencyID: 5, SteamCurrencyFullID: 2005, CurrencyCode: "RUB", CurrencySymbol: "₽"},
 	"PL": {Name: "波兰兹罗提", SteamCurrencyID: 6, SteamCurrencyFullID: 2006, CurrencyCode: "PLN", CurrencySymbol: "zł"},
