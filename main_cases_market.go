@@ -333,5 +333,5 @@ func TestSendGift(accountIndex int) {
 
 	maFileContent := string(data)
 
-	Logger.Info(client.SendGift("https://steamcommunity.com/tradeoffer/new/?partner=352956450&token=U4SAf1wu", items[0].AssetID, maFileContent))
+	Logger.Info(client.SendGift("https://steamcommunity.com/tradeoffer/new/?partner=1603469310&token=orFqPFWu", items[0].AssetID, maFileContent))
 }

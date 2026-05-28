@@ -226,7 +226,7 @@ func (d *Dao) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error)
 	// fmt.Println(resp.StatusCode)
 	// fmt.Println("=====", string(body))
 	// 保存这个string(body)到项目根目录
-	// os.WriteFile("product.html", body, 0644)
+	os.WriteFile("product.html", body, 0644)
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("获取商品信息失败,返回状态码: %d,url: %s", resp.StatusCode, url)
 	}
