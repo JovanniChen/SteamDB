@@ -238,6 +238,8 @@ func (d *Dao) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error)
 		return nil, fmt.Errorf("解析游戏购买信息失败")
 	}
 
+	results = d.mergeBundleListResults(results, string(body))
+
 	fmt.Printf("解析到 %d 个购买选项:\n", len(results))
 	for i, result := range results {
 		fmt.Printf("选项 %d:\n", i+1)
@@ -251,6 +253,221 @@ func (d *Dao) GetProductByAppUrl(url string) ([]Model.GamePurchaseAction, error)
 	}
 
 	return results, nil
+}
+
+func (d *Dao) mergeBundleListResults(results []Model.GamePurchaseAction, htmlContent string) []Model.GamePurchaseAction {
+	bundleListURL := extractBundleListURL(htmlContent)
+	if bundleListURL == "" {
+		return results
+	}
+
+	req, err := d.Request(http.MethodGet, bundleListURL+"?cc=cn&l=schinese", nil)
+	if err != nil {
+		fmt.Println("d.Request bundlelist error:", err)
+		return results
+	}
+
+	if cookies := d.GetLoginCookies()["store.steampowered.com"]; cookies != nil {
+		req.Header.Add("cookie", fmt.Sprintf("sessionid=%s;steamLoginSecure=%s", cookies.SessionId, cookies.SteamLoginSecure))
+	}
+	req.AddCookie(&http.Cookie{Name: "birthtime", Value: "0"})
+	req.AddCookie(&http.Cookie{Name: "lastagecheckage", Value: "1-January-1970"})
+	req.AddCookie(&http.Cookie{Name: "mature_content", Value: "1"})
+	req.AddCookie(&http.Cookie{Name: "wants_mature_content", Value: "1"})
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		fmt.Println("d.RetryRequest bundlelist error:", err)
+		return results
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("io.ReadAll bundlelist error:", err)
+		return results
+	}
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("获取全部捆绑包失败,返回状态码: %d,url: %s\n", resp.StatusCode, bundleListURL)
+		return results
+	}
+
+	bundleResults := ParseBundleListPurchaseActions(string(body))
+	if len(bundleResults) == 0 {
+		return results
+	}
+
+	seen := make(map[string]struct{}, len(results)+len(bundleResults))
+	for _, result := range results {
+		if result.AddToCartIds != "" {
+			seen[result.AddToCartIds] = struct{}{}
+		}
+	}
+	for _, result := range bundleResults {
+		if result.AddToCartIds == "" {
+			continue
+		}
+		if _, ok := seen[result.AddToCartIds]; ok {
+			continue
+		}
+		seen[result.AddToCartIds] = struct{}{}
+		results = append(results, result)
+	}
+
+	return results
+}
+
+func extractBundleListURL(htmlContent string) string {
+	doc, err := htmlquery.Parse(strings.NewReader(htmlContent))
+	if err != nil {
+		return ""
+	}
+
+	linkNode := htmlquery.FindOne(doc, "//a[contains(@href, '/bundlelist/')]")
+	if linkNode == nil {
+		return ""
+	}
+
+	href := strings.TrimSpace(htmlquery.SelectAttr(linkNode, "href"))
+	if href == "" {
+		return ""
+	}
+	if strings.HasPrefix(href, "//") {
+		return "https:" + href
+	}
+	if strings.HasPrefix(href, "/") {
+		return Constants.Origin + href
+	}
+	return href
+}
+
+type bundleListPurchaseOption struct {
+	BundleID             int64  `json:"bundleid"`
+	PurchaseOptionName   string `json:"purchase_option_name"`
+	FinalPriceInCents    string `json:"final_price_in_cents"`
+	OriginalPriceInCents string `json:"original_price_in_cents"`
+}
+
+func ParseBundleListPurchaseActions(htmlContent string) []Model.GamePurchaseAction {
+	rawOptions := parseBundleListPurchaseOptions(htmlContent)
+	results := make([]Model.GamePurchaseAction, 0, len(rawOptions))
+	seen := make(map[string]struct{}, len(rawOptions))
+
+	for _, option := range rawOptions {
+		if option.BundleID == 0 {
+			continue
+		}
+
+		cartID := strconv.FormatInt(option.BundleID, 10)
+		if _, ok := seen[cartID]; ok {
+			continue
+		}
+		seen[cartID] = struct{}{}
+
+		finalPrice := centsStringToPrice(option.FinalPriceInCents)
+		if finalPrice == "" {
+			continue
+		}
+		originalPrice := centsStringToPrice(option.OriginalPriceInCents)
+		if originalPrice == "" {
+			originalPrice = finalPrice
+		}
+
+		gameName := strings.TrimSpace(option.PurchaseOptionName)
+		if gameName == "" {
+			continue
+		}
+
+		results = append(results, Model.GamePurchaseAction{
+			IsBundle:        1,
+			BundleInfoTexts: convertToBundleInfo("bundle"),
+			GameName:        gameName,
+			OriginalPrice:   originalPrice,
+			FinalPrice:      finalPrice,
+			FinalPriceText:  "￥ " + finalPrice,
+			CountryCode:     "CN",
+			AddToCartIds:    cartID,
+		})
+	}
+
+	return results
+}
+
+func parseBundleListPurchaseOptions(htmlContent string) []bundleListPurchaseOption {
+	options := make([]bundleListPurchaseOption, 0)
+	seen := make(map[int64]struct{})
+	decodedHTML := unescapeSSRJSON(htmlContent)
+
+	re := regexp.MustCompile(`"bundleid":(\d+),"purchase_option_name":"([^"]*)","final_price_in_cents":"([^"]*)"(?:,"original_price_in_cents":"([^"]*)")?`)
+	for _, match := range re.FindAllStringSubmatch(decodedHTML, -1) {
+		bundleID, err := strconv.ParseInt(match[1], 10, 64)
+		if err != nil {
+			continue
+		}
+		originalPriceInCents := ""
+		if len(match) > 4 {
+			originalPriceInCents = match[4]
+		}
+		if _, ok := seen[bundleID]; ok {
+			continue
+		}
+		seen[bundleID] = struct{}{}
+		options = append(options, bundleListPurchaseOption{
+			BundleID:             bundleID,
+			PurchaseOptionName:   strings.TrimSpace(match[2]),
+			FinalPriceInCents:    match[3],
+			OriginalPriceInCents: originalPriceInCents,
+		})
+	}
+
+	if len(options) > 0 {
+		return options
+	}
+
+	// 兜底：SSR 首屏 props 中有全集列表，但通常不包含原价。
+	fallbackRe := regexp.MustCompile(`\{[^{}]*"bundleid":\d+[^{}]*"name"[^{}]*"priceInCents"[^{}]*\}`)
+	for _, raw := range fallbackRe.FindAllString(decodedHTML, -1) {
+		var item struct {
+			BundleID     int64  `json:"bundleid"`
+			Name         string `json:"name"`
+			PriceInCents string `json:"priceInCents"`
+		}
+		if err := json.Unmarshal([]byte(raw), &item); err != nil {
+			continue
+		}
+		if item.BundleID == 0 {
+			continue
+		}
+		if _, ok := seen[item.BundleID]; ok {
+			continue
+		}
+		seen[item.BundleID] = struct{}{}
+		options = append(options, bundleListPurchaseOption{
+			BundleID:           item.BundleID,
+			PurchaseOptionName: item.Name,
+			FinalPriceInCents:  item.PriceInCents,
+		})
+	}
+
+	return options
+}
+
+func unescapeSSRJSON(raw string) string {
+	for strings.Contains(raw, `\"`) {
+		raw = strings.ReplaceAll(raw, `\"`, `"`)
+	}
+	return raw
+}
+
+func centsStringToPrice(cents string) string {
+	if cents == "" {
+		return ""
+	}
+	value, err := strconv.ParseFloat(cents, 64)
+	if err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%.2f", value/100.0)
 }
 
 // extractCountryCode 从HTML中提取国家代码
