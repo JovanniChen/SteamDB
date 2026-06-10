@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -1522,11 +1521,13 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 		return nil, err
 	}
 
+	fmt.Println("GetPartnerInventory body:", string(body))
+
 	// 解码 JSON
 	var partnerInventoryResp Model.PartnerInventoryResponse
 	err = json.Unmarshal(body, &partnerInventoryResp)
 	if err != nil {
-		log.Fatal("JSON 解析失败:", err)
+		return nil, err
 	}
 
 	for _, item := range partnerInventoryResp.RGInventory {
