@@ -1502,8 +1502,6 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 	params.SetString("appid", strconv.Itoa(gameId))
 	params.SetString("contextid", strconv.Itoa(contextId))
 
-	fmt.Println(params.ToUrl())
-
 	req, err := d.Request(http.MethodGet, Constants.GetPartnerInventory+"?"+params.ToUrl(), nil)
 	if err != nil {
 		return nil, err

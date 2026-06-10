@@ -296,7 +296,7 @@ func TestGetPartnerInventory(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetPartnerInventory("https://steamcommunity.com/tradeoffer/new/?partner=352956450&token=vKXEWKBw", 440, 2)
+	items, err := client.GetPartnerInventory("https://steamcommunity.com/tradeoffer/new/?partner=806596010&token=JmPZ42Y8", 440, 2)
 	if err != nil {
 		Logger.Error(err)
 		return

@@ -52,12 +52,12 @@ var Countries = map[string]Country{
 	"CA": {Name: "加拿大元", SteamCurrencyID: 20, SteamCurrencyFullID: 2020, CurrencyCode: "CAD", CurrencySymbol: "C$"},
 	"AU": {Name: "澳大利亚元", SteamCurrencyID: 21, SteamCurrencyFullID: 2021, CurrencyCode: "AUD", CurrencySymbol: "A$"},
 	"NZ": {Name: "新西兰元", SteamCurrencyID: 22, SteamCurrencyFullID: 2022, CurrencyCode: "NZD", CurrencySymbol: "NZ$"},
-	"CN": {Name: "人民币", SteamCurrencyID: 23, SteamCurrencyFullID: 2023, CurrencyCode: "CNY", CurrencySymbol: "￥"},
-	"IN": {Name: "印度卢比", SteamCurrencyID: 24, SteamCurrencyFullID: 2024, CurrencyCode: "INR", CurrencySymbol: "₹"},
-	"CL": {Name: "智利比索", SteamCurrencyID: 25, SteamCurrencyFullID: 2025, CurrencyCode: "CLP", CurrencySymbol: "CLP$"},
-	"PE": {Name: "秘鲁索尔", SteamCurrencyID: 26, SteamCurrencyFullID: 2026, CurrencyCode: "PEN", CurrencySymbol: "S/."},
-	"CO": {Name: "哥伦比亚比索", SteamCurrencyID: 27, SteamCurrencyFullID: 2027, CurrencyCode: "COP", CurrencySymbol: "COL$"},
-	"ZA": {Name: "南非兰特", SteamCurrencyID: 28, SteamCurrencyFullID: 2028, CurrencyCode: "ZAR", CurrencySymbol: "R"},
+	"CN": {Name: "人民币", SteamCurrencyID: 23, SteamCurrencyFullID: 2023, CurrencyCode: "CNY", CurrencySymbol: "￥"},¯¯
+	"IN": {Name: "印度卢比", SteamCurrencyID: 24, SteamCurrencyFullID: 2024, CurrencyCode: "INR", CurrencySymbol: "₹"}¯¯
+	"CL": {Name: "智利比索", SteamCurrencyID: 25, SteamCurrencyFullID: 2025, CurrencyCode: "CLP", CurrencySymbol: "CLP¯¯
+	"PE": {Name: "秘鲁索尔", SteamCurrencyID: 26, SteamCurrencyFullID: 2026, CurrencyCode: "PEN", CurrencySymbol: "S/.¯¯
+	"CO": {Name: "哥伦比亚比索", SteamCurrencyID: 27, SteamCurrencyFullID: 2027, CurrencyCode: "COP", CurrencySymbol: ¯¯
+	"ZA": {Name: "南非兰特", SteamCurrencyID: 28, SteamCurrencyFullID: 2028, CurrencyCode: "ZAR", CurrencySymbol: "R"}¯¯
 	"HK": {Name: "港元", SteamCurrencyID: 29, SteamCurrencyFullID: 2029, CurrencyCode: "HKD", CurrencySymbol: "HK$"},
 	"TW": {Name: "新台币", SteamCurrencyID: 30, SteamCurrencyFullID: 2030, CurrencyCode: "TWD", CurrencySymbol: "NT$"},
 	"SA": {Name: "沙特里亚尔", SteamCurrencyID: 31, SteamCurrencyFullID: 2031, CurrencyCode: "SAR", CurrencySymbol: "﷼"},

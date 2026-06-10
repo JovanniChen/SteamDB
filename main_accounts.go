@@ -45,6 +45,7 @@ var accounts = []Account{
 	{Username: "rwc3665651", Password: "qEOmc2Y6OjuI", SharedSecret: "bW4MbbVQca1ypuLv7IbI2KNAVu8="},        // [41]
 	{Username: "wodebeizhucele", Password: "Jovanni19880617", SharedSecret: "qPxoeCgn3MdGRebESgZMUcXNwv4="}, // [42]
 	{Username: "afbtbl9445", Password: "qD703L9reige", SharedSecret: "5F1JcpkKQTxAZvUCv+T+MHZ5bB4="},        // [43]
+	{Username: "zwrvsq6897", Password: "5uoIBclSSBI8", SharedSecret: "kUcQLn0pJutKt9oeh8yRDG7t+o8="},        // [44]
 
 }
 
