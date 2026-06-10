@@ -1521,24 +1521,66 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 		return nil, err
 	}
 
-	fmt.Println("GetPartnerInventory body:", string(body))
-
-	// 解码 JSON
-	var partnerInventoryResp Model.PartnerInventoryResponse
-	err = json.Unmarshal(body, &partnerInventoryResp)
-	if err != nil {
-		return nil, err
+	body = bytes.TrimSpace(body)
+	if len(body) == 0 {
+		return partnerIntegrations, nil
 	}
 
-	for _, item := range partnerInventoryResp.RGInventory {
+	if body[0] == '[' {
+		var arr []interface{}
+		if err := json.Unmarshal(body, &arr); err != nil {
+			return nil, fmt.Errorf("解析合作伙伴库存数组失败: %w", err)
+		}
+
+		if len(arr) == 2 {
+			key, keyOK := arr[0].(string)
+			success, successOK := arr[1].(bool)
+			if keyOK && successOK && key == "success" && !success {
+				return partnerIntegrations, nil
+			}
+		}
+
+		return nil, fmt.Errorf("合作伙伴库存返回了未支持的数组结构: %s", string(body))
+	}
+
+	var rawResp struct {
+		Success        bool            `json:"success"`
+		RGInventory    json.RawMessage `json:"rgInventory"`
+		RGDescriptions json.RawMessage `json:"rgDescriptions"`
+	}
+	if err := json.Unmarshal(body, &rawResp); err != nil {
+		return nil, fmt.Errorf("JSON 解析失败: %w", err)
+	}
+
+	rgInventory := map[string]Model.PartnerInventoryItem{}
+	if err := unmarshalSteamObjectOrFalse(rawResp.RGInventory, &rgInventory); err != nil {
+		return nil, fmt.Errorf("解析 rgInventory 失败: %w", err)
+	}
+
+	rgDescriptions := map[string]Model.PartnerInventoryDescription{}
+	if err := unmarshalSteamObjectOrFalse(rawResp.RGDescriptions, &rgDescriptions); err != nil {
+		return nil, fmt.Errorf("解析 rgDescriptions 失败: %w", err)
+	}
+
+	for _, item := range rgInventory {
+		desc := rgDescriptions[item.ClassID+"_"+item.InstanceID]
 		partnerIntegrations = append(partnerIntegrations, Model.PartnerIntegrationItem{
 			ID:             item.ID,
-			MarketName:     partnerInventoryResp.RGDescriptions[item.ClassID+"_"+item.InstanceID].MarketName,
-			MarketHashName: partnerInventoryResp.RGDescriptions[item.ClassID+"_"+item.InstanceID].MarketHashName,
+			MarketName:     desc.MarketName,
+			MarketHashName: desc.MarketHashName,
 		})
 	}
 
 	return partnerIntegrations, nil
+}
+
+func unmarshalSteamObjectOrFalse[T any](raw json.RawMessage, target *map[string]T) error {
+	raw = bytes.TrimSpace(raw)
+	if len(raw) == 0 || bytes.Equal(raw, []byte("false")) || bytes.Equal(raw, []byte("null")) {
+		*target = map[string]T{}
+		return nil
+	}
+	return json.Unmarshal(raw, target)
 }
 
 // https://steamcommunity.com/tradeoffer/new/?partner=352956450&token=U4SAf1wu
