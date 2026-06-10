@@ -1529,12 +1529,6 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 		log.Fatal("JSON 解析失败:", err)
 	}
 
-	// 输出基本信息
-	fmt.Printf("成功: %v\n", partnerInventoryResp.Success)
-	fmt.Printf("游戏: %s\n", partnerInventoryResp.RGAppInfo.Name)
-	fmt.Println(len(partnerInventoryResp.RGInventory))
-	fmt.Println(len(partnerInventoryResp.RGDescriptions))
-
 	for _, item := range partnerInventoryResp.RGInventory {
 		partnerIntegrations = append(partnerIntegrations, Model.PartnerIntegrationItem{
 			ID:             item.ID,
