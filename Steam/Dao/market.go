@@ -1216,6 +1216,7 @@ func (d *Dao) GetConfirmations(maFileContent string) error {
 	}
 
 	if !response.Success {
+		fmt.Println(string(body))
 		Logger.Errorf("待确认API返回失败，用户: [%s], success字段: %t, 返回码：%d", username, response.Success, resp.StatusCode)
 		return fmt.Errorf("待确认API返回失败")
 	}
@@ -1580,6 +1581,19 @@ func unmarshalSteamObjectOrFalse[T any](raw json.RawMessage, target *map[string]
 		*target = map[string]T{}
 		return nil
 	}
+
+	if raw[0] == '[' {
+		var items []json.RawMessage
+		if err := json.Unmarshal(raw, &items); err != nil {
+			return err
+		}
+		if len(items) == 0 {
+			*target = map[string]T{}
+			return nil
+		}
+		return fmt.Errorf("不支持的数组结构: %s", string(raw))
+	}
+
 	return json.Unmarshal(raw, target)
 }
 
