@@ -17,13 +17,15 @@ type Asset struct {
 }
 
 type Description struct {
-	ClassID    string `json:"classid"`
-	InstanceID string `json:"instanceid"`
-	Name       string `json:"name"`
-	MarketName string `json:"market_name"`
-	Tradable   int    `json:"tradable"`
-	Marketable int    `json:"marketable"`
-	Commodity  int    `json:"commodity"`
+	ClassID        string `json:"classid"`
+	InstanceID     string `json:"instanceid"`
+	Name           string `json:"name"`
+	Icon           string `json:"icon_url"` // 图标
+	MarketName     string `json:"market_name"`
+	MarketHashName string `json:"market_hash_name"` // 市场 Hash 名称
+	Tradable       int    `json:"tradable"`
+	Marketable     int    `json:"marketable"`
+	Commodity      int    `json:"commodity"`
 }
 
 // 将 Asset 和 Description 结合起来的结构体

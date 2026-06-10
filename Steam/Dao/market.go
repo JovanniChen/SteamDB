@@ -787,14 +787,16 @@ func (d *Dao) processInventoryData(inventoryResponse *Model.InventoryResponse, u
 			}
 
 			items = append(items, Model.Item{
-				AssetID:    asset.AssetID,
-				ClassID:    asset.ClassID,
-				InstanceID: asset.InstanceID,
-				Name:       desc.Name,
-				MarketName: desc.MarketName,
-				Tradable:   desc.Tradable == 1,
-				Marketable: desc.Marketable == 1,
-				Commodity:  desc.Commodity == 1,
+				AssetID:        asset.AssetID,
+				ClassID:        asset.ClassID,
+				InstanceID:     asset.InstanceID,
+				Name:           desc.Name,
+				Icon:           desc.Icon,
+				MarketName:     desc.MarketName,
+				MarketHashName: desc.MarketHashName,
+				Tradable:       desc.Tradable == 1,
+				Marketable:     desc.Marketable == 1,
+				Commodity:      desc.Commodity == 1,
 			})
 			filteredCount++
 		}

@@ -173,8 +173,8 @@ func TestGetInventory(accountIndex int) {
 	Logger.Infof("库存物品 (%d 个)", len(items))
 
 	for _, item := range items {
-		Logger.Infof("物品ID: %s, 名称: %s, 市场名称: %s, 价格: %f, 货币: %d, 是否可玩家交易: %t, 是否可在市场交易: %t, 是否标准化商品: %t",
-			item.AssetID, item.Name, item.MarketName, item.Price, item.Currency, item.Tradable, item.Marketable, item.Commodity)
+		Logger.Infof("物品ID: %s, 名称: %s, Icon: %s,市场名称: %s, 市场 Hash名称: %s,价格: %f, 货币: %d, 是否可玩家交易: %t, 是否可在市场交易: %t, 是否标准化商品: %t",
+			item.AssetID, item.Name, item.Icon, item.MarketName, item.MarketHashName, item.Price, item.Currency, item.Tradable, item.Marketable, item.Commodity)
 	}
 }
 
