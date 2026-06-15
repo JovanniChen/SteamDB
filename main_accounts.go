@@ -46,7 +46,10 @@ var accounts = []Account{
 	{Username: "wodebeizhucele", Password: "Jovanni19880617", SharedSecret: "qPxoeCgn3MdGRebESgZMUcXNwv4="}, // [42]
 	{Username: "afbtbl9445", Password: "qD703L9reige", SharedSecret: "5F1JcpkKQTxAZvUCv+T+MHZ5bB4="},        // [43]
 	{Username: "zwrvsq6897", Password: "5uoIBclSSBI8", SharedSecret: "kUcQLn0pJutKt9oeh8yRDG7t+o8="},        // [44]
-
+	{Username: "foq4v1x7li", Password: "Cas3KI1o4nVc", SharedSecret: "9UzDbbUWQNPKVFS4/SRp/Of5XRU="},        // [45]
+	{Username: "gryfn942", Password: "8hhpFJmONO0h", SharedSecret: "17pwuEK7rN8zUZmVEFSCYahjRuQ="},          // [46]
+	{Username: "qrbt1wdvjb", Password: "kCn0GB9HMP2l", SharedSecret: "SnkGnmLVIJ0soPQoRVs5V0tDpLw="},        // [47]
+	{Username: "ptbeyv771", Password: "HStATyILhECK", SharedSecret: "LP4FqMsFkkeHnKOYd3qYdlTqgu4="},         // [48]
 }
 
 type Account struct {

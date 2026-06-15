@@ -162,7 +162,7 @@ func GenerateAuthCode(secret string, time int64) string {
 }
 
 // GenerateConfirmationQueryParams 生成确认查询参数
-func (pt *PhoneToken) GenerateConfirmationQueryParams(timestamp int64, tag string) (Param.Params, error) {
+func (pt *PhoneToken) GenerateConfirmationQueryParams(timestamp, steamId int64, tag string) (Param.Params, error) {
 	if pt.MaFile.DeviceID == "" {
 		return nil, fmt.Errorf("设备ID不存在")
 	}
@@ -174,7 +174,7 @@ func (pt *PhoneToken) GenerateConfirmationQueryParams(timestamp int64, tag strin
 
 	params := Param.Params{}
 	params.SetString("p", pt.MaFile.DeviceID)
-	params.SetInt64("a", pt.MaFile.Session.SteamID)
+	params.SetInt64("a", steamId)
 	params.SetString("k", confirmationHash)
 	params.SetInt64("t", timestamp)
 	params.SetString("m", "react")

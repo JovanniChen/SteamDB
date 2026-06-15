@@ -3,6 +3,8 @@ package main
 var caseRegistry = map[string]func(int){
 	"TestAccess":                          TestAccess,
 	"TestAddFunds":                        TestAddFunds,
+	"TestAddFundsWithCountry":             TestAddFundsWithCountry,
+	"TestSetCountry":                      TestSetCountry,
 	"TestAddFriendByFriendCode":           TestAddFriendByFriendCode,
 	"TestAddFriendByLink":                 TestAddFriendByLink,
 	"TestAddItemToCart":                   TestAddItemToCart,

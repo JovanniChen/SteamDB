@@ -439,7 +439,9 @@ func (d *Dao) buy(gameId int, currency string, creatorId string, name string, bu
 func (d *Dao) BuyListing(gameId int, currency string, creatorId string, name string, buyerPrice, sellerReceivePrice int, confirmation string, maFileContent string) error {
 	br := d.buy(gameId, currency, creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 	if br.success && br.needConfirmation {
-		if err := d.ConfirmationForBuyList("allow", maFileContent); err != nil {
+		steamId := strconv.Itoa(int(d.GetSteamID()))
+
+		if err := d.ConfirmationForBuyList("allow", steamId, maFileContent); err != nil {
 			return err
 		}
 		brAgain := d.buy(gameId, currency, creatorId, name, buyerPrice, sellerReceivePrice, br.confirmationId)
@@ -1181,7 +1183,9 @@ func (d *Dao) GetConfirmations(maFileContent string) error {
 		return err
 	}
 
-	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, strconv.Itoa(int(pt.MaFile.Session.SteamID)), steamTime, "conf")
+	steamId := strconv.Itoa(int(d.GetSteamID()))
+
+	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, steamId, steamTime, "conf")
 	if err != nil {
 		Logger.Errorf("构建获取待确认请求参数失败，错误： %v", err)
 		return err
@@ -1248,7 +1252,7 @@ func (d *Dao) GetConfirmations(maFileContent string) error {
 	return nil
 }
 
-func (d *Dao) ConfirmationForBuyList(op string, maFileContent string) error {
+func (d *Dao) ConfirmationForBuyList(op, steamId string, maFileContent string) error {
 	username := d.GetUsername()
 	Logger.Infof("开始获取用户 [%s] 的购买饰品待确认请求", username)
 
@@ -1264,7 +1268,7 @@ func (d *Dao) ConfirmationForBuyList(op string, maFileContent string) error {
 		return err
 	}
 
-	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, strconv.Itoa(int(pt.MaFile.Session.SteamID)), steamTime, "conf")
+	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, steamId, steamTime, "conf")
 	if err != nil {
 		Logger.Errorf("构建获取待确认请求参数失败，错误： %v", err)
 		return err
@@ -1433,7 +1437,9 @@ func (d *Dao) processSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model
 		return err
 	}
 
-	params, err := phoneToken.GenerateConfirmationQueryParams(steamTime, op)
+	steamId := int64(d.GetSteamID())
+
+	params, err := phoneToken.GenerateConfirmationQueryParams(steamTime, steamId, op)
 	if err != nil {
 		return err
 	}

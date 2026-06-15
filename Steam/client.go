@@ -588,6 +588,14 @@ func (c *Client) AddFunds(amount int) (string, error) {
 	return c.dao.AddFundsSubmit(amount)
 }
 
+func (c *Client) AddFundsWithCountry(amount int, country string) (string, error) {
+	return c.dao.AddFundsSubmitWithCountry(amount, country)
+}
+
+func (c *Client) SetCountry(country string) error {
+	return c.dao.SetCountry(country)
+}
+
 func (c *Client) LogoutAll() error {
 	return c.dao.LogoutAll()
 }

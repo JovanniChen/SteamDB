@@ -125,7 +125,7 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 
 	addCartItems := make([][]Model.AddCartItem, 0)
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 13013, AccountidGiftee: 352956450, Message: "怪物猎人"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 903508, AccountidGiftee: 1834606966, Message: "蒜什么建造师"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 475059}})
 
 	payLinks := make([]string, 0)
 
@@ -327,10 +327,35 @@ func TestAddFunds(accountIndex int) {
 		return
 	}
 
-	payLink, err := client.AddFunds(3001)
+	payLink, err := client.AddFunds(3000)
 	if err != nil {
 		Logger.Error(err)
 		return
 	}
 	Logger.Info(payLink)
+}
+
+func TestAddFundsWithCountry(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	payLink, err := client.AddFundsWithCountry(4000, "HK")
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(payLink)
+}
+
+func TestSetCountry(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	Logger.Info(client.SetCountry("HK"))
 }

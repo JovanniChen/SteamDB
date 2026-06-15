@@ -95,6 +95,7 @@ var (
 	LogoutAll      string = Scheme + Domain.Store + "/twofactor/manage_action"
 	Logout         string = Scheme + Domain.Store + "/logout"
 	LogoutAll2     string = Scheme + Domain.Store + "/login/logoutall"
+	SetCountry     string = Scheme + Domain.Store + "/account/setcountry"
 
 	// 订单相关 API 端点
 	InitTransaction     string = Scheme + Domain.CheckOut + "/checkout/inittransaction/"
