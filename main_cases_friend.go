@@ -19,6 +19,20 @@ func TestRemoveFriend(accountIndex int) {
 	Logger.Info("删除好友成功")
 }
 
+func TestCreateFriendLink(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	friendLink, err := client.CreateFriendLink()
+	if err != nil {
+		Logger.Error("创建好友链接失败: ", err)
+		return
+	}
+	Logger.Info("创建好友链接成功: ", friendLink)
+}
+
 func TestAddFriendByFriendCode(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
@@ -81,7 +95,7 @@ func TestAddFriendByLink(accountIndex int) {
 	}
 
 	var links = make([]string, 0)
-	links = append(links, "https://s.team/p/chbn-qbdd/NPQKGRCQ")
+	links = append(links, "https://s.team/p/hvfw-wmtw/BGDVKBND")
 
 	for i := 0; i < len(links); i++ {
 		steamID, err := client.AddFriendByLink(links[i])

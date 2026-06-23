@@ -499,6 +499,41 @@ func (d *Dao) RemoveFriend(steamID uint64) error {
 	return nil
 }
 
+func (d *Dao) CreateFriendLink() (string, error) {
+	if d.GetLoginCookies()["steamcommunity.com"] == nil {
+		return "", errors.New("steamcommunity.com cookie not found")
+	}
+
+	sessionid := d.GetLoginCookies()["steamcommunity.com"].SessionId
+	steamID := d.GetSteamID()
+
+	params := Param.Params{}
+	params.SetString("sessionid", sessionid)
+	params.SetString("steamid_user", strconv.FormatUint(steamID, 10))
+	params.SetString("duration", "-7776000")
+
+	req, err := d.Request(http.MethodPost, Constants.CreateFriendLink, strings.NewReader(params.Encode()))
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Println(resp.StatusCode)
+	fmt.Println(string(body))
+
+	return "", nil
+}
+
 // ParseFriendLinkHTML 解析好友链接页面的 HTML 内容
 // 从 Steam 好友邀请页面中提取用户信息和链接状态
 // 参数：htmlContent - HTML 页面内容

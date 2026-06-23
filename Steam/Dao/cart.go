@@ -154,6 +154,89 @@ func (d *Dao) AddItemToCart(addCartItems []Model.AddCartItem) error {
 	return nil
 }
 
+func (d *Dao) AddItemToCartSelf(addCartItems []Model.AddCartItem) error {
+	items := make([]*Protoc.Item, 0)
+	for _, addCartItem := range addCartItems {
+		var item *Protoc.Item
+		if addCartItem.BundleID != 0 {
+			item = &Protoc.Item{
+				Bundleid: addCartItem.BundleID,
+			}
+		} else {
+			item = &Protoc.Item{
+				Packageid: addCartItem.PackageID,
+			}
+		}
+
+		item.Flag = &Protoc.Flag{
+			IsGift:    false,
+			IsPrivate: false,
+		}
+
+		// item.GiftInfo = &Protoc.GiftInfo{
+		// 	AccountidGiftee: int32(addCartItem.AccountidGiftee),
+		// 	GiftMessage: &Protoc.GiftMessage{
+		// 		Gifteename: "",
+		// 		Message:    addCartItem.Message,
+		// 		Sentiment:  "",
+		// 		Signature:  "",
+		// 	},
+		// }
+
+		items = append(items, item)
+	}
+
+	addCartSend := &Protoc.AddCartSend{
+		UserCountry: d.GetCountryCode(),
+		Items:       items,
+	}
+
+	// 序列化为protobuf格式
+	data, err := proto.Marshal(addCartSend)
+	if err != nil {
+		return err
+	}
+
+	accessToken, _ := d.AccessToken()
+	params := Param.Params{}
+	params.SetString("access_token", accessToken)
+
+	// 构建POST请求体参数(包含protobuf数据)
+	params1 := Param.Params{}
+	params1.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
+
+	req, err := d.NewRequest(http.MethodPost, Constants.AddItemsToCart+"?"+params.ToUrl(), strings.NewReader(params1.Encode()))
+	if err != nil {
+		return err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.Header.Get("X-Eresult") != "1" {
+		return fmt.Errorf("add item to cart failed: %s", resp.Header.Get("X-Eresult"))
+	}
+
+	// 读取响应数据
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(resp.Body); err != nil {
+		return err
+	}
+
+	// 解析protobuf响应
+	addCartReceive := &Protoc.AddCartReceive{}
+
+	// 使用重试机制解析protobuf
+	if err := protoUnmarshalWithRetry(buf.Bytes(), addCartReceive, "AddItemToCart", 3); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *Dao) ValidateCart() error {
 	accessToken, _ := d.AccessToken()
 	params := Param.Params{}

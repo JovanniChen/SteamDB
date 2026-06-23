@@ -307,6 +307,10 @@ func (c *Client) RemoveFriend(steamID uint64) error {
 	return c.dao.RemoveFriend(steamID)
 }
 
+func (c *Client) CreateFriendLink() (string, error) {
+	return c.dao.CreateFriendLink()
+}
+
 func (c *Client) CheckIsFriend(steamId string) (bool, error) {
 	return c.dao.CheckIsFriend(steamId)
 }
@@ -492,16 +496,20 @@ func (c *Client) AddItemToCart(addCartItems []Model.AddCartItem) error {
 	return c.dao.AddItemToCart(addCartItems)
 }
 
-func (c *Client) InitTransaction() (string, error) {
-	result, err := c.dao.InitTransaction()
+func (c *Client) AddItemToCartSelf(addCartItems []Model.AddCartItem) error {
+	return c.dao.AddItemToCartSelf(addCartItems)
+}
+
+func (c *Client) InitTransaction(paymentMethod, country string, bUseRemainingSteamAccount int64) (string, error) {
+	result, err := c.dao.InitTransaction(paymentMethod, country, bUseRemainingSteamAccount)
 	if err != nil {
-		err = fmt.Errorf("初始化单次付交易失败,代理: %s,错误: %w", c.dao.GetProxy(), err)
+		err = fmt.Errorf("创建交易失败,代理: %s,错误: %w", c.dao.GetProxy(), err)
 	}
 	return result, err
 }
 
-func (c *Client) InitTransactionWithoutWrapErrorMessage() (string, error) {
-	return c.dao.InitTransaction()
+func (c *Client) InitTransactionWithoutWrapErrorMessage(paymentMethod, country string, bUseRemainingSteamAccount int64) (string, error) {
+	return c.dao.InitTransaction(paymentMethod, country, bUseRemainingSteamAccount)
 }
 
 func (c *Client) InitConcurrentTransaction() (string, error) {
@@ -592,8 +600,12 @@ func (c *Client) AddFundsWithCountry(amount int, country string) (string, error)
 	return c.dao.AddFundsSubmitWithCountry(amount, country)
 }
 
-func (c *Client) SetCountry(country string) error {
-	return c.dao.SetCountry(country)
+func (c *Client) SetStoreCountry(country string) error {
+	return c.dao.SetStoreCountry(country)
+}
+
+func (c *Client) SetCheckoutCountry(country string) error {
+	return c.dao.SetCheckoutCountry(country)
 }
 
 func (c *Client) LogoutAll() error {

@@ -85,17 +85,19 @@ var (
 	RemoveFriendAjax string = Scheme + Domain.Community + "/actions/RemoveFriendAjax"   // 通过好友码删除好友
 	Ajaxresolveusers string = Scheme + Domain.Community + "/actions/ajaxresolveusers"   // 查看好友信息
 	AcceptFriend     string = Scheme + Domain.Community + "/profiles/%s/friends/action" // 接受好友请求
+	CreateFriendLink string = Scheme + Domain.Community + "/invites/ajaxcreate/"        // 创建好友链接
 
 	// 购物车相关API端点
-	ClearCart      string = Scheme + Domain.Api + "/IAccountCartService/DeleteCart/v1" // 清空购物车
-	CartIndex      string = Scheme + Domain.Store + "/cart/"
-	AddItemsToCart string = Scheme + Domain.Api + "/IAccountCartService/AddItemsToCart/v1"
-	ValidateCart   string = Scheme + Domain.Api + "/ICheckoutService/ValidateCart/v1"
-	AddFundsSubmit string = Scheme + Domain.Store + "/steamaccount/addfundssubmit"
-	LogoutAll      string = Scheme + Domain.Store + "/twofactor/manage_action"
-	Logout         string = Scheme + Domain.Store + "/logout"
-	LogoutAll2     string = Scheme + Domain.Store + "/login/logoutall"
-	SetCountry     string = Scheme + Domain.Store + "/account/setcountry"
+	ClearCart          string = Scheme + Domain.Api + "/IAccountCartService/DeleteCart/v1" // 清空购物车
+	CartIndex          string = Scheme + Domain.Store + "/cart/"
+	AddItemsToCart     string = Scheme + Domain.Api + "/IAccountCartService/AddItemsToCart/v1"
+	ValidateCart       string = Scheme + Domain.Api + "/ICheckoutService/ValidateCart/v1"
+	AddFundsSubmit     string = Scheme + Domain.Store + "/steamaccount/addfundssubmit"
+	LogoutAll          string = Scheme + Domain.Store + "/twofactor/manage_action"
+	Logout             string = Scheme + Domain.Store + "/logout"
+	LogoutAll2         string = Scheme + Domain.Store + "/login/logoutall"
+	SetCheckoutCountry string = Scheme + Domain.CheckOut + "/country/setcountry"
+	SetStoreCountry    string = Scheme + Domain.Store + "/country/setcountry"
 
 	// 订单相关 API 端点
 	InitTransaction     string = Scheme + Domain.CheckOut + "/checkout/inittransaction/"

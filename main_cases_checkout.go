@@ -75,15 +75,6 @@ func TestCancelTransaction(accountIndex int) {
 	Logger.Info("取消交易成功")
 }
 
-func TestInitTransaction(accountIndex int) {
-	client, err := loadFromSession(accountIndex)
-	if err != nil {
-		Logger.Error(err)
-		return
-	}
-	Logger.Info(client.InitTransaction())
-}
-
 func TestAddItemToCart(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
@@ -92,7 +83,7 @@ func TestAddItemToCart(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1471144, AccountidGiftee: 352956450, Message: "Apewar"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1535794, AccountidGiftee: 1535794, Message: "Apewar"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1430343, AccountidGiftee: 352956450, Message: "Apewar"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
@@ -106,7 +97,7 @@ func TestAddItemToCart(accountIndex int) {
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
 
 	for _, addCartItem := range addCartItems {
-		if err := client.AddItemToCart(addCartItem); err != nil {
+		if err := client.AddItemToCartSelf(addCartItem); err != nil {
 			Logger.Error(err)
 			return
 		}
@@ -114,8 +105,8 @@ func TestAddItemToCart(accountIndex int) {
 	}
 }
 
-func TestAddItemToCartAndInitTransaction(accountIndex int) {
-	fmt.Println("TestAddItemToCartAndInitTransaction")
+func TestBuyGameToSelf(accountIndex int) {
+	Logger.Info("-------------------------------- 给自己购买游戏 --------------------------------")
 
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
@@ -125,7 +116,87 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 
 	addCartItems := make([][]Model.AddCartItem, 0)
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 13013, AccountidGiftee: 352956450, Message: "怪物猎人"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 475059}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 645485}}) // Barro 22
+
+	payLinks := make([]string, 0)
+
+	for _, addCartItem := range addCartItems {
+		if err := client.AddItemToCartSelf(addCartItem); err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("添加购物车成功")
+
+		// err := client.SetStoreCountry("CN")
+		// if err != nil {
+		// 	Logger.Info("设置商店国家失败")
+		// 	Logger.Error(err)
+		// 	return
+		// }
+		// Logger.Info("设置商店国家成功")
+
+		// err = client.SetCheckoutCountry("CN")
+		// if err != nil {
+		// 	Logger.Info("设置结算国家失败")
+		// 	Logger.Error(err)
+		// 	return
+		// }
+		// Logger.Info("设置结算国家成功")
+
+		transID, err := client.InitTransaction("alipay", "CN", 0)
+		if err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("初始化交易成功: ", transID)
+
+		result, err := client.GetFinalPriceWithDetails(transID)
+		if err != nil {
+			Logger.Error(err)
+			return
+		}
+
+		fmt.Printf("%+v\n", result)
+
+		Logger.Info("获取最终价格成功: ", result.Total)
+
+		checkoutURL, err := client.AccessCheckoutURL(transID)
+		if err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("获取支付页面成功: ", checkoutURL)
+
+		payLinks = append(payLinks, checkoutURL)
+
+		if err := client.CancelTransaction(transID); err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("取消交易成功")
+
+		if err := client.ClearCart(); err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("清空购物车成功")
+	}
+	for _, payLink := range payLinks {
+		Logger.Info("支付链接: ", payLink)
+	}
+}
+
+func TestBuyGameToOther(accountIndex int) {
+	Logger.Info("-------------------------------- 给他人赠送游戏 --------------------------------")
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	addCartItems := make([][]Model.AddCartItem, 0)
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 13013, AccountidGiftee: 352956450, Message: "怪物猎人"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 645485, AccountidGiftee: 739009475, Message: "Barro 22"}}) // Barro 22
 
 	payLinks := make([]string, 0)
 
@@ -136,7 +207,7 @@ func TestAddItemToCartAndInitTransaction(accountIndex int) {
 		}
 		Logger.Info("添加购物车成功")
 
-		transID, err := client.InitTransaction()
+		transID, err := client.InitTransaction("alipay", "CN", 1)
 		if err != nil {
 			Logger.Error(err)
 			return
@@ -357,5 +428,5 @@ func TestSetCountry(accountIndex int) {
 		return
 	}
 
-	Logger.Info(client.SetCountry("HK"))
+	Logger.Info(client.SetStoreCountry("HK"))
 }

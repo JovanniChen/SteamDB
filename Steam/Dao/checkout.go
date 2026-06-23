@@ -145,7 +145,7 @@ type InitTransactionResponse struct {
 // bPreAuthOnly: 0
 // sessionid: 5bf319d1458a73814a5873be
 
-func (d *Dao) InitTransaction() (string, error) {
+func (d *Dao) InitTransaction(paymentMethod, country string, bUseRemainingSteamAccount int64) (string, error) {
 	params := Param.Params{}
 	params.SetInt64("gidShoppingCart", -1)
 	params.SetInt64("gidReplayOfTransID", -1)
@@ -190,7 +190,7 @@ func (d *Dao) InitTransaction() (string, error) {
 	params.SetString("BankAccountID", "")
 	params.SetInt64("bSaveBillingAddress", 1)
 	params.SetString("gidPaymentID", "")
-	params.SetInt64("bUseRemainingSteamAccount", 1)
+	params.SetInt64("bUseRemainingSteamAccount", 0)
 	params.SetInt64("bPreAuthOnly", 0)
 
 	if d.GetLoginCookies()["checkout.steampowered.com"] == nil {
@@ -203,6 +203,11 @@ func (d *Dao) InitTransaction() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// req.AddCookie(&http.Cookie{
+	// 	Name:  "steamCountryUseIPCountry",
+	// 	Value: "1",
+	// })
 
 	req.Header.Set("origin", "https://checkout.steampowered.com")
 	req.Header.Set("referer", "https://checkout.steampowered.com/checkout/?accountcart=1")
@@ -625,6 +630,7 @@ type FinalPriceDetails struct {
 func parsePriceString(priceStr string) (float64, error) {
 	// 移除所有空格和货币符号
 	priceStr = strings.ReplaceAll(priceStr, "¥", "")
+	priceStr = strings.ReplaceAll(priceStr, "HK$", "")
 	priceStr = strings.ReplaceAll(priceStr, " ", "")
 	priceStr = strings.ReplaceAll(priceStr, ",", "")
 	priceStr = strings.TrimSpace(priceStr)
@@ -1219,7 +1225,7 @@ func (d *Dao) TransactionStatus(transId string, count int) error {
 	return nil
 }
 
-func (d *Dao) SetCountry(country string) error {
+func (d *Dao) SetCheckoutCountry(country string) error {
 	if d.GetLoginCookies()["store.steampowered.com"] == nil {
 		return errors.New("store.steampowered.com cookie not found")
 	}
@@ -1229,12 +1235,20 @@ func (d *Dao) SetCountry(country string) error {
 	params.SetString("sessionid", sessionId)
 	params.SetString("cc", country)
 
-	req, err := d.Request(http.MethodPost, Constants.SetCountry, strings.NewReader(params.Encode()))
+	fmt.Println("SetCountry sessionId:", sessionId)
+	fmt.Println("SetCountry cc:", country)
+
+	req, err := d.Request(http.MethodPost, Constants.SetCheckoutCountry, strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Referer", "https://store.steampowered.com/steamaccount/addfunds")
+	// req.AddCookie(&http.Cookie{
+	// 	Name:  "steamCountryUseIPCountry",
+	// 	Value: "1",
+	// })
+
+	req.Header.Set("Referer", "https://store.steampowered.com/")
 	req.Header.Set("Origin", "https://store.steampowered.com")
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
@@ -1248,6 +1262,51 @@ func (d *Dao) SetCountry(country string) error {
 		return err
 	}
 	fmt.Println("SetCountry response:", string(body))
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("SetCountry error,返回状态码: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func (d *Dao) SetStoreCountry(country string) error {
+	if d.GetLoginCookies()["store.steampowered.com"] == nil {
+		return errors.New("store.steampowered.com cookie not found")
+	}
+	sessionId := d.GetLoginCookies()["store.steampowered.com"].SessionId
+
+	params := Param.Params{}
+	params.SetString("sessionid", sessionId)
+	params.SetString("cc", country)
+
+	fmt.Println("SetCountry sessionId:", sessionId)
+	fmt.Println("SetCountry cc:", country)
+
+	req, err := d.Request(http.MethodPost, Constants.SetStoreCountry, strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+
+	req.AddCookie(&http.Cookie{
+		Name:  "steamCountryUseIPCountry",
+		Value: "1",
+	})
+
+	req.Header.Set("Referer", "https://store.steampowered.com/cart")
+	req.Header.Set("Origin", "https://store.steampowered.com")
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// body, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return err
+	// }
+	// fmt.Println("SetCountry response:", string(body))
 
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("SetCountry error,返回状态码: %d", resp.StatusCode)
