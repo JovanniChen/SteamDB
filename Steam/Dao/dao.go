@@ -4,16 +4,19 @@ package Dao
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
 	u "net/url"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Errors"
+	xproxy "golang.org/x/net/proxy"
 )
 
 type globalConfig struct {
@@ -232,28 +235,22 @@ func (d *Dao) getOrCreateTransport(proxy string) *http.Transport {
 }
 
 // 获取或创建指定代理的HTTP Transport
-// 从全局缓存中查找，如果不存在则创建新的Transport并缓存
-// 参数：proxy - 代理服务器地址，空字符串表示不使用代理
-// 返回值：配置好的HTTP Transport对象
+// 支持 HTTP 代理和 SOCKS5 代理。无协议前缀时保持兼容，默认按 HTTP 代理处理。
+//
+// 支持格式：
+//   - host:port
+//   - username:password@host:port
+//   - http://username:password@host:port
+//   - socks5://username:password@host:port
 func getTransport(proxy string) *http.Transport {
-	// 缓存中不存在，创建新的 transport
-	// 代理函数配置，根据传入的proxy参数决定是否使用代理
-	proxyFn := func(_ *http.Request) (*u.URL, error) {
-		if proxy == "" {
-			return nil, nil // 不使用代理
-		}
-		// 解析代理地址并返回URL对象
-		ul, err := u.Parse("http://" + proxy)
-		return ul, err
+	dialer := &net.Dialer{
+		Timeout:   15 * time.Second,  // 连接超时时间
+		KeepAlive: 120 * time.Second, // 保持连接时间
 	}
 
-	return &http.Transport{
-		Proxy:        proxyFn,                                                                // 代理配置
-		TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper), // 禁用HTTP/2
-		Dial: (&net.Dialer{
-			Timeout:   15 * time.Second,  // 连接超时时间
-			KeepAlive: 120 * time.Second, // 保持连接时间
-		}).Dial,
+	transport := &http.Transport{
+		TLSNextProto:        make(map[string]func(authority string, c *tls.Conn) http.RoundTripper), // 禁用HTTP/2
+		Dial:                dialer.Dial,
 		TLSHandshakeTimeout: 3 * time.Second, // TLS握手超时时间
 
 		TLSClientConfig: &tls.Config{
@@ -265,6 +262,70 @@ func getTransport(proxy string) *http.Transport {
 		MaxIdleConnsPerHost: 10, // 每个主机最大空闲连接数
 		MaxConnsPerHost:     60, // 每个主机最大连接数
 	}
+
+	if proxy == "" {
+		return transport
+	}
+
+	proxyURL, err := parseProxyURL(proxy)
+	if err != nil {
+		transport.Proxy = func(_ *http.Request) (*u.URL, error) {
+			return nil, err
+		}
+		return transport
+	}
+
+	switch proxyURL.Scheme {
+	case "http", "https":
+		transport.Proxy = func(_ *http.Request) (*u.URL, error) {
+			return proxyURL, nil
+		}
+	case "socks5", "socks5h":
+		socksDialer, err := newSocks5Dialer(proxyURL, dialer)
+		if err != nil {
+			transport.Proxy = func(_ *http.Request) (*u.URL, error) {
+				return nil, err
+			}
+			return transport
+		}
+		transport.Dial = socksDialer.Dial
+	}
+
+	return transport
+}
+
+func parseProxyURL(proxy string) (*u.URL, error) {
+	rawURL := proxy
+	if !strings.Contains(rawURL, "://") {
+		rawURL = "http://" + rawURL
+	}
+
+	proxyURL, err := u.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	if proxyURL.Host == "" {
+		return nil, fmt.Errorf("代理地址缺少 host: %s", proxy)
+	}
+
+	switch proxyURL.Scheme {
+	case "http", "https", "socks5", "socks5h":
+		return proxyURL, nil
+	default:
+		return nil, fmt.Errorf("不支持的代理协议: %s", proxyURL.Scheme)
+	}
+}
+
+func newSocks5Dialer(proxyURL *u.URL, forward xproxy.Dialer) (xproxy.Dialer, error) {
+	var auth *xproxy.Auth
+	if proxyURL.User != nil {
+		password, _ := proxyURL.User.Password()
+		auth = &xproxy.Auth{
+			User:     proxyURL.User.Username(),
+			Password: password,
+		}
+	}
+	return xproxy.SOCKS5("tcp", proxyURL.Host, auth, forward)
 }
 
 // New 创建新的Dao实例

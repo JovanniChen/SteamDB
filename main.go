@@ -11,7 +11,9 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam"
 )
 
-var config *Steam.Config = Steam.NewConfig("a312911880:xiabin1314@18.166.60.230:8080")
+// var config *Steam.Config = Steam.NewConfig("a312911880:xiabin1314@18.166.60.230:8080")
+
+var config *Steam.Config = Steam.NewConfig("socks5://a312911880:xiabin1314@52.79.198.156:8080")
 
 // var config *Steam.Config = Steam.NewConfig("127.0.0.1:7893")
 
