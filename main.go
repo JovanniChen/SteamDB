@@ -13,13 +13,13 @@ import (
 
 // var config *Steam.Config = Steam.NewConfig("a312911880:xiabin1314@18.166.60.230:8080")
 
-var config *Steam.Config = Steam.NewConfig("socks5://a312911880:xiabin1314@52.79.198.156:8080")
+// var config *Steam.Config = Steam.NewConfig("socks5://a312911880:xiabin1314@52.79.198.156:8080")
 
 // var config *Steam.Config = Steam.NewConfig("127.0.0.1:7893")
 
 // var config *Steam.Config = Steam.NewConfig("jiochenhao:JSJ3ZAN9tc@198.64.247.190:50100")
 
-// var config *Steam.Config = Steam.DefaultConfig()
+var config *Steam.Config = Steam.DefaultConfig()
 
 func main() {
 	accountIndex := flag.Int("account", 3, "account index used by case functions")

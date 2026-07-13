@@ -496,8 +496,16 @@ func (c *Client) AddItemToCart(addCartItems []Model.AddCartItem) error {
 	return c.dao.AddItemToCart(addCartItems)
 }
 
+func (c *Client) AddItemToCartWithSentTime(addCartItems []Model.AddCartItem, sentTime int32) error {
+	return c.dao.AddItemToCartWithSentTime(addCartItems, sentTime)
+}
+
 func (c *Client) AddItemToCartSelf(addCartItems []Model.AddCartItem) error {
 	return c.dao.AddItemToCartSelf(addCartItems)
+}
+
+func (c *Client) ModifyLineItem(modifyCartSend *Protoc.ModifyCartSend) (*Protoc.ModifyCartReceive, error) {
+	return c.dao.ModifyLineItem(modifyCartSend)
 }
 
 func (c *Client) InitTransaction(paymentMethod, country string, bUseRemainingSteamAccount int64) (string, error) {

@@ -91,6 +91,7 @@ var (
 	ClearCart          string = Scheme + Domain.Api + "/IAccountCartService/DeleteCart/v1" // 清空购物车
 	CartIndex          string = Scheme + Domain.Store + "/cart/"
 	AddItemsToCart     string = Scheme + Domain.Api + "/IAccountCartService/AddItemsToCart/v1"
+	ModifyLineItem     string = Scheme + Domain.Api + "/IAccountCartService/ModifyLineItem/v1"
 	ValidateCart       string = Scheme + Domain.Api + "/ICheckoutService/ValidateCart/v1"
 	AddFundsSubmit     string = Scheme + Domain.Store + "/steamaccount/addfundssubmit"
 	LogoutAll          string = Scheme + Domain.Store + "/twofactor/manage_action"

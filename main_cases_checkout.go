@@ -252,6 +252,27 @@ func TestBuyGameToOther(accountIndex int) {
 	}
 }
 
+func TestAddItemToCartWithSentTime(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	addCartItems := make([][]Model.AddCartItem, 0)
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 13013, AccountidGiftee: 352956450, Message: "怪物猎人"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 935805, AccountidGiftee: 739009475, Message: "Travellin Cats in China"}}) // Barro 22
+
+	for _, addCartItem := range addCartItems {
+		sentTime := time.Now().Add(5 * time.Minute).Unix()
+		if err := client.AddItemToCartWithSentTime(addCartItem, int32(sentTime)); err != nil {
+			Logger.Error(err)
+			return
+		}
+		Logger.Info("添加购物车成功")
+	}
+}
+
 func TestConcurrentPayment(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {
@@ -260,36 +281,14 @@ func TestConcurrentPayment(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 73106, AccountidGiftee: 352956450, Message: "超级鸡马"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 198332, AccountidGiftee: 352956450, Message: "Arcadian Atlas"}})
-
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1107210, AccountidGiftee: 352956450, Message: "球跳塔"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1101478, AccountidGiftee: 352956450, Message: "恐怖之眼"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984094, AccountidGiftee: 352956450, Message: "纸片大作战2"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 110604, AccountidGiftee: 352956450, Message: "Antisphere"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1033686, AccountidGiftee: 352956450, Message: "咪子不要! - 金缮之美"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1033677, AccountidGiftee: 352956450, Message: "咪子不要! - 日常小物"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 675628, AccountidGiftee: 352956450, Message: "Risen Soundtrack"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 279451, AccountidGiftee: 352956450, Message: "A Sky Full of Stars - Original Sound Track"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984063, AccountidGiftee: 352956450, Message: "黑洞大作战"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 979135, AccountidGiftee: 352956450, Message: "炮弹人冲冲冲"}})
-
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 445776, AccountidGiftee: 352956450, Message: "BIOMUTANT - Soundtrack"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 984097, AccountidGiftee: 352956450, Message: "神枪手强尼"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 834807, AccountidGiftee: 352956450, Message: "奔跑吧，香肠！"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 616514, AccountidGiftee: 352956450, Message: "Farm Kitten - Puzzle Pipes"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1013759, AccountidGiftee: 352956450, Message: "来切我鸭"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 197731, AccountidGiftee: 352956450, Message: "1bitHeart Original Soundtrack"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 366861, AccountidGiftee: 352956450, Message: "Sudoku 9x16x25"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 990639, AccountidGiftee: 352956450, Message: "毒液入侵者"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1383441, AccountidGiftee: 352956450, Message: "Merlin Survivors"}})
-	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 375305, AccountidGiftee: 352956450, Message: "Kakuro"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 935805, AccountidGiftee: 739009475, Message: "Travellin Cats in China"}})
 
 	transIDs := make([]string, 0)
 
 	for i, addCartItem := range addCartItems {
+		sentTime := time.Now().Add(5 * time.Minute).Unix()
 
-		if err := client.AddItemToCart(addCartItem); err != nil {
+		if err := client.AddItemToCartWithSentTime(addCartItem, int32(sentTime)); err != nil {
 			Logger.Error(err)
 			return
 		}

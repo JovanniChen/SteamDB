@@ -145,11 +145,87 @@ func (d *Dao) AddItemToCart(addCartItems []Model.AddCartItem) error {
 		return err
 	}
 
-	// fmt.Println("******************************************************")
-	// fmt.Println(addCartReceive)
-	// fmt.Println("******************************************************")
-	// fmt.Println(addCartReceive.Cart.Subtotal)
-	// fmt.Println("******************************************************")
+	return nil
+}
+
+func (d *Dao) AddItemToCartWithSentTime(addCartItems []Model.AddCartItem, sentTime int32) error {
+	items := make([]*Protoc.Item, 0)
+	for _, addCartItem := range addCartItems {
+		var item *Protoc.Item
+		if addCartItem.BundleID != 0 {
+			item = &Protoc.Item{
+				Bundleid: addCartItem.BundleID,
+			}
+		} else {
+			item = &Protoc.Item{
+				Packageid: addCartItem.PackageID,
+			}
+		}
+		item.GiftInfo = &Protoc.GiftInfo{
+			AccountidGiftee: int32(addCartItem.AccountidGiftee),
+			GiftMessage: &Protoc.GiftMessage{
+				Gifteename: "",
+				Message:    addCartItem.Message,
+				Sentiment:  "",
+				Signature:  "",
+			},
+			TimeScheduledSend: sentTime,
+		}
+		item.Flag = &Protoc.Flag{
+			IsGift:    true,
+			IsPrivate: false,
+		}
+
+		items = append(items, item)
+	}
+
+	addCartSend := &Protoc.AddCartSend{
+		UserCountry: d.GetCountryCode(),
+		Items:       items,
+	}
+
+	// 序列化为protobuf格式
+	data, err := proto.Marshal(addCartSend)
+	if err != nil {
+		return err
+	}
+
+	accessToken, _ := d.AccessToken()
+	params := Param.Params{}
+	params.SetString("access_token", accessToken)
+
+	// 构建POST请求体参数(包含protobuf数据)
+	params1 := Param.Params{}
+	params1.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
+
+	req, err := d.NewRequest(http.MethodPost, Constants.AddItemsToCart+"?"+params.ToUrl(), strings.NewReader(params1.Encode()))
+	if err != nil {
+		return err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.Header.Get("X-Eresult") != "1" {
+		return fmt.Errorf("add item to cart failed: %s", resp.Header.Get("X-Eresult"))
+	}
+
+	// 读取响应数据
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(resp.Body); err != nil {
+		return err
+	}
+
+	// 解析protobuf响应
+	addCartReceive := &Protoc.AddCartReceive{}
+
+	// 使用重试机制解析protobuf
+	if err := protoUnmarshalWithRetry(buf.Bytes(), addCartReceive, "AddItemToCart", 3); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -235,6 +311,58 @@ func (d *Dao) AddItemToCartSelf(addCartItems []Model.AddCartItem) error {
 	}
 
 	return nil
+}
+
+func (d *Dao) ModifyLineItem(modifyCartSend *Protoc.ModifyCartSend) (*Protoc.ModifyCartReceive, error) {
+	if modifyCartSend == nil {
+		return nil, fmt.Errorf("modify line item request is nil")
+	}
+	if modifyCartSend.UserCountry == "" {
+		modifyCartSend.UserCountry = d.GetCountryCode()
+	}
+
+	data, err := proto.Marshal(modifyCartSend)
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, err := d.AccessToken()
+	if err != nil {
+		return nil, err
+	}
+
+	query := Param.Params{}
+	query.SetString("access_token", accessToken)
+
+	form := Param.Params{}
+	form.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
+
+	req, err := d.NewRequest(http.MethodPost, Constants.ModifyLineItem+"?"+query.ToUrl(), strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.Header.Get("X-Eresult") != "1" {
+		return nil, fmt.Errorf("modify line item failed: %s", resp.Header.Get("X-Eresult"))
+	}
+
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(resp.Body); err != nil {
+		return nil, err
+	}
+
+	modifyCartReceive := &Protoc.ModifyCartReceive{}
+	if err := protoUnmarshalWithRetry(buf.Bytes(), modifyCartReceive, "ModifyLineItem", 3); err != nil {
+		return nil, err
+	}
+
+	return modifyCartReceive, nil
 }
 
 func (d *Dao) ValidateCart() error {
