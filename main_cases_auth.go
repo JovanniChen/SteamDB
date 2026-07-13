@@ -142,3 +142,12 @@ func TestLogoutAll(accountIndex int) {
 	}
 	Logger.Info(client.LogoutAll())
 }
+
+func TestSetPrivacy(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.SetPrivacy())
+}

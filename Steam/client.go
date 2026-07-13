@@ -631,3 +631,7 @@ func (c *Client) GetPartnerInventory(partnerUrl string, gameId, contextId int) (
 func (c *Client) SendGift(partnerUrl, assetId, maFileContent string) error {
 	return c.dao.SendGift(partnerUrl, assetId, maFileContent)
 }
+
+func (c *Client) SetPrivacy() error {
+	return c.dao.SetPrivacy()
+}

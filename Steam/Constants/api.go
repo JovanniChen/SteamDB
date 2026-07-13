@@ -86,6 +86,7 @@ var (
 	Ajaxresolveusers string = Scheme + Domain.Community + "/actions/ajaxresolveusers"   // 查看好友信息
 	AcceptFriend     string = Scheme + Domain.Community + "/profiles/%s/friends/action" // 接受好友请求
 	CreateFriendLink string = Scheme + Domain.Community + "/invites/ajaxcreate/"        // 创建好友链接
+	SetPrivacy       string = Scheme + Domain.Community + "/profiles/%s/ajaxsetprivacy" // 设置隐私信息
 
 	// 购物车相关API端点
 	ClearCart          string = Scheme + Domain.Api + "/IAccountCartService/DeleteCart/v1" // 清空购物车
