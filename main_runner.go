@@ -54,4 +54,5 @@ var caseRegistry = map[string]func(int){
 	"TestGetUserInfo":                     TestGetUserInfo,
 	"TestAddItemToCartWithSentTime":       TestAddItemToCartWithSentTime,
 	"TestSetPrivacy":                      TestSetPrivacy,
+	"TestGetStorePurchaseHistory":         TestGetStorePurchaseHistory,
 }

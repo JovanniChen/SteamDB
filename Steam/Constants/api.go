@@ -114,5 +114,6 @@ var (
 	TransactionStatus string = Scheme + Domain.CheckOut + "/checkout/transactionstatus/"
 
 	// 商店相关
-	PackageDetails string = Scheme + Domain.Store + "/api/packagedetails"
+	PackageDetails       string = Scheme + Domain.Store + "/api/packagedetails"
+	StorePurchaseHistory string = Scheme + Domain.Store + "/account/history/"
 )

@@ -635,3 +635,7 @@ func (c *Client) SendGift(partnerUrl, assetId, maFileContent string) error {
 func (c *Client) SetPrivacy() error {
 	return c.dao.SetPrivacy()
 }
+
+func (c *Client) GetStorePurchaseHistory() (*Model.StorePurchaseHistoryResult, error) {
+	return c.dao.GetStorePurchaseHistory()
+}
