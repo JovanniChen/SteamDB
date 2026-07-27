@@ -5,6 +5,7 @@ type AddCartItem struct {
 	BundleID        uint32
 	AccountidGiftee uint32
 	Message         string
+	EmailGiftee     string
 }
 
 type GamePurchaseAction struct {

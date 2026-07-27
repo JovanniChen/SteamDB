@@ -80,15 +80,11 @@ func (d *Dao) AddItemToCart(addCartItems []Model.AddCartItem) error {
 				Packageid: addCartItem.PackageID,
 			}
 		}
-		item.GiftInfo = &Protoc.GiftInfo{
-			AccountidGiftee: int32(addCartItem.AccountidGiftee),
-			GiftMessage: &Protoc.GiftMessage{
-				Gifteename: "",
-				Message:    addCartItem.Message,
-				Sentiment:  "",
-				Signature:  "",
-			},
+		giftInfo, err := newGiftInfo(addCartItem, 0)
+		if err != nil {
+			return err
 		}
+		item.GiftInfo = giftInfo
 		item.Flag = &Protoc.Flag{
 			IsGift:    true,
 			IsPrivate: false,
@@ -161,16 +157,11 @@ func (d *Dao) AddItemToCartWithSentTime(addCartItems []Model.AddCartItem, sentTi
 				Packageid: addCartItem.PackageID,
 			}
 		}
-		item.GiftInfo = &Protoc.GiftInfo{
-			AccountidGiftee: int32(addCartItem.AccountidGiftee),
-			GiftMessage: &Protoc.GiftMessage{
-				Gifteename: "",
-				Message:    addCartItem.Message,
-				Sentiment:  "",
-				Signature:  "",
-			},
-			TimeScheduledSend: sentTime,
+		giftInfo, err := newGiftInfo(addCartItem, sentTime)
+		if err != nil {
+			return err
 		}
+		item.GiftInfo = giftInfo
 		item.Flag = &Protoc.Flag{
 			IsGift:    true,
 			IsPrivate: false,
@@ -228,6 +219,34 @@ func (d *Dao) AddItemToCartWithSentTime(addCartItems []Model.AddCartItem, sentTi
 	}
 
 	return nil
+}
+
+func newGiftInfo(addCartItem Model.AddCartItem, sentTime int32) (*Protoc.GiftInfo, error) {
+	emailGiftee := strings.TrimSpace(addCartItem.EmailGiftee)
+	if emailGiftee != "" && addCartItem.AccountidGiftee != 0 {
+		return nil, fmt.Errorf("gift info cannot set both accountid_giftee and email_giftee")
+	}
+	if emailGiftee == "" && addCartItem.AccountidGiftee == 0 {
+		return nil, fmt.Errorf("gift info requires accountid_giftee or email_giftee")
+	}
+
+	giftInfo := &Protoc.GiftInfo{
+		GiftMessage: &Protoc.GiftMessage{
+			Gifteename: "",
+			Message:    addCartItem.Message,
+			Sentiment:  "",
+			Signature:  "",
+		},
+		TimeScheduledSend: sentTime,
+	}
+
+	if emailGiftee != "" {
+		giftInfo.EmailGiftee = emailGiftee
+	} else {
+		giftInfo.AccountidGiftee = int32(addCartItem.AccountidGiftee)
+	}
+
+	return giftInfo, nil
 }
 
 func (d *Dao) AddItemToCartSelf(addCartItems []Model.AddCartItem) error {

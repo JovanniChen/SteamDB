@@ -83,7 +83,7 @@ func TestAddItemToCart(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1535794, AccountidGiftee: 1535794, Message: "Apewar"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1535794, AccountidGiftee: 1535794, Message: "Apewar"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1430343, AccountidGiftee: 352956450, Message: "Apewar"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 489963, AccountidGiftee: 352956450, Message: "霓虹深渊 - 游戏原声"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 181611, AccountidGiftee: 352956450, Message: "Slay the Spire"}})
@@ -95,9 +95,10 @@ func TestAddItemToCart(accountIndex int) {
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 377271, AccountidGiftee: 352956450, Message: "TTV3"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1298871, AccountidGiftee: 352956450, Message: "Gladiator Fights"}})
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 272173, AccountidGiftee: 352956450, Message: "Bighead Runner"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1535794, EmailGiftee: "jio.chenhao@gmail.com", Message: "Apewar"}})
 
 	for _, addCartItem := range addCartItems {
-		if err := client.AddItemToCartSelf(addCartItem); err != nil {
+		if err := client.AddItemToCart(addCartItem); err != nil {
 			Logger.Error(err)
 			return
 		}
@@ -198,7 +199,8 @@ func TestBuyGameToOther(accountIndex int) {
 
 	addCartItems := make([][]Model.AddCartItem, 0)
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 13013, AccountidGiftee: 352956450, Message: "怪物猎人"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 645485, AccountidGiftee: 739009475, Message: "Barro 22"}}) // Barro 22
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 165867, AccountidGiftee: 739009475, Message: "Barro"}}) // Barro 22
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 165867, EmailGiftee: "jio.chenhao@gmail.com", Message: "Barro"}}) // Barro 22
 
 	payLinks := make([]string, 0)
 

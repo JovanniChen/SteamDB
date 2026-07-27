@@ -40,6 +40,7 @@ message GiftInfo {
     int32 accountid_giftee = 1;
     GiftMessage gift_message = 2;
     int32 time_scheduled_send = 3;
+    string email_giftee = 4;
 }
 
 message GiftMessage {
