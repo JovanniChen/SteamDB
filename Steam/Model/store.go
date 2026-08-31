@@ -9,8 +9,8 @@ type StorePurchaseHistoryRecord struct {
 	Index           int
 	TransactionID   string
 	Date            string
-	Item            string
-	Receiver        string
+	Items           []string
+	Receivers       []string
 	TransactionType string
 	Payment         string
 	BasePrice       string

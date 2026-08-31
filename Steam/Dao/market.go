@@ -583,6 +583,8 @@ func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 		return nil, fmt.Errorf("读取库存响应失败: %w", err)
 	}
 
+	Logger.Debugf("[GetSteamGift] 获取库存响应: %s", string(body))
+
 	// 检查是否为GZIP压缩数据
 	if len(body) > 2 && body[0] == 0x1f && body[1] == 0x8b {
 		// 解压GZIP数据

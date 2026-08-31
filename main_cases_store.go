@@ -111,9 +111,13 @@ func printStorePurchaseHistoryRecord(record Model.StorePurchaseHistoryRecord) {
 	fmt.Printf("---------- 消费记录 %d ----------\n", record.Index)
 	fmt.Printf("交易ID: %s\n", record.TransactionID)
 	fmt.Printf("日期: %s\n", record.Date)
-	fmt.Printf("物品: %s\n", record.Item)
-	if record.Receiver != "" {
-		fmt.Printf("收礼人: %s\n", record.Receiver)
+	for i := 0; i < len(record.Items) || i < len(record.Receivers); i++ {
+		if i < len(record.Items) {
+			fmt.Printf("赠送物品 %d: %s\n", i+1, record.Items[i])
+		}
+		if i < len(record.Receivers) {
+			fmt.Printf("收礼人 %d: %s\n", i+1, record.Receivers[i])
+		}
 	}
 	fmt.Printf("类型: %s\n", record.TransactionType)
 	fmt.Printf("支付方式: %s\n", record.Payment)

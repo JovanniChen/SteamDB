@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -73,6 +74,8 @@ func (d *Dao) GetStorePurchaseHistory() (*Model.StorePurchaseHistoryResult, erro
 		return nil, err
 	}
 
+	ioutil.WriteFile("store_purchase_history.html", body, 0644)
+
 	return parseStorePurchaseHistory(body)
 }
 
@@ -103,12 +106,20 @@ func parseStorePurchaseHistory(body []byte) (*Model.StorePurchaseHistoryResult, 
 }
 
 func parseStorePurchaseHistoryRow(row *html.Node, index int) Model.StorePurchaseHistoryRecord {
+	items := nodeTexts(row, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_items ")]//div[contains(@style, "clear")]`)
+	if len(items) == 0 {
+		if item := nodeText(row, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_items ")]`); item != "" {
+			items = []string{item}
+		}
+	}
+	receivers := nodeTexts(row, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_items ")]//a[contains(@href, "steamcommunity.com/profiles/")]`)
+
 	return Model.StorePurchaseHistoryRecord{
 		Index:           index,
 		TransactionID:   extractTransactionID(htmlquery.SelectAttr(row, "onclick")),
 		Date:            nodeText(row, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_date ")]`),
-		Item:            firstNonEmptyText(row, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_items ")]//div[contains(@style, "clear")]`, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_items ")]`),
-		Receiver:        nodeText(row, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_items ")]//a[contains(@href, "steamcommunity.com/profiles/")]`),
+		Items:           items,
+		Receivers:       receivers,
 		TransactionType: firstNonEmptyText(row, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_type ")]/div[not(contains(concat(" ", normalize-space(@class), " "), " wth_payment "))]`, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_type ")]`),
 		Payment:         nodeText(row, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_type ")]//div[contains(concat(" ", normalize-space(@class), " "), " wth_payment ")]`),
 		BasePrice:       nodeText(row, `.//td[contains(concat(" ", normalize-space(@class), " "), " wht_base_price ")]`),
@@ -147,6 +158,17 @@ func firstNonEmptyText(root *html.Node, paths ...string) string {
 		}
 	}
 	return ""
+}
+
+func nodeTexts(root *html.Node, path string) []string {
+	nodes := htmlquery.Find(root, path)
+	texts := make([]string, 0, len(nodes))
+	for _, node := range nodes {
+		if text := cleanText(htmlquery.InnerText(node)); text != "" {
+			texts = append(texts, text)
+		}
+	}
+	return texts
 }
 
 func nodeText(root *html.Node, path string) string {
