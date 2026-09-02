@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +20,8 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 	"github.com/JovanniChen/SteamDB/Steam/Param"
 	"github.com/JovanniChen/SteamDB/Steam/Utils"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, country, language string, currency int) (*Model.GetMarketListingIntegrationResponse, error) {
@@ -567,7 +568,7 @@ func (d *Dao) CreateOrder(marketHashName string, price float64, quantity int64, 
 // GetInventory 获取用户库存
 func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 
-	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d?l=schinese&count=100&preserve_bbcode=1&raw_asset_properties=1", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
+	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
 	req, err := d.Request(http.MethodGet, inventoryUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("创建库存请求失败: %w", err)
@@ -616,29 +617,90 @@ func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 	for _, asset := range inventoryResponse.Assets {
 		description := descriptionMap[asset.ClassID+"_"+asset.InstanceID]
 		steamGiftResponse = append(steamGiftResponse, Model.Item{
-			AssetID:           asset.AssetID,
-			EstimatedSendTime: extractEstimatedSendTime(description.OwnerDescriptions),
+			AssetID:        asset.AssetID,
+			ClassID:        asset.ClassID,
+			InstanceID:     asset.InstanceID,
+			Name:           description.Name,
+			Icon:           description.Icon,
+			MarketName:     description.MarketName,
+			MarketHashName: description.MarketHashName,
+			Currency:       description.Currency,
+			ReceiverName:   extractReceiverName(description.OwnerDescriptions),
+			Tradable:       description.Tradable == 1,
+			Marketable:     description.Marketable == 1,
+			Commodity:      description.Commodity == 1,
 		})
 	}
 
 	return steamGiftResponse, nil
 }
 
-var estimatedSendTimePattern = regexp.MustCompile(`\[date\](\d+)\[/date\]`)
-
-func extractEstimatedSendTime(ownerDescriptions []Model.OwnerDescription) int64 {
+func extractReceiverName(ownerDescriptions []Model.OwnerDescription) string {
 	for _, description := range ownerDescriptions {
-		matches := estimatedSendTimePattern.FindStringSubmatch(description.Value)
-		if len(matches) != 2 {
+		nodes, err := html.ParseFragment(strings.NewReader(description.Value), &html.Node{
+			Type:     html.ElementNode,
+			DataAtom: atom.Div,
+			Data:     "div",
+		})
+		if err != nil {
 			continue
 		}
 
-		timestamp, err := strconv.ParseInt(matches[1], 10, 64)
-		if err == nil {
-			return timestamp
+		if receiverName := findReceiverName(nodes); receiverName != "" {
+			return receiverName
 		}
 	}
-	return 0
+	return ""
+}
+
+func findReceiverName(nodes []*html.Node) string {
+	for _, node := range nodes {
+		if name := findReceiverNameNode(node); name != "" {
+			return name
+		}
+	}
+	return ""
+}
+
+func findReceiverNameNode(node *html.Node) string {
+	if node == nil {
+		return ""
+	}
+	if node.Type == html.ElementNode && node.Data == "a" && hasAttribute(node, "data-miniprofile") {
+		if name := cleanHTMLText(node); name != "" {
+			return name
+		}
+	}
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		if name := findReceiverNameNode(child); name != "" {
+			return name
+		}
+	}
+	return ""
+}
+
+func hasAttribute(node *html.Node, key string) bool {
+	for _, attr := range node.Attr {
+		if attr.Key == key && attr.Val != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func cleanHTMLText(node *html.Node) string {
+	var builder strings.Builder
+	var walk func(*html.Node)
+	walk = func(current *html.Node) {
+		if current.Type == html.TextNode {
+			builder.WriteString(current.Data)
+		}
+		for child := current.FirstChild; child != nil; child = child.NextSibling {
+			walk(child)
+		}
+	}
+	walk(node)
+	return strings.Join(strings.Fields(builder.String()), " ")
 }
 
 func (d *Dao) IsAccountBanned() bool {

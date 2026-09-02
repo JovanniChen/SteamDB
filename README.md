@@ -479,7 +479,7 @@ go run . --case TestGetGameUpdateInofs --game-id 1879330
 | Case | 风险 | 说明 |
 | --- | --- | --- |
 | `TestGetInventory` | 只读 | 获取并筛选库存 |
-| `TestGetSteamGift` | 只读 | 获取 Steam 礼物库存 |
+| `TestGetSteamGift` | 只读 | 获取 Steam 礼物库存、名称、市场名称和收礼人 |
 | `TestGetMyListings` | 只读 | 获取已上架和待确认物品 |
 | `TestGetMarketListings` | 只读 | 获取指定市场商品的挂单列表 |
 | `TestGetSteamRate` | 只读 | 按不同国家和货币市场价格估算汇率 |
