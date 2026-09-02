@@ -31,3 +31,24 @@ func TestExtractReceiverNameWithEstimatedTime(t *testing.T) {
 		t.Fatalf("expected receiver name Why always me, got %q", got)
 	}
 }
+
+func TestExtractDescriptionName(t *testing.T) {
+	descriptions := []Model.DescriptionText{
+		{Value: "这是礼物的描述内容"},
+	}
+
+	if got := extractDescriptionName(descriptions); got != "这是礼物的描述内容" {
+		t.Fatalf("expected description name, got %q", got)
+	}
+}
+
+func TestExtractDescriptionNameSkipsEmptyValues(t *testing.T) {
+	descriptions := []Model.DescriptionText{
+		{Value: "  "},
+		{Value: "第二条描述"},
+	}
+
+	if got := extractDescriptionName(descriptions); got != "第二条描述" {
+		t.Fatalf("expected second description value, got %q", got)
+	}
+}

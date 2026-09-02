@@ -568,7 +568,7 @@ func (d *Dao) CreateOrder(marketHashName string, price float64, quantity int64, 
 // GetInventory 获取用户库存
 func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 
-	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
+	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d?l=english", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
 	req, err := d.Request(http.MethodGet, inventoryUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("创建库存请求失败: %w", err)
@@ -617,22 +617,32 @@ func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 	for _, asset := range inventoryResponse.Assets {
 		description := descriptionMap[asset.ClassID+"_"+asset.InstanceID]
 		steamGiftResponse = append(steamGiftResponse, Model.Item{
-			AssetID:        asset.AssetID,
-			ClassID:        asset.ClassID,
-			InstanceID:     asset.InstanceID,
-			Name:           description.Name,
-			Icon:           description.Icon,
-			MarketName:     description.MarketName,
-			MarketHashName: description.MarketHashName,
-			Currency:       description.Currency,
-			ReceiverName:   extractReceiverName(description.OwnerDescriptions),
-			Tradable:       description.Tradable == 1,
-			Marketable:     description.Marketable == 1,
-			Commodity:      description.Commodity == 1,
+			AssetID:         asset.AssetID,
+			ClassID:         asset.ClassID,
+			InstanceID:      asset.InstanceID,
+			Name:            description.Name,
+			Icon:            description.Icon,
+			MarketName:      description.MarketName,
+			MarketHashName:  description.MarketHashName,
+			DescriptionName: extractDescriptionName(description.Descriptions),
+			Currency:        description.Currency,
+			ReceiverName:    extractReceiverName(description.OwnerDescriptions),
+			Tradable:        description.Tradable == 1,
+			Marketable:      description.Marketable == 1,
+			Commodity:       description.Commodity == 1,
 		})
 	}
 
 	return steamGiftResponse, nil
+}
+
+func extractDescriptionName(descriptions []Model.DescriptionText) string {
+	for _, description := range descriptions {
+		if value := strings.TrimSpace(description.Value); value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func extractReceiverName(ownerDescriptions []Model.OwnerDescription) string {

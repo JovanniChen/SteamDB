@@ -191,7 +191,7 @@ func TestGetSteamGift(accountIndex int) {
 	}
 
 	for _, item := range items {
-		Logger.Infof("物品ID: %s, 名称: %s, 市场名称: %s, 市场Hash名称: %s, 接受者: %s, 是否可交易: %t, 是否可在市场交易: %t, 是否标准化商品: %t", item.AssetID, item.Name, item.MarketName, item.MarketHashName, item.ReceiverName, item.Tradable, item.Marketable, item.Commodity)
+		Logger.Infof("物品ID: %s, 名称: %s, 描述: %s, 市场名称: %s, 市场Hash名称: %s, 接受者: %s, 是否可交易: %t, 是否可在市场交易: %t, 是否标准化商品: %t", item.AssetID, item.Name, item.DescriptionName, item.MarketName, item.MarketHashName, item.ReceiverName, item.Tradable, item.Marketable, item.Commodity)
 	}
 }
 
