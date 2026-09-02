@@ -191,7 +191,11 @@ func TestGetSteamGift(accountIndex int) {
 	}
 
 	for _, item := range items {
-		Logger.Infof("物品ID: %s, 名称: %s, 市场名称: %s, 价格: %f, 货币: %d, 是否可交易: %t, 是否可在市场交易: %t", item.AssetID, item.Name, item.MarketName, item.Price, item.Currency, item.Tradable, item.Marketable)
+		estimatedSendTime := ""
+		if item.EstimatedSendTime > 0 {
+			estimatedSendTime = time.Unix(item.EstimatedSendTime, 0).Format("2006-01-02 15:04:05")
+		}
+		Logger.Infof("物品ID: %s, 名称: %s, 市场名称: %s, 价格: %f, 货币: %d, 是否可交易: %t, 是否可在市场交易: %t, 预计发送时间: %s (Unix: %d)", item.AssetID, item.Name, item.MarketName, item.Price, item.Currency, item.Tradable, item.Marketable, estimatedSendTime, item.EstimatedSendTime)
 	}
 }
 

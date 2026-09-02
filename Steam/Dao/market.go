@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -566,7 +567,7 @@ func (d *Dao) CreateOrder(marketHashName string, price float64, quantity int64, 
 // GetInventory 获取用户库存
 func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 
-	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
+	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d?l=schinese&count=100&preserve_bbcode=1&raw_asset_properties=1", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
 	req, err := d.Request(http.MethodGet, inventoryUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("创建库存请求失败: %w", err)
@@ -606,14 +607,38 @@ func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
 		return nil, fmt.Errorf("库存API返回失败，success=%d", inventoryResponse.Success)
 	}
 
-	var steamGiftResponse []Model.Item
+	descriptionMap := make(map[string]Model.Description, len(inventoryResponse.Descriptions))
+	for _, description := range inventoryResponse.Descriptions {
+		descriptionMap[description.ClassID+"_"+description.InstanceID] = description
+	}
+
+	steamGiftResponse := make([]Model.Item, 0, len(inventoryResponse.Assets))
 	for _, asset := range inventoryResponse.Assets {
+		description := descriptionMap[asset.ClassID+"_"+asset.InstanceID]
 		steamGiftResponse = append(steamGiftResponse, Model.Item{
-			AssetID: asset.AssetID,
+			AssetID:           asset.AssetID,
+			EstimatedSendTime: extractEstimatedSendTime(description.OwnerDescriptions),
 		})
 	}
 
 	return steamGiftResponse, nil
+}
+
+var estimatedSendTimePattern = regexp.MustCompile(`\[date\](\d+)\[/date\]`)
+
+func extractEstimatedSendTime(ownerDescriptions []Model.OwnerDescription) int64 {
+	for _, description := range ownerDescriptions {
+		matches := estimatedSendTimePattern.FindStringSubmatch(description.Value)
+		if len(matches) != 2 {
+			continue
+		}
+
+		timestamp, err := strconv.ParseInt(matches[1], 10, 64)
+		if err == nil {
+			return timestamp
+		}
+	}
+	return 0
 }
 
 func (d *Dao) IsAccountBanned() bool {
