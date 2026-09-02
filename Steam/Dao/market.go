@@ -567,73 +567,108 @@ func (d *Dao) CreateOrder(marketHashName string, price float64, quantity int64, 
 
 // GetInventory 获取用户库存
 func (d *Dao) GetSteamGift(gameId int, categoryId int) ([]Model.Item, error) {
+	inventoryURL := fmt.Sprintf("%s/%d/%d/%d", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
 
-	inventoryUrl := fmt.Sprintf("%s/%d/%d/%d?l=english", Constants.GetInventory, d.GetSteamID(), gameId, categoryId)
-	req, err := d.Request(http.MethodGet, inventoryUrl, nil)
+	chineseResponse, err := d.getSteamGiftInventory(inventoryURL + "?l=schinese")
 	if err != nil {
-		return nil, fmt.Errorf("创建库存请求失败: %w", err)
+		return nil, fmt.Errorf("获取中文库存失败: %w", err)
+	}
+
+	time.Sleep(3 * time.Second)
+
+	englishResponse, err := d.getSteamGiftInventory(inventoryURL + "?l=english")
+	if err != nil {
+		return nil, fmt.Errorf("获取英文库存失败: %w", err)
+	}
+
+	englishDescriptionMap := make(map[string]Model.Description, len(englishResponse.Descriptions))
+	for _, description := range englishResponse.Descriptions {
+		englishDescriptionMap[description.ClassID+"_"+description.InstanceID] = description
+	}
+
+	return buildSteamGiftItems(chineseResponse, englishDescriptionMap), nil
+}
+
+func (d *Dao) getSteamGiftInventory(inventoryURL string) (Model.InventoryResponse, error) {
+	var inventoryResponse Model.InventoryResponse
+
+	req, err := d.Request(http.MethodGet, inventoryURL, nil)
+	if err != nil {
+		return inventoryResponse, fmt.Errorf("创建库存请求失败: %w", err)
 	}
 
 	resp, err := d.RetryRequest(Constants.Tries, req)
 	if err != nil {
-		return nil, fmt.Errorf("执行库存请求失败: %w", err)
+		return inventoryResponse, fmt.Errorf("执行库存请求失败: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("读取库存响应失败: %w", err)
+		return inventoryResponse, fmt.Errorf("读取库存响应失败: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return inventoryResponse, fmt.Errorf("获取库存失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	// Steam 可能直接返回 gzip 压缩内容，即使响应头没有声明压缩编码。
+	if len(body) > 2 && body[0] == 0x1f && body[1] == 0x8b {
+		reader, err := gzip.NewReader(bytes.NewReader(body))
+		if err != nil {
+			return inventoryResponse, fmt.Errorf("解压库存响应失败: %w", err)
+		}
+		body, err = io.ReadAll(reader)
+		reader.Close()
+		if err != nil {
+			return inventoryResponse, fmt.Errorf("读取解压后的库存响应失败: %w", err)
+		}
 	}
 
 	Logger.Debugf("[GetSteamGift] 获取库存响应: %s", string(body))
 
-	// 检查是否为GZIP压缩数据
-	if len(body) > 2 && body[0] == 0x1f && body[1] == 0x8b {
-		// 解压GZIP数据
-		reader, _ := gzip.NewReader(bytes.NewReader(body))
-		defer reader.Close()
-		body, _ = io.ReadAll(reader)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("获取库存失败,返回状态码: %d", resp.StatusCode)
-	}
-
-	var inventoryResponse Model.InventoryResponse
 	if err := json.Unmarshal(body, &inventoryResponse); err != nil {
-		return nil, fmt.Errorf("解析库存响应失败: %w", err)
+		return inventoryResponse, fmt.Errorf("解析库存响应失败: %w", err)
 	}
 
 	if inventoryResponse.Success != 1 {
-		return nil, fmt.Errorf("库存API返回失败，success=%d", inventoryResponse.Success)
+		return inventoryResponse, fmt.Errorf("库存API返回失败，success=%d", inventoryResponse.Success)
 	}
 
-	descriptionMap := make(map[string]Model.Description, len(inventoryResponse.Descriptions))
-	for _, description := range inventoryResponse.Descriptions {
+	return inventoryResponse, nil
+}
+
+func buildSteamGiftItems(chineseResponse Model.InventoryResponse, englishDescriptionMap map[string]Model.Description) []Model.Item {
+	descriptionMap := make(map[string]Model.Description, len(chineseResponse.Descriptions))
+	for _, description := range chineseResponse.Descriptions {
 		descriptionMap[description.ClassID+"_"+description.InstanceID] = description
 	}
 
-	steamGiftResponse := make([]Model.Item, 0, len(inventoryResponse.Assets))
-	for _, asset := range inventoryResponse.Assets {
-		description := descriptionMap[asset.ClassID+"_"+asset.InstanceID]
+	steamGiftResponse := make([]Model.Item, 0, len(chineseResponse.Assets))
+	for _, asset := range chineseResponse.Assets {
+		key := asset.ClassID + "_" + asset.InstanceID
+		description := descriptionMap[key]
+		englishDescription := englishDescriptionMap[key]
 		steamGiftResponse = append(steamGiftResponse, Model.Item{
-			AssetID:         asset.AssetID,
-			ClassID:         asset.ClassID,
-			InstanceID:      asset.InstanceID,
-			Name:            description.Name,
-			Icon:            description.Icon,
-			MarketName:      description.MarketName,
-			MarketHashName:  description.MarketHashName,
-			DescriptionName: extractDescriptionName(description.Descriptions),
-			Currency:        description.Currency,
-			ReceiverName:    extractReceiverName(description.OwnerDescriptions),
-			Tradable:        description.Tradable == 1,
-			Marketable:      description.Marketable == 1,
-			Commodity:       description.Commodity == 1,
+			AssetID:               asset.AssetID,
+			ClassID:               asset.ClassID,
+			InstanceID:            asset.InstanceID,
+			Name:                  description.Name,
+			Icon:                  description.Icon,
+			MarketName:            description.MarketName,
+			MarketHashName:        description.MarketHashName,
+			EnglishMarketName:     englishDescription.MarketName,
+			EnglishMarketHashName: englishDescription.MarketHashName,
+			DescriptionName:       extractDescriptionName(description.Descriptions),
+			Currency:              description.Currency,
+			ReceiverName:          extractReceiverName(description.OwnerDescriptions),
+			Tradable:              description.Tradable == 1,
+			Marketable:            description.Marketable == 1,
+			Commodity:             description.Commodity == 1,
 		})
 	}
 
-	return steamGiftResponse, nil
+	return steamGiftResponse
 }
 
 func extractDescriptionName(descriptions []Model.DescriptionText) string {

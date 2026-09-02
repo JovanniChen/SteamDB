@@ -43,21 +43,23 @@ type OwnerDescription struct {
 
 // 将 Asset 和 Description 结合起来的结构体
 type Item struct {
-	AssetID         string  `json:"asset_id"`         // 物品资产ID
-	ClassID         string  `json:"class_id"`         // 物品类别ID
-	InstanceID      string  `json:"instance_id"`      // 物品实例ID
-	Name            string  `json:"name"`             // 物品名称
-	Icon            string  `json:"icon_url"`         // 图标
-	MarketName      string  `json:"market_name"`      // 市场名称
-	MarketHashName  string  `json:"market_hash_name"` // 市场 Hash 名称
-	DescriptionName string  `json:"description_name"` // 物品描述内容
-	Price           float64 `json:"price"`            // 价格
-	Currency        int     `json:"currency"`         // 货币类型
-	ReceiverName    string  `json:"receiver_name"`    // 礼物接受者名称
-	Tradable        bool    `json:"tradable"`         // 是否可玩家交易
-	Marketable      bool    `json:"marketable"`       // 是否可在市场交易
-	Commodity       bool    `json:"commodity"`        // 是否为标准化商品
-	ListingID       string  `json:"listing_id"`       // 上架ID(如果已上架)
+	AssetID               string  `json:"asset_id"`                 // 物品资产ID
+	ClassID               string  `json:"class_id"`                 // 物品类别ID
+	InstanceID            string  `json:"instance_id"`              // 物品实例ID
+	Name                  string  `json:"name"`                     // 物品名称
+	Icon                  string  `json:"icon_url"`                 // 图标
+	MarketName            string  `json:"market_name"`              // 市场名称
+	MarketHashName        string  `json:"market_hash_name"`         // 市场 Hash 名称
+	EnglishMarketName     string  `json:"english_market_name"`      // 英文市场名称
+	EnglishMarketHashName string  `json:"english_market_hash_name"` // 英文市场 Hash 名称
+	DescriptionName       string  `json:"description_name"`         // 物品描述内容
+	Price                 float64 `json:"price"`                    // 价格
+	Currency              int     `json:"currency"`                 // 货币类型
+	ReceiverName          string  `json:"receiver_name"`            // 礼物接受者名称
+	Tradable              bool    `json:"tradable"`                 // 是否可玩家交易
+	Marketable            bool    `json:"marketable"`               // 是否可在市场交易
+	Commodity             bool    `json:"commodity"`                // 是否为标准化商品
+	ListingID             string  `json:"listing_id"`               // 上架ID(如果已上架)
 }
 
 // PutListResponse 上架物品响应
