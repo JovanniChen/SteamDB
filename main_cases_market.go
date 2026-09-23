@@ -318,7 +318,7 @@ func TestSendTradeOffer(accountIndex int) {
 	// https://steamcommunity.com/tradeoffer/new/?partner=1707845686&token=fGsR2IfZ
 	// https://steamcommunity.com/tradeoffer/new/?partner=1573409796&token=Y3f4KUs9
 
-	partnerUrl := "https://steamcommunity.com/tradeoffer/new/?partner=1573409796&token=Y3f4KUs9"
+	partnerUrl := "https://steamcommunity.com/tradeoffer/new/?partner=1707845686&token=W3ZhZ9u9"
 	items, err := client.GetPartnerInventory(partnerUrl, 440, 2)
 	if err != nil {
 		Logger.Error(err)
@@ -339,7 +339,7 @@ func TestSendTradeOffer(accountIndex int) {
 		assetIds = append(assetIds, item.ID)
 	}
 
-	tradeOfferId, err := client.SendTradeOffer(partnerUrl, assetIds...)
+	tradeOfferId, err := client.SendTradeOffer(partnerUrl, "440", "2", assetIds...)
 	if err != nil {
 		Logger.Error(err)
 		return

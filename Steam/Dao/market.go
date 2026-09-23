@@ -1715,7 +1715,7 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 	return partnerIntegrations, nil
 }
 
-func (d *Dao) SendTradeOffer(partnerUrl string, assetIds ...string) (string, error) {
+func (d *Dao) SendTradeOffer(partnerUrl, gameId, contextId string, assetIds ...string) (string, error) {
 	if len(assetIds) == 0 {
 		return "", errors.New("assetId is required")
 	}
@@ -1764,7 +1764,8 @@ func (d *Dao) SendTradeOffer(partnerUrl string, assetIds ...string) (string, err
 	// 将 assetId 转换为 json 数组
 	assetIdsJson := make([]string, len(assetIds))
 	for i, id := range assetIds {
-		assetIdsJson[i] = fmt.Sprintf("{\"appid\":440,\"contextid\":\"2\",\"amount\":1,\"assetid\":\"%s\"}", id)
+		// 使用传递过来的 gameId 和 contextId
+		assetIdsJson[i] = fmt.Sprintf("{\"appid\":%s,\"contextid\":\"%s\",\"amount\":1,\"assetid\":\"%s\"}", gameId, contextId, id)
 	}
 	assetIdsStr := strings.Join(assetIdsJson, ",")
 	jsonTradeoffer := fmt.Sprintf("{\"newversion\":true,\"version\":3,\"me\":{\"assets\":[],\"currency\":[],\"ready\":false},\"them\":{\"assets\":[%s],\"currency\":[],\"ready\":false}}", assetIdsStr)
