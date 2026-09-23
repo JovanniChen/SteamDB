@@ -265,3 +265,7 @@ type SendGiftResponse struct {
 	NeedsEmailConfirmation  bool   `json:"needs_email_confirmation"`
 	EmailDomain             string `json:"email_domain"`
 }
+
+type SendTradeOfferResponse struct {
+	TradeOfferId string `json:"tradeofferid"`
+}

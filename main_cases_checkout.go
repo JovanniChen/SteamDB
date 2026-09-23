@@ -119,7 +119,7 @@ func TestBuyGameToSelf(accountIndex int) {
 
 	addCartItems := make([][]Model.AddCartItem, 0)
 	// addCartItems = append(addCartItems, []Model.AddCartItem{{BundleID: 13013, AccountidGiftee: 352956450, Message: "怪物猎人"}})
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 645485}}) // Barro 22
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 21350}}) // Barro 22
 
 	payLinks := make([]string, 0)
 

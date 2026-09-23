@@ -628,6 +628,14 @@ func (c *Client) GetPartnerInventory(partnerUrl string, gameId, contextId int) (
 	return c.dao.GetPartnerInventory(partnerUrl, gameId, contextId)
 }
 
+func (c *Client) SendTradeOffer(partnerUrl string, assetIds ...string) (string, error) {
+	return c.dao.SendTradeOffer(partnerUrl, assetIds...)
+}
+
+func (c *Client) AcceptTradeOffer(tradeOfferId, partnerSteamId string) error {
+	return c.dao.AcceptTradeOffer(tradeOfferId, partnerSteamId)
+}
+
 func (c *Client) SendGift(partnerUrl, assetId, maFileContent string) error {
 	return c.dao.SendGift(partnerUrl, assetId, maFileContent)
 }

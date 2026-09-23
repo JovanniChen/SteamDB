@@ -296,7 +296,7 @@ func TestGetPartnerInventory(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetPartnerInventory("https://steamcommunity.com/tradeoffer/new/?partner=739009475&token=k0hOOOS4", 440, 2)
+	items, err := client.GetPartnerInventory("https://steamcommunity.com/tradeoffer/new/?partner=1707845686&token=fGsR2IfZ", 440, 2)
 	if err != nil {
 		Logger.Error(err)
 		return
@@ -306,6 +306,54 @@ func TestGetPartnerInventory(accountIndex int) {
 	for _, item := range items {
 		Logger.Infof("[物品ID]: %s, [名称]: %s, [市场名称]: %s", item.ID, item.MarketName, item.MarketHashName)
 	}
+}
+
+func TestSendTradeOffer(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	// https://steamcommunity.com/tradeoffer/new/?partner=1707845686&token=fGsR2IfZ
+	// https://steamcommunity.com/tradeoffer/new/?partner=1573409796&token=Y3f4KUs9
+
+	partnerUrl := "https://steamcommunity.com/tradeoffer/new/?partner=1573409796&token=Y3f4KUs9"
+	items, err := client.GetPartnerInventory(partnerUrl, 440, 2)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	for _, item := range items {
+		Logger.Infof("[物品ID]: %s, [名称]: %s, [市场名称]: %s", item.ID, item.MarketName, item.MarketHashName)
+	}
+
+	if len(items) == 0 {
+		Logger.Error("没有伙伴库存物品")
+		return
+	}
+
+	assetIds := make([]string, 0, len(items))
+	for _, item := range items {
+		assetIds = append(assetIds, item.ID)
+	}
+
+	tradeOfferId, err := client.SendTradeOffer(partnerUrl, assetIds...)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info("发送交易请求成功: ", tradeOfferId)
+}
+
+func TestAcceptTradeOffer(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.AcceptTradeOffer("9382773546", "76561199668111414"))
 }
 
 func TestSendGift(accountIndex int) {

@@ -1715,6 +1715,155 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 	return partnerIntegrations, nil
 }
 
+func (d *Dao) SendTradeOffer(partnerUrl string, assetIds ...string) (string, error) {
+	if len(assetIds) == 0 {
+		return "", errors.New("assetId is required")
+	}
+
+	u, err := url.Parse(partnerUrl)
+	if err != nil {
+		return "", err
+	}
+	partner := u.Query().Get("partner")
+	partnerID, err := strconv.ParseUint(partner, 10, 64)
+	if err != nil {
+		return "", err
+	}
+	steamId := Utils.FriendCodeToSteamID64(uint32(partnerID))
+
+	token := u.Query().Get("token")
+
+	// 	{
+	//     "newversion": true,
+	//     "version": 3,
+	//     "me": {
+	//         "assets": [],
+	//         "currency": [],
+	//         "ready": false
+	//     },
+	//     "them": {
+	//         "assets": [
+	//             {
+	//                 "appid": 440,
+	//                 "contextid": "2",
+	//                 "amount": 1,
+	//                 "assetid": "16378281664"
+	//             },
+	//             {
+	//                 "appid": 440,
+	//                 "contextid": "2",
+	//                 "amount": 1,
+	//                 "assetid": "17058179965"
+	//             }
+	//         ],
+	//         "currency": [],
+	//         "ready": false
+	//     }
+	// }
+
+	// 将 assetId 转换为 json 数组
+	assetIdsJson := make([]string, len(assetIds))
+	for i, id := range assetIds {
+		assetIdsJson[i] = fmt.Sprintf("{\"appid\":440,\"contextid\":\"2\",\"amount\":1,\"assetid\":\"%s\"}", id)
+	}
+	assetIdsStr := strings.Join(assetIdsJson, ",")
+	jsonTradeoffer := fmt.Sprintf("{\"newversion\":true,\"version\":3,\"me\":{\"assets\":[],\"currency\":[],\"ready\":false},\"them\":{\"assets\":[%s],\"currency\":[],\"ready\":false}}", assetIdsStr)
+
+	tradeOfferAccessToken := fmt.Sprintf("{\"trade_offer_access_token\":\"%s\"}", token)
+
+	cookies, ok := d.GetLoginCookies()["steamcommunity.com"]
+	if !ok {
+		return "", errors.New("sessionid not found")
+	}
+	sessionid := cookies.SessionId
+
+	params := Param.Params{}
+	params.SetString("sessionid", sessionid)
+	params.SetString("serverid", "1")
+	params.SetString("partner", strconv.Itoa(int(steamId)))
+	params.SetString("tradeoffermessage", "")
+	params.SetString("json_tradeoffer", jsonTradeoffer)
+	params.SetString("captcha", "")
+	params.SetString("trade_offer_create_params", tradeOfferAccessToken)
+
+	req, err := d.Request(http.MethodPost, Constants.SendTradeOffer, strings.NewReader(params.Encode()))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("origin", "https://steamcommunity.com")
+	req.Header.Set("referer", partnerUrl)
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("发送交易请求失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	fmt.Println(string(body))
+	// 解析 body 中的 tradeofferid
+	var tradeOfferResp Model.SendTradeOfferResponse
+	if err := json.Unmarshal(body, &tradeOfferResp); err != nil {
+		return "", fmt.Errorf("解析发送交易请求响应失败: %w", err)
+	}
+	if tradeOfferResp.TradeOfferId == "" {
+		return "", fmt.Errorf("发送交易请求失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	return tradeOfferResp.TradeOfferId, nil
+}
+
+func (d *Dao) AcceptTradeOffer(tradeOfferId, partnerSteamId string) error {
+	cookies, ok := d.GetLoginCookies()["steamcommunity.com"]
+	if !ok {
+		return errors.New("sessionid not found")
+	}
+	sessionid := cookies.SessionId
+
+	params := Param.Params{}
+	params.SetString("sessionid", sessionid)
+	params.SetString("serverid", "1")
+	params.SetString("tradeofferid", tradeOfferId)
+	params.SetString("partner", partnerSteamId)
+	params.SetString("captcha", "")
+
+	req, err := d.Request(http.MethodPost, fmt.Sprintf(Constants.AcceptTradeOffer, tradeOfferId), strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("origin", "https://steamcommunity.com")
+	req.Header.Set("referer", fmt.Sprintf("https://steamcommunity.com/tradeoffer/%s", tradeOfferId))
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(body))
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("接受交易报价失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
 func unmarshalSteamObjectOrFalse[T any](raw json.RawMessage, target *map[string]T) error {
 	raw = bytes.TrimSpace(raw)
 	if len(raw) == 0 || bytes.Equal(raw, []byte("false")) || bytes.Equal(raw, []byte("null")) {
