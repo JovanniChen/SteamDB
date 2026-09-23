@@ -1971,3 +1971,52 @@ func (d *Dao) SendGift(partnerUrl, assetId, maFileContent string) error {
 
 	return nil
 }
+
+func (d *Dao) GetNewTradeUrl() (string, error) {
+	cookies, ok := d.GetLoginCookies()["steamcommunity.com"]
+	if !ok {
+		return "", errors.New("sessionid not found")
+	}
+	sessionid := cookies.SessionId
+
+	params := Param.Params{}
+	params.SetString("sessionid", sessionid)
+
+	steamId := d.GetSteamID()
+
+	req, err := d.Request(http.MethodPost, fmt.Sprintf(Constants.NewTradeUrl, fmt.Sprintf("%d", steamId)), strings.NewReader(params.Encode()))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("origin", "https://steamcommunity.com")
+	req.Header.Set("referer", fmt.Sprintf("https://steamcommunity.com/profiles/%d/tradeoffers/privacy", steamId))
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("获取新交易链接失败,返回状态码: %d", resp.StatusCode)
+	}
+
+	// 返回值带了双引号，需要去掉
+	bodyStr := string(body)
+	bodyStr = strings.ReplaceAll(bodyStr, "\"", "")
+	fmt.Println(bodyStr)
+
+	// 构建交易链接
+	// https://steamcommunity.com/tradeoffer/new/?partner=1707845686&token=3JDQKgjc
+	partner := Utils.SteamID64ToFriendCode(steamId)
+	token := bodyStr
+	newTradeUrl := fmt.Sprintf("https://steamcommunity.com/tradeoffer/new/?partner=%d&token=%s", partner, token)
+
+	return newTradeUrl, nil
+}

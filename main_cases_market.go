@@ -356,6 +356,15 @@ func TestAcceptTradeOffer(accountIndex int) {
 	Logger.Info(client.AcceptTradeOffer("9382773546", "76561199668111414"))
 }
 
+func TestGetNewTradeUrl(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.GetNewTradeUrl())
+}
+
 func TestSendGift(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {

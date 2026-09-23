@@ -636,6 +636,10 @@ func (c *Client) AcceptTradeOffer(tradeOfferId, partnerSteamId string) error {
 	return c.dao.AcceptTradeOffer(tradeOfferId, partnerSteamId)
 }
 
+func (c *Client) GetNewTradeUrl() (string, error) {
+	return c.dao.GetNewTradeUrl()
+}
+
 func (c *Client) SendGift(partnerUrl, assetId, maFileContent string) error {
 	return c.dao.SendGift(partnerUrl, assetId, maFileContent)
 }
