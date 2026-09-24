@@ -648,6 +648,10 @@ func (c *Client) SetPrivacy() error {
 	return c.dao.SetPrivacy()
 }
 
+func (c *Client) SetPublicPrivacy() error {
+	return c.dao.SetPublicPrivacy()
+}
+
 func (c *Client) GetStorePurchaseHistory() (*Model.StorePurchaseHistoryResult, error) {
 	return c.dao.GetStorePurchaseHistory()
 }

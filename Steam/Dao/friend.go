@@ -509,7 +509,47 @@ func (d *Dao) SetPrivacy() error {
 
 	params := Param.Params{}
 	params.SetString("sessionid", sessionID)
+	// {"PrivacyProfile":3,"PrivacyInventory":3,"PrivacyInventoryGifts":3,"PrivacyOwnedGames":3,"PrivacyPlaytime":3,"PrivacyFriendsList":3}
 	params.SetString("Privacy", "{\"PrivacyProfile\":1,\"PrivacyInventory\":3,\"PrivacyInventoryGifts\":1,\"PrivacyOwnedGames\":3,\"PrivacyPlaytime\":3,\"PrivacyFriendsList\":3}")
+	params.SetInt64("eCommentPermission", 0)
+
+	url := fmt.Sprintf(Constants.SetPrivacy, strconv.Itoa(int(steamID)))
+
+	req, err := d.Request(http.MethodPost, url, strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(body))
+
+	return nil
+}
+
+func (d *Dao) SetPublicPrivacy() error {
+	if d.GetLoginCookies()["steamcommunity.com"] == nil {
+		return errors.New("steamcommunity.com cookie not found")
+	}
+
+	sessionID := d.GetLoginCookies()["steamcommunity.com"].SessionId
+	steamID := d.GetSteamID()
+
+	params := Param.Params{}
+	params.SetString("sessionid", sessionID)
+	params.SetString("Privacy", "{\"PrivacyProfile\":3,\"PrivacyInventory\":3,\"PrivacyInventoryGifts\":3,\"PrivacyOwnedGames\":3,\"PrivacyPlaytime\":3,\"PrivacyFriendsList\":3}")
 	params.SetInt64("eCommentPermission", 0)
 
 	url := fmt.Sprintf(Constants.SetPrivacy, strconv.Itoa(int(steamID)))

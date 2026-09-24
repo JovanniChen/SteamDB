@@ -151,3 +151,12 @@ func TestSetPrivacy(accountIndex int) {
 	}
 	Logger.Info(client.SetPrivacy())
 }
+
+func TestSetPublicPrivacy(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Info(client.SetPublicPrivacy())
+}
