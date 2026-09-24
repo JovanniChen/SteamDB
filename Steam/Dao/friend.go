@@ -513,7 +513,7 @@ func (d *Dao) SetPrivacy() error {
 	params.SetString("Privacy", "{\"PrivacyProfile\":1,\"PrivacyInventory\":3,\"PrivacyInventoryGifts\":1,\"PrivacyOwnedGames\":3,\"PrivacyPlaytime\":3,\"PrivacyFriendsList\":3}")
 	params.SetInt64("eCommentPermission", 0)
 
-	url := fmt.Sprintf(Constants.SetPrivacy, strconv.Itoa(int(steamID)))
+	url := fmt.Sprintf(Constants.SetPrivacy, strconv.FormatUint(steamID, 10))
 
 	req, err := d.Request(http.MethodPost, url, strings.NewReader(params.Encode()))
 	if err != nil {
@@ -552,7 +552,7 @@ func (d *Dao) SetPublicPrivacy() error {
 	params.SetString("Privacy", "{\"PrivacyProfile\":3,\"PrivacyInventory\":3,\"PrivacyInventoryGifts\":3,\"PrivacyOwnedGames\":3,\"PrivacyPlaytime\":3,\"PrivacyFriendsList\":3}")
 	params.SetInt64("eCommentPermission", 0)
 
-	url := fmt.Sprintf(Constants.SetPrivacy, strconv.Itoa(int(steamID)))
+	url := fmt.Sprintf(Constants.SetPrivacy, strconv.FormatUint(steamID, 10))
 
 	req, err := d.Request(http.MethodPost, url, strings.NewReader(params.Encode()))
 	if err != nil {

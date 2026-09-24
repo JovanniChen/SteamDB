@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"math"
 	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/JovanniChen/SteamDB/Steam/Param"
 )
@@ -20,13 +22,44 @@ import (
 // 排除了容易混淆的字符(如0/O, 1/I/L等)，提高用户输入准确性
 const chars = "23456789BCDFGHJKMNPQRTVWXY"
 
+// SteamID accepts both quoted and unquoted uint64 values used by different maFile exporters.
+type SteamID uint64
+
+func (s *SteamID) UnmarshalJSON(data []byte) error {
+	value := strings.TrimSpace(string(data))
+	if value == "null" {
+		*s = 0
+		return nil
+	}
+
+	if len(value) > 0 && value[0] == '"' {
+		unquoted, err := strconv.Unquote(value)
+		if err != nil {
+			return fmt.Errorf("解析 SteamID 字符串失败: %w", err)
+		}
+		value = strings.TrimSpace(unquoted)
+	}
+
+	steamID, err := strconv.ParseUint(value, 10, 64)
+	if err != nil {
+		return fmt.Errorf("解析 SteamID 失败: %w", err)
+	}
+
+	*s = SteamID(steamID)
+	return nil
+}
+
+func (s SteamID) String() string {
+	return strconv.FormatUint(uint64(s), 10)
+}
+
 // MaFile Steam移动验证器文件结构
 type MaFile struct {
 	SharedSecret   string `json:"shared_secret"`
 	IdentitySecret string `json:"identity_secret"`
 	DeviceID       string `json:"device_id"`
 	Session        struct {
-		SteamID int64 `json:"steamid"`
+		SteamID SteamID `json:"steamid"`
 	} `json:"Session"`
 }
 
@@ -162,7 +195,7 @@ func GenerateAuthCode(secret string, time int64) string {
 }
 
 // GenerateConfirmationQueryParams 生成确认查询参数
-func (pt *PhoneToken) GenerateConfirmationQueryParams(timestamp, steamId int64, tag string) (Param.Params, error) {
+func (pt *PhoneToken) GenerateConfirmationQueryParams(timestamp int64, steamID uint64, tag string) (Param.Params, error) {
 	if pt.MaFile.DeviceID == "" {
 		return nil, fmt.Errorf("设备ID不存在")
 	}
@@ -174,7 +207,7 @@ func (pt *PhoneToken) GenerateConfirmationQueryParams(timestamp, steamId int64, 
 
 	params := Param.Params{}
 	params.SetString("p", pt.MaFile.DeviceID)
-	params.SetInt64("a", steamId)
+	params.SetString("a", strconv.FormatUint(steamID, 10))
 	params.SetString("k", confirmationHash)
 	params.SetInt64("t", timestamp)
 	params.SetString("m", "react")

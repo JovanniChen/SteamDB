@@ -383,7 +383,7 @@ func (d *Dao) AutoLogin(url, nonce, auth string, steamID uint64, reDir string) (
 	params := Param.Params{}
 	params.SetString("nonce", nonce)
 	params.SetString("auth", auth)
-	params.SetInt64("steamID", int64(steamID))
+	params.SetString("steamID", strconv.FormatUint(steamID, 10))
 	params.SetString("redir", reDir)
 	req, err := d.NewRequest("POST", url, strings.NewReader(params.Encode()))
 	if err != nil {

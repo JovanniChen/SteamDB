@@ -441,7 +441,7 @@ func (d *Dao) buy(gameId int, currency string, creatorId string, name string, bu
 func (d *Dao) BuyListing(gameId int, currency string, creatorId string, name string, buyerPrice, sellerReceivePrice int, confirmation string, maFileContent string) error {
 	br := d.buy(gameId, currency, creatorId, name, buyerPrice, sellerReceivePrice, confirmation)
 	if br.success && br.needConfirmation {
-		steamId := strconv.Itoa(int(d.GetSteamID()))
+		steamId := strconv.FormatUint(d.GetSteamID(), 10)
 
 		if err := d.ConfirmationForBuyList("allow", steamId, maFileContent); err != nil {
 			return err
@@ -1047,7 +1047,7 @@ func (d *Dao) ConfirmationForPutList(op string, maFileContent string) *Model.Con
 		}
 	}
 
-	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, strconv.Itoa(int(pt.MaFile.Session.SteamID)), steamTime, "conf")
+	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, pt.MaFile.Session.SteamID.String(), steamTime, "conf")
 	if err != nil {
 		Logger.Errorf("构建获取待确认请求参数失败，错误： %v", err)
 		return &Model.ConfirmationResult{
@@ -1201,7 +1201,7 @@ func (d *Dao) ConfirmationForSendGift(op string, maFileContent string) *Model.Co
 		}
 	}
 
-	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, strconv.Itoa(int(pt.MaFile.Session.SteamID)), steamTime, "conf")
+	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, pt.MaFile.Session.SteamID.String(), steamTime, "conf")
 	if err != nil {
 		Logger.Errorf("构建获取待确认请求参数失败，错误： %v", err)
 		return &Model.ConfirmationResult{
@@ -1317,7 +1317,7 @@ func (d *Dao) GetConfirmations(maFileContent string) error {
 		return err
 	}
 
-	steamId := strconv.Itoa(int(d.GetSteamID()))
+	steamId := strconv.FormatUint(d.GetSteamID(), 10)
 
 	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, steamId, steamTime, "conf")
 	if err != nil {
@@ -1496,7 +1496,7 @@ func (d *Dao) ConfirmationForBuyListAndOrder(op string, maFileContent string) er
 		return err
 	}
 
-	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, strconv.Itoa(int(pt.MaFile.Session.SteamID)), steamTime, "conf")
+	queryParams, err := Utils.GenerateConfirmationQueryParams(pt.MaFile.DeviceID, pt.MaFile.IdentitySecret, pt.MaFile.Session.SteamID.String(), steamTime, "conf")
 	if err != nil {
 		Logger.Errorf("构建获取待确认请求参数失败，错误： %v", err)
 		return err
@@ -1571,9 +1571,7 @@ func (d *Dao) processSingleConfirmation(phoneToken *Utils.PhoneToken, conf Model
 		return err
 	}
 
-	steamId := int64(d.GetSteamID())
-
-	params, err := phoneToken.GenerateConfirmationQueryParams(steamTime, steamId, op)
+	params, err := phoneToken.GenerateConfirmationQueryParams(steamTime, d.GetSteamID(), op)
 	if err != nil {
 		return err
 	}
@@ -1640,7 +1638,7 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 
 	params := Param.Params{}
 	params.SetString("sessionid", sessionid)
-	params.SetString("partner", strconv.Itoa(int(steamId)))
+	params.SetString("partner", strconv.FormatUint(steamId, 10))
 	params.SetString("appid", strconv.Itoa(gameId))
 	params.SetString("contextid", strconv.Itoa(contextId))
 
@@ -1781,7 +1779,7 @@ func (d *Dao) SendTradeOffer(partnerUrl, gameId, contextId string, assetIds ...s
 	params := Param.Params{}
 	params.SetString("sessionid", sessionid)
 	params.SetString("serverid", "1")
-	params.SetString("partner", strconv.Itoa(int(steamId)))
+	params.SetString("partner", strconv.FormatUint(steamId, 10))
 	params.SetString("tradeoffermessage", "")
 	params.SetString("json_tradeoffer", jsonTradeoffer)
 	params.SetString("captcha", "")
@@ -1925,7 +1923,7 @@ func (d *Dao) SendGift(partnerUrl, assetId, maFileContent string) error {
 	params := Param.Params{}
 	params.SetString("sessionid", sessionid)
 	params.SetString("serverid", "1")
-	params.SetString("partner", strconv.Itoa(int(steamId)))
+	params.SetString("partner", strconv.FormatUint(steamId, 10))
 	params.SetString("tradeoffermessage", "")
 	params.SetString("json_tradeoffer", jsonTradeoffer)
 	params.SetString("captcha", "")
