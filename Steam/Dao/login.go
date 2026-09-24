@@ -200,7 +200,7 @@ func (d *Dao) getRSA(username string) (*Model.SteamPublicKey, error) {
 	params.SetString("input_protobuf_encoded", base64.StdEncoding.EncodeToString(data))
 
 	// 创建HTTP请求
-	req, err := d.NewRequest("GET", Constants.GetPasswordRSAPublicKey+"?="+params.ToUrl(), nil)
+	req, err := d.NewRequest("GET", Constants.GetPasswordRSAPublicKey+"?"+params.ToUrl(), nil)
 	if err != nil {
 		return nil, err
 	}
