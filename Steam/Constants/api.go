@@ -49,6 +49,7 @@ var (
 	AjaxRefresh                    string = Scheme + Domain.Login + "/jwt/ajaxrefresh"                                             // JWT令牌刷新端点
 	FinalizeLogin                  string = Scheme + Domain.Login + "/jwt/finalizelogin"                                           // 完成登录流程的端点
 	CheckEmailCode                 string = Scheme + Domain.Login + "/jwt/checkdevice/"                                            // 检查邮箱验证码的端点
+	HelpWithTransaction            string = Scheme + Domain.Help + "/zh-cn/wizard/HelpWithTransaction"                             // 交易帮助详情页
 
 	// 手机令牌(Steam Guard移动认证器)相关API端点
 	QueryTime         string = Scheme + Domain.Api + "/ITwoFactorService/QueryTime/v1/"              // 查询Steam服务器时间，用于时间同步

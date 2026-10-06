@@ -128,4 +128,7 @@ func printStorePurchaseHistoryRecord(record Model.StorePurchaseHistoryRecord) {
 	fmt.Printf("钱包变更: %s\n", record.WalletChange)
 	fmt.Printf("钱包余额: %s\n", record.WalletBalance)
 	fmt.Printf("已退款: %t\n", record.Refunded)
+	for _, assetKey := range record.InventoryAssetKeys {
+		fmt.Printf("库存物品键: %s\n", assetKey)
+	}
 }

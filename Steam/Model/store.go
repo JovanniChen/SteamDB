@@ -8,6 +8,7 @@ type StorePurchaseHistoryResult struct {
 type StorePurchaseHistoryRecord struct {
 	Index           int
 	TransactionID   string
+	TransactionURL  string
 	Date            string
 	Items           []string
 	Receivers       []string
@@ -20,4 +21,7 @@ type StorePurchaseHistoryRecord struct {
 	WalletChange    string
 	WalletBalance   string
 	Refunded        bool
+	// InventoryAssetKeys contains the appid_contextid_assetid values found
+	// on the purchase detail pages for this transaction.
+	InventoryAssetKeys []string
 }
