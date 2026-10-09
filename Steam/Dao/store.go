@@ -276,12 +276,21 @@ func appendUniqueStrings(values []string, additions ...string) []string {
 func filterLatestUnrefundedGiftPurchases(records []Model.StorePurchaseHistoryRecord) []Model.StorePurchaseHistoryRecord {
 	filtered := make([]Model.StorePurchaseHistoryRecord, 0)
 	for _, record := range records {
-		if record.TransactionType != "礼物购买" || record.Refunded {
+		if !isGiftPurchaseType(record.TransactionType) || record.Refunded {
 			break
 		}
 		filtered = append(filtered, record)
 	}
 	return filtered
+}
+
+func isGiftPurchaseType(transactionType string) bool {
+	switch strings.ToLower(strings.TrimSpace(transactionType)) {
+	case "礼物购买", "gift purchase":
+		return true
+	default:
+		return false
+	}
 }
 
 func extractTransactionID(onclick string) string {

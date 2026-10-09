@@ -40,6 +40,27 @@ func TestParseStorePurchaseHistoryRowParsesMultipleGifts(t *testing.T) {
 	}
 }
 
+func TestParseStorePurchaseHistorySupportsEnglishGiftPurchase(t *testing.T) {
+	result, err := parseStorePurchaseHistory([]byte(`
+		<table class="wallet_history_table"><tbody>
+			<tr class="wallet_table_row" onclick="location.href='https://help.steampowered.com/en/wizard/HelpWithTransaction?transid=123'">
+				<td class="wht_items"><div style="clear: both">Barro</div></td>
+				<td class="wht_type"><div>Gift Purchase</div><div class="wth_payment">Wallet</div></td>
+			</tr>
+			<tr class="wallet_table_row"><td class="wht_items">Wallet Credit</td><td class="wht_type"><div>Purchase</div></td></tr>
+		</tbody></table>
+	`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.LatestUnrefundedGiftPurchases) == 0 {
+		t.Fatal("expected the latest English gift purchase")
+	}
+	if got := result.LatestUnrefundedGiftPurchases[0].TransactionType; got != "Gift Purchase" {
+		t.Fatalf("unexpected transaction type: %s", got)
+	}
+}
+
 func TestParseStorePurchaseDetailURLs(t *testing.T) {
 	urls, err := parseStorePurchaseDetailURLs([]byte(`
 		<html><body>
