@@ -576,7 +576,7 @@ func (c *Client) UnsendAllGift() error {
 		}
 		Logger.Info("撤回赠送礼物成功: ", item.AssetID, " ", i+1, " / ", len(items))
 		count++
-		time.Sleep(4 * time.Second)
+		time.Sleep(2 * time.Second)
 	}
 	if count != len(items) {
 		return fmt.Errorf("退回全部礼物失败: 已有[%d] != 退回[%d]", count, len(items))
