@@ -746,28 +746,70 @@ func extractFinalPrice(priceNode *html.Node) string {
 	// 如果没有 data-price-final，从文本内容提取
 	priceText := strings.TrimSpace(htmlquery.InnerText(priceNode))
 	if priceText != "" {
-		// 使用正则表达式提取价格数字（折扣场景下同一段里可能有原价+现价，取最后一个金额作为现价）
-		// 支持千分位，例如: ¥ 2,458.80
-		priceRegex := regexp.MustCompile(`(?i)(?:[￥$]|CNY|HKD|USD)\s*([0-9][0-9,]*(?:\.[0-9]+)?)`)
+		// 使用正则表达式提取价格数字（折扣场景下同一段里可能有原价+现价，取最后一个金额作为现价）。
+		// Steam 会按地区格式化价格，例如 `¥ 12.54` 或 `12,54€`。
+		priceRegex := regexp.MustCompile(`(?i)(?:[￥$€]|CNY|HKD|USD|EUR)\s*([0-9][0-9.,]*)`)
 		matches := priceRegex.FindAllStringSubmatch(priceText, -1)
 		if len(matches) > 0 {
 			last := matches[len(matches)-1]
 			if len(last) > 1 {
-				return strings.ReplaceAll(last[1], ",", "")
+				return normalizePriceNumber(last[1])
+			}
+		}
+
+		// 欧洲格式通常把货币符号放在数字后面，例如 `12,54€`。
+		suffixPriceRegex := regexp.MustCompile(`(?i)([0-9][0-9.,]*)\s*(?:€|EUR|[￥$])`)
+		matches = suffixPriceRegex.FindAllStringSubmatch(priceText, -1)
+		if len(matches) > 0 {
+			last := matches[len(matches)-1]
+			if len(last) > 1 {
+				return normalizePriceNumber(last[1])
 			}
 		}
 
 		// 如果没有找到带货币符号的价格，尝试只匹配数字（同样取最后一个）
-		numberRegex := regexp.MustCompile(`([0-9][0-9,]*(?:\.[0-9]+)?)`)
+		numberRegex := regexp.MustCompile(`([0-9][0-9.,]*)`)
 		matches = numberRegex.FindAllStringSubmatch(priceText, -1)
 		if len(matches) > 0 {
 			last := matches[len(matches)-1]
 			if len(last) > 1 {
-				return strings.ReplaceAll(last[1], ",", "")
+				return normalizePriceNumber(last[1])
 			}
 		}
 	}
 
+	return ""
+}
+
+func normalizePriceNumber(raw string) string {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return ""
+	}
+
+	// When both separators are present, the last one is the decimal separator.
+	lastComma := strings.LastIndexByte(value, ',')
+	lastDot := strings.LastIndexByte(value, '.')
+	switch {
+	case lastComma >= 0 && lastDot >= 0:
+		if lastComma > lastDot {
+			value = strings.ReplaceAll(value, ".", "")
+			value = strings.Replace(value, ",", ".", 1)
+		} else {
+			value = strings.ReplaceAll(value, ",", "")
+		}
+	case lastComma >= 0:
+		// Steam's regional decimal prices have two digits after the comma.
+		if len(value)-lastComma-1 == 2 {
+			value = strings.Replace(value, ",", ".", 1)
+		} else {
+			value = strings.ReplaceAll(value, ",", "")
+		}
+	}
+
+	if parsed, err := strconv.ParseFloat(value, 64); err == nil {
+		return strconv.FormatFloat(parsed, 'f', -1, 64)
+	}
 	return ""
 }
 
