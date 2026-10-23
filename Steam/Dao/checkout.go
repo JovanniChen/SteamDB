@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -626,19 +627,20 @@ type FinalPriceDetails struct {
 	Total             int     // 总金额（整数，单位：分）
 }
 
-// parsePriceString 解析价格字符串（如 "¥ 45.90"）并返回浮点数
+// parsePriceString 解析价格字符串（如 "¥ 45.90" 或 "499€"）并返回浮点数。
 func parsePriceString(priceStr string) (float64, error) {
-	// 移除所有空格和货币符号
-	priceStr = strings.ReplaceAll(priceStr, "¥", "")
-	priceStr = strings.ReplaceAll(priceStr, "HK$", "")
-	priceStr = strings.ReplaceAll(priceStr, " ", "")
-	priceStr = strings.ReplaceAll(priceStr, ",", "")
-	priceStr = strings.TrimSpace(priceStr)
+	original := priceStr
+	// 货币符号可能位于金额前面或后面，先提取金额部分，再按地区格式处理小数和千位分隔符。
+	amountPattern := regexp.MustCompile(`[+-]?[0-9][0-9.,]*`)
+	amount := amountPattern.FindString(priceStr)
+	if amount == "" {
+		return 0, fmt.Errorf("解析价格失败 '%s': 未找到金额", original)
+	}
 
-	// 转换为浮点数
-	price, err := strconv.ParseFloat(priceStr, 64)
+	normalized := normalizePriceNumber(amount)
+	price, err := strconv.ParseFloat(normalized, 64)
 	if err != nil {
-		return 0, fmt.Errorf("解析价格失败 '%s': %w", priceStr, err)
+		return 0, fmt.Errorf("解析价格失败 '%s': %w", original, err)
 	}
 	return price, nil
 }

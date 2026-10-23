@@ -283,7 +283,7 @@ func TestConcurrentPayment(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 935805, AccountidGiftee: 739009475, Message: "Travellin Cats in China"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 89783, AccountidGiftee: 1708621286, Message: "壁纸引擎"}})
 
 	transIDs := make([]string, 0)
 
