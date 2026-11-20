@@ -283,14 +283,13 @@ func TestConcurrentPayment(accountIndex int) {
 	}
 
 	addCartItems := make([][]Model.AddCartItem, 0)
-	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 89783, AccountidGiftee: 1708621286, Message: "壁纸引擎"}})
+	addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 1293904, AccountidGiftee: 1708621286, Message: "如何训练你的鸡"}})
+	// addCartItems = append(addCartItems, []Model.AddCartItem{{PackageID: 546165, AccountidGiftee: 739009475, Message: "仙剑奇侠传"}})
 
 	transIDs := make([]string, 0)
 
 	for i, addCartItem := range addCartItems {
-		sentTime := time.Now().Add(5 * time.Minute).Unix()
-
-		if err := client.AddItemToCartWithSentTime(addCartItem, int32(sentTime)); err != nil {
+		if err := client.AddItemToCart(addCartItem); err != nil {
 			Logger.Error(err)
 			return
 		}
@@ -304,7 +303,7 @@ func TestConcurrentPayment(accountIndex int) {
 		}
 		Logger.Info("初始化交易成功: ", transID, " ", i+1, " / ", len(addCartItems))
 
-		total, err := client.GetFinalPrice(transID)
+		total, err := client.GetFinalPriceWithDetails(transID)
 		if err != nil {
 			Logger.Error(err)
 			return
@@ -317,11 +316,11 @@ func TestConcurrentPayment(accountIndex int) {
 		}
 		Logger.Info("清空购物车成功: ", i+1, " / ", len(addCartItems))
 
-		if err := client.CancelTransaction("231481419234113013"); err != nil {
-			Logger.Error(err)
-			return
-		}
-		Logger.Info("取消交易成功: ", i+1, " / ", len(addCartItems))
+		// if err := client.CancelTransaction("231481419234113013"); err != nil {
+		// 	Logger.Error(err)
+		// 	return
+		// }
+		// Logger.Info("取消交易成功: ", i+1, " / ", len(addCartItems))
 
 		transIDs = append(transIDs, transID)
 	}

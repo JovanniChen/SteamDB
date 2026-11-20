@@ -77,6 +77,7 @@ var (
 	SendTradeOffer      string = Scheme + Domain.Community + "/tradeoffer/new/send"              // 发送交易报价
 	AcceptTradeOffer    string = Scheme + Domain.Community + "/tradeoffer/%s/accept"             // 接受交易报价
 	NewTradeUrl         string = Scheme + Domain.Community + "/profiles/%s/tradeoffers/newtradeurl"
+	GetUserBillingInfo  string = Scheme + Domain.Community + "/market/userbillinginfo"
 
 	// 游戏更新
 	GetGameUpdateInofs    string = Scheme + Domain.Store + "/news/app" // 获取游戏更新信息

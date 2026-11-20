@@ -449,6 +449,10 @@ func (c *Client) GetBalance() int {
 	return c.dao.GetBalance()
 }
 
+func (c *Client) GetUserBillingInfo() error {
+	return c.dao.GetUserBillingInfo()
+}
+
 func (c *Client) GetWaitBalance() int {
 	return c.dao.GetWaitBalance()
 }

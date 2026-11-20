@@ -1,10 +1,52 @@
 package Dao
 
 import (
+	"io"
+	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/JovanniChen/SteamDB/Steam/Model"
 )
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func TestGetPartnerInventoryReturnsErrorWhenSteamReportsFailure(t *testing.T) {
+	for _, responseBody := range []string{
+		`["success",false]`,
+		`{"success":false}`,
+	} {
+		t.Run(responseBody, func(t *testing.T) {
+			d := &Dao{
+				credentials: &Credentials{
+					LoginCookies: map[string]*LoginCookie{
+						"steamcommunity.com": {SessionId: "session"},
+					},
+				},
+				httpCli: &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(responseBody)),
+						Header:     make(http.Header),
+						Request:    req,
+					}, nil
+				})},
+			}
+
+			items, err := d.GetPartnerInventory("https://steamcommunity.com/tradeoffer/new/?partner=123&token=test", 440, 2)
+			if err == nil {
+				t.Fatalf("expected error for response %s; got %d items", responseBody, len(items))
+			}
+			if !strings.Contains(err.Error(), "success=false") {
+				t.Fatalf("expected success=false error, got %v", err)
+			}
+		})
+	}
+}
 
 func TestExtractReceiverName(t *testing.T) {
 	ownerDescriptions := []Model.OwnerDescription{

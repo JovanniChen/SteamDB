@@ -1675,7 +1675,7 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 			key, keyOK := arr[0].(string)
 			success, successOK := arr[1].(bool)
 			if keyOK && successOK && key == "success" && !success {
-				return partnerIntegrations, nil
+				return nil, errors.New("获取伙伴库存失败: Steam 返回 success=false")
 			}
 		}
 
@@ -1689,6 +1689,9 @@ func (d *Dao) GetPartnerInventory(partnerUrl string, gameId, contextId int) ([]M
 	}
 	if err := json.Unmarshal(body, &rawResp); err != nil {
 		return nil, fmt.Errorf("JSON 解析失败: %w", err)
+	}
+	if !rawResp.Success {
+		return nil, errors.New("获取伙伴库存失败: Steam 返回 success=false")
 	}
 
 	rgInventory := map[string]Model.PartnerInventoryItem{}

@@ -143,7 +143,7 @@ func TestGetMarketListings(accountIndex int) {
 		return
 	}
 
-	response, err := client.GetMarketListings(440, "Specialized%20Killstreak%20Baby%20Face%27s%20Blaster%20Kit%20Fabricator", 0, 10, "CN", "schinese", 23)
+	response, err := client.GetMarketListings(440, "Specialized Killstreak Tribalman's Shiv Kit Fabricator", 100, 10, "CN", "schinese", 22)
 	if err != nil {
 		Logger.Error(err)
 		return
@@ -296,7 +296,7 @@ func TestGetPartnerInventory(accountIndex int) {
 		return
 	}
 
-	items, err := client.GetPartnerInventory("https://steamcommunity.com/tradeoffer/new/?partner=1707845686&token=fGsR2IfZ", 440, 2)
+	items, err := client.GetPartnerInventory("https://steamcommunity.com/tradeoffer/new/?partner=739009475&token=EqxV_whk", 440, 2)
 	if err != nil {
 		Logger.Error(err)
 		return

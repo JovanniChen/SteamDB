@@ -234,3 +234,30 @@ func (d *Dao) SetLanguage(language string) error {
 	d.SetCookiesLanguage(language)
 	return nil
 }
+
+// https://steamcommunity.com/market/userbillinginfo
+func (d *Dao) GetUserBillingInfo() error {
+	req, err := d.Request("GET", Constants.GetUserBillingInfo, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("语言设置失败: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(body))
+
+	return nil
+}
