@@ -62,6 +62,10 @@ func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, c
 		return nil, err
 	}
 
+	fmt.Println("*****************************************************************")
+	fmt.Println(string(body))
+	fmt.Println("*****************************************************************")
+
 	var response Model.GetMarketListingResponse
 
 	err = json.Unmarshal(body, &response)

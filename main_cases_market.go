@@ -143,7 +143,7 @@ func TestGetMarketListings(accountIndex int) {
 		return
 	}
 
-	response, err := client.GetMarketListings(440, "Specialized Killstreak Tribalman's Shiv Kit Fabricator", 100, 10, "CN", "schinese", 22)
+	response, err := client.GetMarketListings(440, "Specialized Killstreak Tribalman's Shiv Kit Fabricator", 0, 100, "CN", "schinese", 22)
 	if err != nil {
 		Logger.Error(err)
 		return
