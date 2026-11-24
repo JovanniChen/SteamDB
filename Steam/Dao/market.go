@@ -107,7 +107,7 @@ func (d *Dao) GetNewMarketListings(gameId int, gameName string, start int) (*Mod
 	qp, err := json.Marshal([]map[string]any{{
 		"appid":            gameId,
 		"strItemName":      gameName,
-		"sort":             map[string]int{"field": 0, "direction": 0},
+		"sort":             map[string]int{"field": 0, "direction": 1},
 		"filters":          map[string]any{},
 		"accessoryFilters": map[string]any{},
 		"propertyFilters":  map[string]any{},
