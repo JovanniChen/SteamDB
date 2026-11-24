@@ -147,6 +147,7 @@ func (d *Dao) GetNewMarketListings(gameId int, gameName string, start int) (*Mod
 		return nil, fmt.Errorf("解析新市场列表失败: %w", err)
 	}
 	if response.Data == nil {
+		fmt.Println(string(body))
 		return nil, errors.New("解析新市场列表失败: 响应缺少 data")
 	}
 
