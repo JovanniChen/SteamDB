@@ -63,15 +63,16 @@ var (
 	AddReaction       string = Scheme + Domain.Api + "/ILoyaltyRewardsService/AddReaction/v1"       // 添加反应/表情到指定内容
 
 	// 市场交易相关API端点
-	GetMyListings       string = Scheme + Domain.Community + "/market/mylistings"                // 获取用户的上架列表
-	RemoveMyListings    string = Scheme + Domain.Community + "/market/removelisting"             // 删除用户的已上架或待确认的物品
-	GetInventory        string = Scheme + Domain.Community + "/inventory"                        // 获取用户库存
-	PutList             string = Scheme + Domain.Community + "/market/sellitem"                  // 上架物品
-	GetConfirmationList string = Scheme + Domain.Community + "/mobileconf/getlist"               // 获取待确认列表
-	Confirmation        string = Scheme + Domain.Community + "/mobileconf/ajaxop"                // 确认上架
-	BuyListing          string = Scheme + Domain.Community + "/market/buylisting"                // 购买物品
-	CreateOrder         string = Scheme + Domain.Community + "/market/createbuyorder"            // 创建订单
-	GetMarketListing    string = Scheme + Domain.Community + "/market/listings/"                 // 获取市场列表
+	GetMyListings       string = Scheme + Domain.Community + "/market/mylistings"     // 获取用户的上架列表
+	RemoveMyListings    string = Scheme + Domain.Community + "/market/removelisting"  // 删除用户的已上架或待确认的物品
+	GetInventory        string = Scheme + Domain.Community + "/inventory"             // 获取用户库存
+	PutList             string = Scheme + Domain.Community + "/market/sellitem"       // 上架物品
+	GetConfirmationList string = Scheme + Domain.Community + "/mobileconf/getlist"    // 获取待确认列表
+	Confirmation        string = Scheme + Domain.Community + "/mobileconf/ajaxop"     // 确认上架
+	BuyListing          string = Scheme + Domain.Community + "/market/buylisting"     // 购买物品
+	CreateOrder         string = Scheme + Domain.Community + "/market/createbuyorder" // 创建订单
+	GetMarketListing    string = Scheme + Domain.Community + "/market/listings/"      // 获取市场列表
+	GetNewMarketListing string = Scheme + Domain.Community + "/market/actions"
 	GetPartnerInventory string = Scheme + Domain.Community + "/tradeoffer/new/partnerinventory/" // 获取合作伙伴库存
 	Market              string = Scheme + Domain.Community + "/market"                           // 市场
 	SendTradeOffer      string = Scheme + Domain.Community + "/tradeoffer/new/send"              // 发送交易报价

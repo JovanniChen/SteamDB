@@ -28,6 +28,7 @@ var caseRegistry = map[string]func(int){
 	"TestGetInventory":                    TestGetInventory,
 	"TestGetMyListings":                   TestGetMyListings,
 	"TestGetMarketListings":               TestGetMarketListings,
+	"TestGetNewMarketListings":            TestGetNewMarketListings,
 	"TestGetProductByAppUrl":              TestGetProductByAppUrl,
 	"TestGetSteamGift":                    TestGetSteamGift,
 	"TestGetSummary":                      TestGetSummary,

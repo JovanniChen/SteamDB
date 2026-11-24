@@ -157,6 +157,24 @@ func TestGetMarketListings(accountIndex int) {
 	}
 }
 
+func TestGetNewMarketListings(accountIndex int) {
+	client, err := loadFromSession(accountIndex)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+
+	response, err := client.GetNewMarketListings(440, "Specialized Killstreak Unarmed Combat Kit Fabricator", 0)
+	if err != nil {
+		Logger.Error(err)
+		return
+	}
+	Logger.Infof("获取新市场列表成功，起始位置: %d，每页数量: %d，总数量: %d", response.Start, response.PageSize, response.TotalCount)
+	for _, listing := range response.Items {
+		Logger.Infof("AssetID: %s, ListingID: %s, Price: %d, Fee: %d", listing.AssetID, listing.ListingID, listing.Price, listing.Fee)
+	}
+}
+
 func TestGetInventory(accountIndex int) {
 	client, err := loadFromSession(accountIndex)
 	if err != nil {

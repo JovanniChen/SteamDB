@@ -204,6 +204,28 @@ type GetMarketListingIntegrationResponse struct {
 	PageSize   int                    `json:"pagesize"`
 	TotalCount int                    `json:"total_count"`
 	Items      []GetMarketListingItem `json:"items"`
+	More       bool                   `json:"more,omitempty"`
+}
+
+type GetNewMarketListingResponse struct {
+	Data *GetNewMarketListingData `json:"data"`
+}
+
+type GetNewMarketListingData struct {
+	More       bool                  `json:"more"`
+	Start      int                   `json:"start"`
+	TotalCount int                   `json:"total_count"`
+	Listings   []GetNewMarketListing `json:"listings"`
+}
+
+type GetNewMarketListing struct {
+	ListingID    string    `json:"listingid"`
+	Price        int       `json:"unPrice"`
+	Fee          int       `json:"unFee"`
+	SteamFee     int       `json:"unSteamFee"`
+	PublisherFee int       `json:"unPublisherFee"`
+	PricePerUnit int       `json:"unPricePerUnit"`
+	Asset        AssetInfo `json:"asset"`
 }
 
 type PartnerIntegrationItem struct {

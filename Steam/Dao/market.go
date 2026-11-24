@@ -40,6 +40,7 @@ func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, c
 	params.SetString("country", country)
 	params.SetString("language", language)
 	params.SetString("currency", strconv.Itoa(currency))
+	params.SetString("norender", "1")
 
 	req, err := d.Request(http.MethodGet, marketUrl+"?"+params.ToUrl(), nil)
 	if err != nil {
@@ -62,9 +63,9 @@ func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, c
 		return nil, err
 	}
 
-	fmt.Println("*****************************************************************")
-	fmt.Println(string(body))
-	fmt.Println("*****************************************************************")
+	// fmt.Println("*****************************************************************")
+	// fmt.Println(string(body))
+	// fmt.Println("*****************************************************************")
 
 	var response Model.GetMarketListingResponse
 
@@ -97,6 +98,78 @@ func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, c
 		PageSize:   response.PageSize,
 		TotalCount: response.TotalCount,
 		Items:      marketListingItems,
+	}, nil
+}
+
+func (d *Dao) GetNewMarketListings(gameId int, gameName string, start int) (*Model.GetMarketListingIntegrationResponse, error) {
+	params := Param.Params{}
+	params.SetString("q", "QueryListingsForItem")
+	qp, err := json.Marshal([]map[string]any{{
+		"appid":            gameId,
+		"strItemName":      gameName,
+		"sort":             map[string]int{"field": 0, "direction": 0},
+		"filters":          map[string]any{},
+		"accessoryFilters": map[string]any{},
+		"propertyFilters":  map[string]any{},
+		"start":            start,
+	}})
+	if err != nil {
+		return nil, err
+	}
+	params.SetString("qp", string(qp))
+
+	req, err := d.Request(http.MethodGet, Constants.GetNewMarketListing+"?"+params.Encode(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.AddCookie(&http.Cookie{Name: "bMarketOptOut", Value: "1"})
+
+	resp, err := d.RetryRequest(Constants.Tries, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("获取新市场列表失败，HTTP状态码: %d", resp.StatusCode)
+	}
+
+	var response Model.GetNewMarketListingResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, fmt.Errorf("解析新市场列表失败: %w", err)
+	}
+	if response.Data == nil {
+		return nil, errors.New("解析新市场列表失败: 响应缺少 data")
+	}
+
+	items := make([]Model.GetMarketListingItem, 0, len(response.Data.Listings))
+	for _, listing := range response.Data.Listings {
+		// 新接口只提供 eCurrency 下的一套金额，因此旧结构的原价和转换价相同。
+		items = append(items, Model.GetMarketListingItem{
+			AssetID:               listing.Asset.ID,
+			ListingID:             listing.ListingID,
+			Price:                 listing.Price,
+			Fee:                   listing.Fee,
+			ConvertedPrice:        listing.Price,
+			ConvertedFee:          listing.Fee,
+			ConvertedSteamFee:     listing.SteamFee,
+			ConvertedPublisherFee: listing.PublisherFee,
+			ConvertedPricePerUnit: listing.PricePerUnit,
+		})
+	}
+
+	return &Model.GetMarketListingIntegrationResponse{
+		Start:      response.Data.Start,
+		PageSize:   len(items),
+		TotalCount: response.Data.TotalCount,
+		Items:      items,
+		More:       response.Data.More,
 	}, nil
 }
 
