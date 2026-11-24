@@ -136,6 +136,8 @@ func (d *Dao) GetNewMarketListings(gameId int, gameName string, start int) (*Mod
 		return nil, err
 	}
 
+	fmt.Println(string(body))
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("获取新市场列表失败，HTTP状态码: %d", resp.StatusCode)
 	}
