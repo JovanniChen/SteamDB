@@ -359,8 +359,8 @@ func (c *Client) GetMarketListings(gameID int, gameName string, start, count int
 	return c.dao.GetMarketListings(gameID, gameName, start, count, country, language, currency)
 }
 
-func (c *Client) GetNewMarketListings(gameID int, gameName string, start int) (*Model.GetMarketListingIntegrationResponse, error) {
-	return c.dao.GetNewMarketListings(gameID, gameName, start)
+func (c *Client) GetNewMarketListings(gameID int, gameName string, start int, priceFilters ...Model.MarketListingPriceFilter) (*Model.GetMarketListingIntegrationResponse, error) {
+	return c.dao.GetNewMarketListings(gameID, gameName, start, priceFilters...)
 }
 
 func (c *Client) GetConfirmations(maFileContent string) error {

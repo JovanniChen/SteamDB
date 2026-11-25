@@ -207,6 +207,12 @@ type GetMarketListingIntegrationResponse struct {
 	More       bool                   `json:"more,omitempty"`
 }
 
+type MarketListingPriceFilter struct {
+	Currency int  `json:"eCurrency"`
+	Min      *int `json:"unMin,omitempty"`
+	Max      *int `json:"unMax,omitempty"`
+}
+
 type GetNewMarketListingResponse struct {
 	Data *GetNewMarketListingData `json:"data"`
 }

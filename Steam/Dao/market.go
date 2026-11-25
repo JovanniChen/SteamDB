@@ -101,18 +101,38 @@ func (d *Dao) GetMarketListings(gameID int, gameName string, start, count int, c
 	}, nil
 }
 
-func (d *Dao) GetNewMarketListings(gameId int, gameName string, start int) (*Model.GetMarketListingIntegrationResponse, error) {
+func (d *Dao) GetNewMarketListings(gameId int, gameName string, start int, priceFilters ...Model.MarketListingPriceFilter) (*Model.GetMarketListingIntegrationResponse, error) {
+	if len(priceFilters) > 1 {
+		return nil, errors.New("最多只能指定一个价格筛选条件")
+	}
+
 	params := Param.Params{}
 	params.SetString("q", "QueryListingsForItem")
-	qp, err := json.Marshal([]map[string]any{{
+
+	query := map[string]any{
 		"appid":            gameId,
 		"strItemName":      gameName,
-		"sort":             map[string]int{"field": 0, "direction": 1},
+		"sort":             map[string]int{"field": 0, "direction": 0},
 		"filters":          map[string]any{},
 		"accessoryFilters": map[string]any{},
 		"propertyFilters":  map[string]any{},
 		"start":            start,
-	}})
+	}
+	if len(priceFilters) == 1 {
+		priceFilter := priceFilters[0]
+		if priceFilter.Currency <= 0 {
+			return nil, errors.New("价格筛选的 currency 必须大于 0")
+		}
+		if priceFilter.Min != nil && *priceFilter.Min < 0 || priceFilter.Max != nil && *priceFilter.Max < 0 {
+			return nil, errors.New("价格筛选的 min/max 不能小于 0")
+		}
+		if priceFilter.Min != nil && priceFilter.Max != nil && *priceFilter.Min > *priceFilter.Max {
+			return nil, errors.New("价格筛选的 min 不能大于 max")
+		}
+		query["price"] = priceFilter
+	}
+
+	qp, err := json.Marshal([]map[string]any{query})
 	if err != nil {
 		return nil, err
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/JovanniChen/SteamDB/Steam/Constants"
 	"github.com/JovanniChen/SteamDB/Steam/Dao"
 	"github.com/JovanniChen/SteamDB/Steam/Logger"
+	"github.com/JovanniChen/SteamDB/Steam/Model"
 )
 
 func TestIsAccountBanned(accountIndex int) {
@@ -164,7 +165,9 @@ func TestGetNewMarketListings(accountIndex int) {
 		return
 	}
 
-	response, err := client.GetNewMarketListings(440, "Specialized Killstreak Unarmed Combat Kit Fabricator", 0)
+	min, max := 1000000, 1200000
+	priceFilter := Model.MarketListingPriceFilter{Currency: 23, Min: &min, Max: &max}
+	response, err := client.GetNewMarketListings(440, "Specialized Killstreak Tribalman's Shiv Kit Fabricator", 0, priceFilter)
 	if err != nil {
 		Logger.Error(err)
 		return
